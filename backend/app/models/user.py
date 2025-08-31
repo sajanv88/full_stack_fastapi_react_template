@@ -1,12 +1,21 @@
 from pydantic import BaseModel
+from enum import Enum
 
-class Gender(str):
-    male = "male"
-    female = "female"
-    other = "other"
+
+class Gender(str, Enum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
+    PREFER_NOT_TO_SAY = "prefer_not_to_say"
 
 class User(BaseModel):
-    id: int
+    id: str
+    first_name: str
+    last_name: str
+    email: str
+    gender: Gender
+
+class NewUser(BaseModel):
     first_name: str
     last_name: str
     email: str
