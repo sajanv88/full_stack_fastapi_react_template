@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Optional
 import jwt
 from jwt.exceptions import InvalidTokenError
 from pydantic import BaseModel
 from fastapi import HTTPException, status
 import os
+from app.models.role import Role
 
 
 JWT_SECRET = os.getenv("JWT_SECRET", "your_jwt_secret_key")
@@ -26,6 +27,7 @@ class TokenSet(BaseModel):
 class TokenData(BaseModel):
     email: str
     sub: str
+    role: Optional[Role]
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):

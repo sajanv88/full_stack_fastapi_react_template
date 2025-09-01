@@ -7,6 +7,9 @@ def seralize_user_schema(user) -> dict:
         "last_name": user["last_name"],
         "email": user["email"],
         "gender": user["gender"],
+        "role_id": str(user["role_id"]) if "role_id" in user and user["role_id"] else None,
+        "is_active": user["is_active"],
+        "activated_at": user["activated_at"]
     }
 
 def list_users(users) -> list:

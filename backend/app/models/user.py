@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from enum import Enum
-
+from typing import Optional
+from datetime import datetime
 
 class Gender(str, Enum):
     MALE = "male"
@@ -14,6 +15,9 @@ class User(BaseModel):
     last_name: str
     email: str
     gender: Gender
+    role_id: Optional[str] = None
+    is_active: bool
+    activated_at: Optional[datetime] = None
 
 class NewUser(BaseModel):
     first_name: str

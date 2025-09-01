@@ -1,9 +1,10 @@
+aiosmtplib==3.0.2
 annotated-types==0.7.0
 anyio==4.10.0
 backports.tarfile==1.2.0
 bcc==0.18.0
 bcrypt==4.3.0
-blinker==1.4
+blinker==1.9.0
 Brlapi==0.8.3
 build==1.2.2.post1
 CacheControl==0.14.3
@@ -33,6 +34,7 @@ exceptiongroup==1.3.0
 fastapi==0.116.1
 fastapi-cli==0.0.8
 fastapi-cloud-cli==0.1.5
+fastapi-mail==1.5.0
 fastjsonschema==2.21.1
 filelock==3.18.0
 findpython==0.6.3
