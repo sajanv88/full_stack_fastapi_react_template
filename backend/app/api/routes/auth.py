@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from app.core.db import user_collection, role_collection
 from app.models.user import NewUser, User
-from app.models.role import Role
+from app.models.role import Role, RoleType
 from app.schemas.role_schema import serialize_role_schema
 from bson import ObjectId
 from typing import Annotated, Union
@@ -37,8 +37,10 @@ class UserMeResponse(BaseModel):
     email: str
     gender: str
     role: Union[Role, None] = None
+    is_active: bool = False
+    activated_at: str | None = None
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login", refreshUrl="api/auth/refresh")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login", refreshUrl="api/v1/auth/refresh")
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -52,7 +54,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         subject = payload.get("sub")
         if subject is None:
             raise credentials_exception
-        token_data = TokenData(email=payload["email"], sub=payload["sub"], role=payload["role"])
+        token_data = TokenData(email=payload["email"], sub=payload["sub"], role=payload["role"], is_active=payload["is_active"], activated_at=payload["activated_at"])
     except InvalidTokenError:
         raise credentials_exception
     user = await user_collection.find_one({"_id": ObjectId(token_data.sub)})
@@ -62,14 +64,19 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
 
 async def get_token_data(user):
-    token_data = {"sub": str(user["_id"]), "email": user["email"]}.copy()
-    if user["role_id"]:
+    token_data = {"sub": str(user["_id"]), "email": user["email"], "is_active": user["is_active"], "activated_at": str(user["activated_at"]) if "activated_at" in user else None}.copy()
+    if user["role_id"] is not None:
         role = await role_collection.find_one({"_id": user["role_id"]})
         token_data["role"] = serialize_role_schema(role)
 
     return token_data
 
- 
+
+async def get_guest_role_detail():
+    role = await role_collection.find_one({"name": RoleType.GUEST})
+    return serialize_role_schema(role)
+
+
 @router.post("/login", response_model=TokenSet)
 async def login(login_request: Annotated[OAuth2PasswordRequestForm, Depends()]):
     user = await user_collection.find_one({"email": login_request.username})
@@ -100,7 +107,9 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser):
     user_dict = new_user.model_dump().copy()
     user_dict["password"] = hashed_password
     user_dict["is_active"] = False  # User starts as inactive until activation
-    
+    guest_role = await get_guest_role_detail()
+    user_dict["role_id"] = ObjectId(guest_role["id"])
+
     result = await user_collection.insert_one(user_dict)
     if result.inserted_id:
         activation_email_data = ActivationEmailSchema(

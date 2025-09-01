@@ -28,6 +28,8 @@ class TokenData(BaseModel):
     email: str
     sub: str
     role: Optional[Role]
+    is_active: Optional[bool] = False
+    activated_at: Optional[str] = None
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):

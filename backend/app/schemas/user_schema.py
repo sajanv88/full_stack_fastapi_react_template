@@ -9,7 +9,7 @@ def seralize_user_schema(user) -> dict:
         "gender": user["gender"],
         "role_id": str(user["role_id"]) if "role_id" in user and user["role_id"] else None,
         "is_active": user["is_active"],
-        "activated_at": user["activated_at"]
+        "activated_at": str(user["activated_at"]) if "activated_at" in user else None
     }
 
 def list_users(users) -> list:
