@@ -20,3 +20,4 @@ class NewUser(BaseModel):
     last_name: str
     email: str
     gender: Gender
+    password: str

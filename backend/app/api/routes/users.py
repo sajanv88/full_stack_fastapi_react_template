@@ -1,12 +1,15 @@
-from fastapi import APIRouter, status, HTTPException, Response
+from fastapi import Depends, APIRouter, status, HTTPException, Response
 from pydantic import BaseModel
 from typing import List
 from app.core.db import user_collection
 from app.models.user import NewUser, User
 from app.schemas.user_schema import list_users, seralize_user_schema
 from bson import ObjectId
+from typing import Annotated
+from app.api.routes.auth import get_current_user
 
 router = APIRouter(prefix="/users")
+router.tags = ["Users"]
 
 class UserListData(BaseModel):
     users: List[User]
@@ -23,7 +26,9 @@ class UserListResponse(BaseModel):
 
 
 @router.get("/", response_model=UserListResponse)
-async def get_users(skip: int = 0, limit: int = 10):
+async def get_users(
+    current_user: Annotated[User, Depends(get_current_user)],
+    skip: int = 0, limit: int = 10):
     users_cursor = user_collection.find().skip(skip).limit(limit)
     users_data = list_users(await users_cursor.to_list(length=limit))
     total = await user_collection.count_documents({})
@@ -47,7 +52,9 @@ async def get_users(skip: int = 0, limit: int = 10):
     
 
 @router.post("/",  response_class=Response)
-async def create_user(user: NewUser):
+async def create_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+    user: NewUser):
     try:
         result = await user_collection.insert_one({
             "first_name": user.first_name,
@@ -72,7 +79,9 @@ async def create_user(user: NewUser):
 
 
 @router.get("/{user_id}", response_model=User)
-async def get_user(user_id: str):
+async def get_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+    user_id: str):
     user = await user_collection.find_one({"_id": ObjectId(user_id)})
     if user:
         return seralize_user_schema(user)
@@ -83,7 +92,9 @@ async def get_user(user_id: str):
 
 
 @router.delete("/{user_id}", response_class=Response)
-async def delete_user(user_id: str):
+async def delete_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+    user_id: str):
     result = await user_collection.delete_one({"_id": ObjectId(user_id)})
     if result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -94,7 +105,9 @@ async def delete_user(user_id: str):
 
 
 @router.put("/{user_id}", response_model=User)
-async def update_user(user_id: str, user: User):
+async def update_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+    user_id: str, user: User):
     result = await user_collection.update_one(
         {"_id": ObjectId(user_id)},
         {"$set": {

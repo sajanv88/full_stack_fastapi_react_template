@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from app.api.routes import settings, users
 from app.core.db import ensure_indexes
+from app.api.routes import auth
 
 
 @asynccontextmanager
@@ -19,5 +20,6 @@ router = APIRouter(prefix="/api")
 
 router.include_router(settings.router)
 router.include_router(users.router)
+router.include_router(auth.router)
 
 app.include_router(router)
