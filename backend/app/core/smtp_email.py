@@ -138,3 +138,48 @@ async def send_activation_email(user_data: ActivationEmailSchema) -> JSONRespons
         "message": "Activation email has been sent", 
         "email": user_data.email
     })
+
+async def send_email_change_activation(user_data: ActivationEmailSchema) -> JSONResponse:
+    """
+    Send an email change activation email with activation link.
+    """
+    activation_link = generate_activation_link(user_data.user_id, user_data.email)
+    
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Notification!</h2>
+        <p>Hello {user_data.first_name},</p>
+        <p>You have recently requested to change your email. Please click the button below to confirm your new email address:</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{activation_link}" 
+               style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Confirm Your New Email
+            </a>
+        </div>
+        
+        <p>Or copy and paste this link in your browser:</p>
+        <p style="word-break: break-all; color: #007bff;">{activation_link}</p>
+        
+        <p><strong>Note:</strong> This activation link will expire in 24 hours for security reasons.</p>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+        <p style="font-size: 12px; color: #666;">
+            If you didn't create an account with us, please ignore this email.
+        </p>
+    </div>
+    """
+
+    message = MessageSchema(
+        subject="Confirm Your New Email - Full-Stack FastAPI React Template",
+        recipients=[user_data.email],
+        body=html,
+        subtype=MessageType.html
+    )
+
+    fm = FastMail(conf)
+    await fm.send_message(message)
+    return JSONResponse(status_code=200, content={
+        "message": "Email change activation email has been sent", 
+        "email": user_data.email
+    })

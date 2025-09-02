@@ -4,7 +4,7 @@ import jwt
 from datetime import datetime
 from pydantic import BaseModel
 from app.core.db import user_collection, role_collection
-from app.models.user import NewUser, User
+from app.models.user import NewUser, User, UserEmailUpdate
 from app.models.role import Role, RoleType
 from app.schemas.role_schema import serialize_role_schema
 from bson import ObjectId
@@ -13,7 +13,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.core.token import TokenSet, verify_refresh_token, verify_token, TokenData, generate_token_set
 from app.schemas.user_schema import seralize_user_schema
 from app.core.password import get_password_hash, verify_password
-from app.core.smtp_email import ActivationEmailSchema, send_activation_email, verify_activation_token
+from app.core.smtp_email import ActivationEmailSchema, send_activation_email, verify_activation_token, send_email_change_activation
 
 
 
@@ -162,6 +162,41 @@ async def refresh_token(token: RefreshRequest):
             detail="Invalid refresh token"
             )
 
+@router.patch("/change-email", response_class=Response)
+async def change_email(
+    current_user: Annotated[User, Depends(get_current_user)],
+    email_update: UserEmailUpdate,
+    background_tasks: BackgroundTasks
+):
+    user = await user_collection.find_one({"_id": ObjectId(current_user["_id"])})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    if user["email"] == email_update.new_email:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email is the same as the current email"
+        )
+
+    result = await user_collection.update_one(
+        {"_id": ObjectId(current_user["_id"])},
+        {"$set": {"email": email_update.new_email, "is_active": False, "activated_at": None}}
+    )
+
+    if result.modified_count == 1:
+        activation_email_data = ActivationEmailSchema(
+                email=email_update.new_email,
+                user_id=str(current_user["_id"]),
+                first_name=user["first_name"]
+            )
+
+        background_tasks.add_task(send_email_change_activation, activation_email_data)
+
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    
 
 @router.post("/activate")
 async def activate_account(request: ActivationRequest):

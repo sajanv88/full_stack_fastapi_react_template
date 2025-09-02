@@ -2,16 +2,18 @@ from fastapi import BackgroundTasks, Depends, APIRouter, status, HTTPException, 
 from pydantic import BaseModel
 from typing import List
 from app.core.db import user_collection
-from app.models.user import NewUser, User
+from app.models.user import NewUser, User, UserUpdate
 from app.schemas.user_schema import list_users, seralize_user_schema
 from bson import ObjectId
 from typing import Annotated
 from app.api.routes.auth import get_current_user
 from app.core.smtp_email import send_activation_email, ActivationEmailSchema
 from app.core.password import get_password_hash
+from app.core.role_checker import view_only_resource, admin_only_user_resource
 
 router = APIRouter(prefix="/users")
 router.tags = ["Users"]
+
 
 class UserListData(BaseModel):
     users: List[User]
@@ -32,6 +34,7 @@ class UserRoleUpdateRequest(BaseModel):
 @router.get("/", response_model=UserListResponse)
 async def get_users(
     current_user: Annotated[User, Depends(get_current_user)],
+    _:bool = Depends(view_only_resource),
     skip: int = 0, limit: int = 10):
     users_cursor = user_collection.find().skip(skip).limit(limit)
     users_data = list_users(await users_cursor.to_list(length=limit))
@@ -102,7 +105,8 @@ async def create_user(
 @router.get("/{user_id}", response_model=User)
 async def get_user(
     current_user: Annotated[User, Depends(get_current_user)],
-    user_id: str):
+    user_id: str,
+    _:bool = Depends(view_only_resource)):
     user = await user_collection.find_one({"_id": ObjectId(user_id)})
     if user:
         return seralize_user_schema(user)
@@ -115,7 +119,8 @@ async def get_user(
 @router.delete("/{user_id}", response_class=Response)
 async def delete_user(
     current_user: Annotated[User, Depends(get_current_user)],
-    user_id: str):
+    user_id: str,
+    _: bool = Depends(admin_only_user_resource)):
     result = await user_collection.delete_one({"_id": ObjectId(user_id)})
     if result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -128,14 +133,15 @@ async def delete_user(
 @router.put("/{user_id}", response_model=User)
 async def update_user(
     current_user: Annotated[User, Depends(get_current_user)],
-    user_id: str, user: User):
+    user: UserUpdate,
+    user_id: str,
+    _: bool = Depends(admin_only_user_resource)):
     result = await user_collection.update_one(
         {"_id": ObjectId(user_id)},
         {"$set": {
             "first_name": user.first_name,
             "last_name": user.last_name,
-            "email": user.email,
-            "gnder": user.gender.value
+            "gender": user.gender.value
         }}
     )
     if result.modified_count == 1:
@@ -151,7 +157,8 @@ async def update_user(
 @router.patch("/{user_id}/assign_role", response_model=User)
 async def patch_user(
     current_user: Annotated[User, Depends(get_current_user)],
-    user_id: str, role_update: UserRoleUpdateRequest):
+    user_id: str, role_update: UserRoleUpdateRequest,
+    _: bool = Depends(admin_only_user_resource)):
     user = await user_collection.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(
@@ -182,7 +189,8 @@ async def patch_user(
 async def remove_user_role(
     current_user: Annotated[User, Depends(get_current_user)],
     user_id: str,
-    role_update: UserRoleUpdateRequest):
+    role_update: UserRoleUpdateRequest,
+    _: bool = Depends(admin_only_user_resource)):
     user = await user_collection.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(

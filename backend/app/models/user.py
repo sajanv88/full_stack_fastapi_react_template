@@ -25,3 +25,12 @@ class NewUser(BaseModel):
     email: str
     gender: Gender
     password: str
+
+class UserUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    gender: Optional[Gender] = None
+
+
+class UserEmailUpdate(BaseModel):
+    email: str
