@@ -32,5 +32,5 @@ export function clearIsLoggedIn() {
 
 export function clearAllTokens() {
   sessionStorage.clear();
-  localStorage.clear();
+  localStorage.removeItem("refresh_token");
 }
