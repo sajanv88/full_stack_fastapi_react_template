@@ -8,7 +8,8 @@ from app.schemas.role_schema import list_roles, serialize_role_schema
 from bson import ObjectId
 from typing import Annotated
 from app.api.routes.auth import get_current_user
-from app.core.role_checker import admin_only_role_resource, view_only_resource
+from app.core.role_checker import  read_write_resource
+from app.core.permission import Permission
 
 router = APIRouter(prefix="/roles")
 router.tags = ["Roles"]
@@ -30,7 +31,6 @@ class RoleListResponse(BaseModel):
 @router.get("/", response_model=RoleListResponse)
 async def get_roles(
     current_user: Annotated[User, Depends(get_current_user)],
-    _:bool = Depends(view_only_resource),  
     skip: int = 0, limit: int = 10
 ):
     roles_cursor = role_collection.find().skip(skip).limit(limit)
@@ -59,12 +59,13 @@ async def get_roles(
 async def create_role(
     current_user: Annotated[User, Depends(get_current_user)],
     role: NewRole,
-    _: bool = Depends(admin_only_role_resource)
+    _: bool = Depends(read_write_resource)
 ):
     try:
         result = await role_collection.insert_one({
             "name": role.name,
-            "description": role.description
+            "description": role.description,
+            "permissions": [Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY]  # Default permissions
         })
         if result.inserted_id:
             return Response(status_code=status.HTTP_201_CREATED)
@@ -77,8 +78,7 @@ async def create_role(
 @router.get("/{role_id}", response_model=Role)
 async def get_role( 
     current_user: Annotated[User, Depends(get_current_user)],
-    role_id: str,
-    _:bool = Depends(view_only_resource)
+    role_id: str
 
 ):
     role = await role_collection.find_one({"_id": ObjectId(role_id)})
@@ -92,7 +92,7 @@ async def get_role(
 async def delete_role(
     current_user: Annotated[User, Depends(get_current_user)],
     role_id: str,
-    _: bool = Depends(admin_only_role_resource)
+    _: bool = Depends(read_write_resource)
 
 ):
     result = await role_collection.delete_one({"_id": ObjectId(role_id)})
@@ -107,7 +107,7 @@ async def update_role(
     current_user: Annotated[User, Depends(get_current_user)],
     role_id: str,
     role:  NewRole,
-    _: bool = Depends(admin_only_role_resource)
+    _: bool = Depends(read_write_resource)
 ):
     update_data = {k: v for k, v in role.model_dump().items() if v is not None}
     if not update_data:

@@ -16,6 +16,7 @@ export type { Gender } from './models/Gender';
 export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { NewRole } from './models/NewRole';
 export type { NewUser } from './models/NewUser';
+export type { Permission } from './models/Permission';
 export type { RefreshRequest } from './models/RefreshRequest';
 export type { Role } from './models/Role';
 export type { RoleListData } from './models/RoleListData';

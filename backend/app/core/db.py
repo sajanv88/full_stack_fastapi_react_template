@@ -6,6 +6,7 @@ from pymongo import AsyncMongoClient
 from app.models.user import Gender
 from app.core.password import get_password_hash
 from app.models.role import RoleType
+from app.core.permission import Permission
 
 load_dotenv()
 
@@ -49,9 +50,9 @@ async def seed_default_data():
         print(f"Admin user already exists: {ADMIN_EMAIL}. Hence, skipping...")
 
     roles = [
-        {"name": RoleType.ADMIN, "description": "Admin role can give full access to application. Can read, write and delete any resource."},
-        {"name": RoleType.USER, "description": "Regular user has read and update their own resources."},
-        {"name": RoleType.GUEST, "description": "Guest user has read only access to resources."}
+        {"name": RoleType.ADMIN, "description": "Admin role can give full access to application. Can read, write and delete any resource.", "permissions": [Permission.FULL_ACCESS]},
+        {"name": RoleType.USER, "description": "Regular user has read and update their own resources.", "permissions": [Permission.USER_SELF_READ_AND_WRITE_ONLY, Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY]},
+        {"name": RoleType.GUEST, "description": "Guest user has read only access to resources.", "permissions": [Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY]}
     ]
 
     print("Seeding roles...")

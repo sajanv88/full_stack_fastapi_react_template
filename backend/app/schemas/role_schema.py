@@ -3,7 +3,8 @@ def serialize_role_schema(role) -> dict:
     return {
         "id": str(role["_id"]),
         "name": role["name"],
-        "description": role["description"]
+        "description": role["description"],
+        "permissions": role["permissions"]
     }
 
 def list_roles(roles) -> list:
