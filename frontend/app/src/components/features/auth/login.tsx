@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Form,
     FormControl,
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { NavLink } from "react-router";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 
@@ -121,8 +122,19 @@ export function Login() {
                         Don&apos;t have an account?{' '}
                         <NavLink to="/register" className="text-primary underline hover:text-primary/80">Register</NavLink>
                     </div>
+
+
+                    <CardFooter className="p-0 mt-4">
+                        {error && (
+                            <Alert>
+                                <AlertTitle>Error</AlertTitle>
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
+                    </CardFooter>
                 </CardContent>
             </Card>
+
         </div>
     )
 
