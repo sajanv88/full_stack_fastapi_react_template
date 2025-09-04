@@ -17,6 +17,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { Button } from "../ui/button";
 import { clearAllTokens } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react"
 
 const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
@@ -118,7 +120,15 @@ export function DashboardLayout() {
                             </span>
                             <DarkMode />
                         </header>
+
                         <section className="pt-10">
+                            {!auth.user?.is_active && (
+                                <Alert variant="destructive" className="mb-4">
+                                    <InfoIcon className="h-4 w-4" />
+                                    <AlertTitle>Your account is not activated</AlertTitle>
+                                    <AlertDescription>Please check your email for the activation link.</AlertDescription>
+                                </Alert>
+                            )}
                             <Outlet />
                         </section>
                     </div>

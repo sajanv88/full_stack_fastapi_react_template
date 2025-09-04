@@ -1,0 +1,139 @@
+# Default values for fastapi-react-app
+replicaCount: 2
+
+image:
+  repository: sajanv88/fastapi-react-app
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: 
+  fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: your-app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: fastapi-react-tls
+      hosts:
+        - your-app.example.com
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Environment variables
+env:
+  - name: MONGO_URI
+    value: "mongodb://mongodb:27017"
+  - name: MONGO_DB_NAME
+    value: "fastapi_app"
+  - name: JWT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: app-secrets
+        key: jwt-secret
+  - name: REFRESH_TOKEN_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: app-secrets
+        key: refresh-token-secret
+  - name: SMTP_HOST
+    value: "smtp.gmail.com"
+  - name: SMTP_PORT
+    value: "587"
+  - name: SMTP_USER
+    valueFrom:
+      secretKeyRef:
+        name: app-secrets
+        key: smtp-user
+  - name: SMTP_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: app-secrets
+        key: smtp-password
+  - name: SMTP_MAIL_FROM
+    valueFrom:
+      secretKeyRef:
+        name: app-secrets
+        key: smtp-mail-from
+  - name: SMTP_MAIL_FROM_NAME
+    value: "FastAPI React App"
+  - name: BASE_URL
+    value: "https://your-app.example.com"
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /api/v1/users/
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /api/v1/users/
+    port: 8000
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# MongoDB dependency
+mongodb:
+  enabled: true
+  auth:
+    enabled: false
+  persistence:
+    enabled: true
+    size: 8Gi

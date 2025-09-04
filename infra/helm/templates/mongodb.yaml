@@ -1,0 +1,70 @@
+{{- if .Values.mongodb.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fastapi-react-app.fullname" . }}-mongodb
+  labels:
+    {{- include "fastapi-react-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "fastapi-react-app.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mongodb
+  template:
+    metadata:
+      labels:
+        {{- include "fastapi-react-app.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:7.0
+          ports:
+            - containerPort: 27017
+              name: mongodb
+          {{- if .Values.mongodb.persistence.enabled }}
+          volumeMounts:
+            - name: mongodb-storage
+              mountPath: /data/db
+          {{- end }}
+      {{- if .Values.mongodb.persistence.enabled }}
+      volumes:
+        - name: mongodb-storage
+          persistentVolumeClaim:
+            claimName: {{ include "fastapi-react-app.fullname" . }}-mongodb-pvc
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  labels:
+    {{- include "fastapi-react-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mongodb
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+      name: mongodb
+  selector:
+    {{- include "fastapi-react-app.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: mongodb
+{{- if .Values.mongodb.persistence.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "fastapi-react-app.fullname" . }}-mongodb-pvc
+  labels:
+    {{- include "fastapi-react-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mongodb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mongodb.persistence.size }}
+{{- end }}
+{{- end }}

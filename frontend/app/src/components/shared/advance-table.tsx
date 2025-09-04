@@ -46,7 +46,7 @@ export default function AdvanceTable<T>({
     const { search } = useLocation();
     const searchParams = new URLSearchParams(search);
     const currentPage = useMemo(
-        () => Number(searchParams.get("page")),
+        () => Number(searchParams.get("skip")),
         [searchParams],
     );
     const pageLimit = useMemo(
@@ -57,8 +57,8 @@ export default function AdvanceTable<T>({
     const limit = pageLimit === 0 ? DEFAULT_PAGE_LIMIT : pageLimit;
 
     const navigate = useNavigate();
-    const { items, totalRecords } = data;
-    const totalPage = Math.ceil(totalRecords / limit);
+    const { items, total } = data;
+    const totalPage = Math.ceil(total / limit);
     const [pagination, setPagination] = useState<{
         pageIndex: number;
         pageSize: number;
@@ -80,15 +80,16 @@ export default function AdvanceTable<T>({
 
     useEffect(() => {
         if (pagination.pageIndex !== Number(currentPage)) {
-            const url = new URL(window.location.href);
-            url.searchParams.set("page", pagination.pageIndex.toString());
-            navigate(url.toString());
+            const url = new URLSearchParams(window.location.search);
+            url.set("skip", pagination.pageIndex.toString());
+            const newUrl = `?${url.toString()}`
+            navigate(newUrl);
         }
     }, [pagination.pageIndex]);
 
-    const showPagination = items.length < totalRecords;
+    const showPagination = items.length < total;
     const renderEmptyState = () => {
-        if (items.length === 0 && totalRecords === 0) {
+        if (items.length === 0 && total === 0) {
             return (
                 <div className="grid place-items-center place-content-center h-40">
                     No Records

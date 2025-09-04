@@ -1,10 +1,8 @@
 export interface IResponseData<T> {
     items: T[];
-    totalRecords: number;
-    paginate: {
-        limit?: number;
-        offset?: number;
-        sort?: string;
-        filter?: string;
-    };
+    skip: number;
+    limit: number;
+    total: number;
+    hasPrevious: boolean;
+    hasNext: boolean;
 }

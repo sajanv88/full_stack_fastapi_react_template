@@ -1,11 +1,16 @@
 import { ApiClient, type UserListResponse } from "@/api";
+import { IResponseData } from "@/components/shared/iresponse-data.inteface";
 import { getAccessToken } from "@/lib/utils";
 import { useEffect, useState, useTransition } from "react";
 import { useLocation } from 'react-router';
+
+export type UserResponse = UserListResponse["data"]
+export type UsersType = UserResponse["users"][0]
+
 export function useUser() {
     const { search } = useLocation();
     const [pending, startTransition] = useTransition();
-    const [userResponse, setUserResponse] = useState<UserListResponse>();
+    const [userResponse, setUserResponse] = useState<IResponseData<UsersType>>();
     const accessToken = getAccessToken();
     const user = new ApiClient({
         HEADERS: {
@@ -20,18 +25,22 @@ export function useUser() {
 
             const skip = searchParams.get("skip");
             const limit = searchParams.get("limit");
-            console.log(`Fetching users with skip: ${skip}, limit: ${limit}`);
             const users = await user.getUsersApiV1UsersGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
-
-            console.log(users);
-            setUserResponse(users);
+            setUserResponse({
+                items: users.data.users,
+                hasNext: users.data.hasNext,
+                total: users.data.total,
+                hasPrevious: users.data.hasPrevious,
+                limit: users.data.limit,
+                skip: users.data.skip,
+            });
         }
 
 
         startTransition(() => {
             fetchUsers();
         });
-    }, []);
+    }, [searchParams.toString()]);
 
 
 

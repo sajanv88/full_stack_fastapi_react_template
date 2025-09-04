@@ -6,6 +6,7 @@ import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { Profile } from "@/components/features/profile/profile";
 import { Roles } from "@/components/features/roles/roles";
 import { Users } from "@/components/features/users/users";
+import Register from "./components/features/auth/register";
 
 function App() {
 
@@ -13,7 +14,7 @@ function App() {
     <Routes>
       <Route element={<DefaultLayout />}>
         <Route index path="login" element={<Login />} />
-        <Route path="register" element={<div>Signup Page</div>} />
+        <Route path="register" element={<Register />} />
       </Route>
 
       <Route element={<DashboardLayout />}>

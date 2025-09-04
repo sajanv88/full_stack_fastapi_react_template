@@ -1,0 +1,14 @@
+apiVersion: v2
+name: fastapi-react-app
+description: A Helm chart for FastAPI React Full-Stack Application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - fastapi
+  - react
+  - fullstack
+  - web
+maintainers:
+  - name: sajankumarv
+    email: sajankumarv@example.com
