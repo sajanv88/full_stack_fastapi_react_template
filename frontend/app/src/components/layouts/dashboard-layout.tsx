@@ -19,6 +19,7 @@ import { Button } from "../ui/button";
 import { clearAllTokens } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react"
+import { Logo } from "@/components/shared/logo";
 
 const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
@@ -43,12 +44,12 @@ function DashboardSidebar() {
 
     return (
         <Sidebar>
-            <SidebarHeader>
+            <SidebarHeader className="pb-5 pt-5">
                 <NavLink
                     to="/dashboard"
                     className="text-2xl font-bold tracking-tight text-primary"
                 >
-                    Full-Stack Fast API
+                    <Logo />
                 </NavLink>
             </SidebarHeader>
             <SidebarContent>

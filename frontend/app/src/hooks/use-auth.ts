@@ -1,12 +1,10 @@
 import { ApiClient, type NewUser } from "@/api";
 import { storeTokenSet } from "@/lib/utils";
-import { useNavigate } from "react-router";
 import { toast } from "sonner";
 
 const auth = new ApiClient().auth
 
 export function useAuth() {
-    const navigate = useNavigate()
     async function login(data: { email: string; password: string }) {
         try {
             const result = await auth.loginApiV1AuthLoginPost({
@@ -19,7 +17,7 @@ export function useAuth() {
             toast.success("Login successful!", {
                 richColors: true
             });
-            navigate("/dashboard");
+            window.location.href = "/dashboard";
         } catch (e) {
             if (e instanceof Error) {
                 throw e;
@@ -37,7 +35,7 @@ export function useAuth() {
             toast.success("Registration successful!", {
                 richColors: true
             });
-            navigate("/login");
+            window.location.href = "/dashboard";
         } catch (e) {
             if (e instanceof Error) {
                 throw e;

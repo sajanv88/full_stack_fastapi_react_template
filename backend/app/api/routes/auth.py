@@ -109,7 +109,7 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser):
     user_dict["is_active"] = False  # User starts as inactive until activation
     guest_role = await get_guest_role_detail()
     user_dict["role_id"] = ObjectId(guest_role["id"])
-
+    user_dict["created_at"] = datetime.utcnow()
     result = await user_collection.insert_one(user_dict)
     if result.inserted_id:
         activation_email_data = ActivationEmailSchema(

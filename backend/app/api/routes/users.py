@@ -1,7 +1,8 @@
+from datetime import datetime
 from fastapi import BackgroundTasks, Depends, APIRouter, status, HTTPException, Response
 from pydantic import BaseModel
 from typing import List
-from app.core.db import user_collection
+from app.core.db import user_collection, role_collection
 from app.models.user import NewUser, User, UserUpdate
 from app.schemas.user_schema import list_users, seralize_user_schema
 from bson import ObjectId
@@ -10,6 +11,7 @@ from app.api.routes.auth import get_current_user
 from app.core.smtp_email import send_activation_email, ActivationEmailSchema
 from app.core.password import get_password_hash
 from app.core.role_checker import  read_write_resource, user_assign_or_remove_role_resource
+from app.models.role import RoleType
 
 router = APIRouter(prefix="/users")
 router.tags = ["Users"]
@@ -66,7 +68,9 @@ async def create_user(
     try:
         # Hash the password
         hashed_password = get_password_hash(user.password)
-        
+
+        role_guest = await role_collection.find_one({"name": RoleType.GUEST})
+
         # Create user document
         user_doc = {
             "first_name": user.first_name,
@@ -74,11 +78,14 @@ async def create_user(
             "email": user.email,
             "gender": user.gender.value,
             "password": hashed_password,
+            "role_id": ObjectId(role_guest["_id"]),
+            "created_at": datetime.utcnow(),
+            
             "is_active": False  # User starts as inactive until activation
         }
         
         result = await user_collection.insert_one(user_doc)
-        
+        print(f"User created with ID: {result.inserted_id}")
         if result.inserted_id:
             # Send activation email
             activation_email_data = ActivationEmailSchema(
@@ -96,6 +103,7 @@ async def create_user(
                 detail="Failed to create user"
             )
     except Exception as e:
+        print(f"Error creating user: {e}")
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Error creating user"

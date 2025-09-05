@@ -1,4 +1,4 @@
-import { ApiClient, type UserMeResponse } from "@/api";
+import { ApiClient, Permission, type UserMeResponse } from "@/api";
 import { clearAllTokens, clearIsLoggedIn, getAccessToken, getRefreshToken, isLoggedIn, storeTokenSet } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
 import { useNavigate } from "react-router";
@@ -7,18 +7,21 @@ import { useNavigate } from "react-router";
 type AuthProviderState = {
     isLoggedIn: boolean;
     user: UserMeResponse | null;
+    can: (action: Permission) => boolean;
 }
 
 const authContext = createContext<AuthProviderState>({
     isLoggedIn: false,
-    user: null
+    user: null,
+    can: () => false
 });
 
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [authState, setAuthState] = useState<AuthProviderState>({
         isLoggedIn: false,
-        user: null
+        user: null,
+        can: () => false
     });
     const navigate = useNavigate();
     useEffect(() => {
@@ -33,7 +36,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const user = await auth.readUsersMeApiV1AuthMeGet();
                 setAuthState({
                     isLoggedIn: true,
-                    user
+                    user,
+                    can: (action: Permission) => {
+                        return user?.role?.permissions?.includes(action) ?? false;
+                    }
                 });
                 if (isLoggedIn()) {
                     return;

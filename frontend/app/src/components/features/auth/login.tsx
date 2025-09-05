@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { NavLink } from "react-router";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Logo } from "@/components/shared/logo";
 
 
 
@@ -65,10 +66,10 @@ export function Login() {
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
             <Card className="w-full max-w-md shadow-lg">
                 <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-center">Full-Stack Fast API</CardTitle>
-                    <CardDescription className="text-center text-muted-foreground">
-                        Enter your email and password to access your account
-                    </CardDescription>
+                    <CardTitle className="text-2xl font-bold text-center">
+                        <Logo className="justify-center" />
+                    </CardTitle>
+
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>

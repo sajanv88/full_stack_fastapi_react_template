@@ -18,6 +18,7 @@ class User(BaseModel):
     role_id: Optional[str] = None
     is_active: bool
     activated_at: Optional[datetime] = None
+    created_at: datetime
 
 class NewUser(BaseModel):
     first_name: str

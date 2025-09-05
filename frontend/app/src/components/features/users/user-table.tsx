@@ -1,9 +1,8 @@
 import AdvanceTable from "@/components/shared/advance-table";
 import { IResponseData } from "@/components/shared/iresponse-data.inteface";
-import { Button } from "@/components/ui/button";
+import { TableActions } from "@/components/shared/table-actions";
 import { UsersType } from "@/hooks/use-user";
 import { createColumnHelper } from "@tanstack/react-table";
-import { CogIcon } from 'lucide-react'
 
 
 
@@ -13,10 +12,20 @@ const columns = [
         header: "Actions",
         cell: (c) => {
             return (
-                <Button>
-                    <CogIcon className="h-4 w-4" />
-                    Actions
-                </Button>
+                <TableActions<typeof c.row.original>
+                    options={[
+                        {
+                            label: "Edit",
+                            data: c.row.original,
+                            onClick: (data) => console.log("Edit", data),
+                        },
+                        {
+                            label: "Delete",
+                            data: c.row.original,
+                            onClick: (data) => console.log("Delete", data),
+                        },
+                    ]}
+                />
             )
         }
     }),

@@ -4,7 +4,8 @@ def serialize_role_schema(role) -> dict:
         "id": str(role["_id"]),
         "name": role["name"],
         "description": role["description"],
-        "permissions": role["permissions"]
+        "permissions": role["permissions"],
+        "created_at": str(role["created_at"]) if "created_at" in role else None
     }
 
 def list_roles(roles) -> list:

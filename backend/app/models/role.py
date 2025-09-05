@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 from typing import Union
 from enum import Enum
@@ -12,6 +13,7 @@ class Role(BaseModel):
     name: RoleType
     description: Union[str, None] = None
     permissions: Union[list[Permission], None] = []
+    created_at: datetime
 
 class NewRole(BaseModel):
     name: RoleType

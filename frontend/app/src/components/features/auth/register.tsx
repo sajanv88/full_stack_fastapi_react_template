@@ -17,9 +17,10 @@ import {
 } from "@/components/ui/form";
 import { NavLink, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/use-auth";
+import { Logo } from "@/components/shared/logo";
 
 // Gender enum matching the backend
-const Gender = {
+export const Gender = {
     MALE: 'male',
     FEMALE: 'female',
     OTHER: 'other',
@@ -101,7 +102,9 @@ export default function Register() {
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
             <Card className="w-full max-w-md shadow-lg">
                 <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-center">Full-Stack Fast API | Create Account</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center">
+                        <Logo className="justify-center pb-5" />
+                    </CardTitle>
                     <CardDescription className="text-center text-muted-foreground">
                         Enter your information to create a new account
                     </CardDescription>

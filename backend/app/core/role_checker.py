@@ -29,10 +29,12 @@ class RoleChecker:
 
         # Admin can perform any action
         if role["name"] in self.allowed_roles and Permission.FULL_ACCESS in role["permissions"]:
+            print("Admin access granted.")
             return True
 
         # User can perform role assignment or removal
         if role["name"] in self.allowed_roles and Permission.USER_ROLE_ASSIGN_OR_REMOVE_ONLY in role["permissions"]:
+            print("User role assignment/removal access granted.")
             return True
 
         # User can perform self update
