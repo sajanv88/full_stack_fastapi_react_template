@@ -142,7 +142,8 @@ async def seed_default_data():
                 {"$set": {"role_id": ObjectId(admin_role["_id"])}}
             )
 
-    await generate_fake_users(100, True)
+    # Uncomment to generate fake users when you need feed fake users
+    # await generate_fake_users(100) 
     print("Seeding completed.")
     # Example:
     # await check_new_fields_and_add([DBField("users", "created_at", datetime.utcnow()), DBField("roles", "created_at", datetime.utcnow())])

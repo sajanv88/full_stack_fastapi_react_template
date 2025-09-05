@@ -12,6 +12,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { ActivationRequest } from './models/ActivationRequest';
 export type { Body_login_api_v1_auth_login_post } from './models/Body_login_api_v1_auth_login_post';
+export type { DashboardMetrics } from './models/DashboardMetrics';
 export type { Gender } from './models/Gender';
 export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { NewRole } from './models/NewRole';
@@ -34,6 +35,7 @@ export type { UserUpdate } from './models/UserUpdate';
 export type { ValidationError } from './models/ValidationError';
 
 export { AuthService } from './services/AuthService';
+export { DashboardService } from './services/DashboardService';
 export { DefaultService } from './services/DefaultService';
 export { RolesService } from './services/RolesService';
 export { UsersService } from './services/UsersService';
