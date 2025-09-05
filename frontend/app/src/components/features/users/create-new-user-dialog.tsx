@@ -40,7 +40,7 @@ interface CreateNewUserDialogProps {
 
 export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const { createNewUser } = useUsers();
+    const { onCreateNewUser } = useUsers();
 
     const form = useForm<CreateUserFormInputs>({
         resolver: zodResolver(createUserSchema),
@@ -57,7 +57,7 @@ export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProp
         console.log("Form Data Submitted: ", data);
         setIsLoading(true);
         try {
-            await createNewUser({
+            await onCreateNewUser({
                 email: data.email,
                 password: data.password,
                 first_name: data.firstName,

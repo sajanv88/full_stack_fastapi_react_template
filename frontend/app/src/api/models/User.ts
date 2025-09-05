@@ -12,5 +12,6 @@ export type User = {
   role_id?: (string | null);
   is_active: boolean;
   activated_at?: (string | null);
+  created_at: string;
 };
 

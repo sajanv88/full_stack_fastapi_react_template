@@ -6,11 +6,13 @@ import type { BaseHttpRequest } from './core/BaseHttpRequest';
 import type { OpenAPIConfig } from './core/OpenAPI';
 import { FetchHttpRequest } from './core/FetchHttpRequest';
 import { AuthService } from './services/AuthService';
+import { DefaultService } from './services/DefaultService';
 import { RolesService } from './services/RolesService';
 import { UsersService } from './services/UsersService';
 type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
 export class ApiClient {
   public readonly auth: AuthService;
+  public readonly default: DefaultService;
   public readonly roles: RolesService;
   public readonly users: UsersService;
   public readonly request: BaseHttpRequest;
@@ -27,6 +29,7 @@ export class ApiClient {
       ENCODE_PATH: config?.ENCODE_PATH,
     });
     this.auth = new AuthService(this.request);
+    this.default = new DefaultService(this.request);
     this.roles = new RolesService(this.request);
     this.users = new UsersService(this.request);
   }

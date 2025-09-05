@@ -40,6 +40,11 @@ class UserMeResponse(BaseModel):
     is_active: bool = False
     activated_at: str | None = None
 
+class ResendActivationEmailRequest(BaseModel):
+    email: str
+    id: str
+    first_name: str
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login", refreshUrl="api/v1/auth/refresh")
 
 
@@ -126,6 +131,23 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser):
             detail="Failed to create user"
         )
     
+
+@router.post("/resend_activation_email", response_class=Response)
+async def resend_activation_email(
+    current_user: Annotated[User, Depends(get_current_user)],
+    user: ResendActivationEmailRequest,
+    background_tasks: BackgroundTasks
+):
+    email_user = user.model_dump().copy()
+    activation_email_data = ActivationEmailSchema(
+        email=email_user["email"],
+        user_id=str(email_user["id"]),
+        first_name=email_user["first_name"]
+    )
+
+    background_tasks.add_task(send_activation_email, activation_email_data)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 
 @router.get("/me", response_model=UserMeResponse)
 async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):

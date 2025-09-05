@@ -11,11 +11,11 @@ const columns = [
     columHelper.accessor("id", {
         header: "Actions",
         cell: (c) => {
-            const { selectUser } = useUsers()
+            const { onSelectUser } = useUsers()
             const actionOptions: ActionOption<typeof c.row.original> = {
                 label: "Resend Activation Email",
                 data: c.row.original,
-                onClick: (data) => selectUser({
+                onClick: (data) => onSelectUser({
                     type: 'resend_email',
                     user: data
                 }),
@@ -25,7 +25,7 @@ const columns = [
                 {
                     label: "Edit",
                     data: c.row.original,
-                    onClick: (data) => selectUser({
+                    onClick: (data) => onSelectUser({
                         type: 'edit',
                         user: data
                     }),
@@ -33,7 +33,7 @@ const columns = [
                 {
                     label: "Delete",
                     data: c.row.original,
-                    onClick: (data) => selectUser({
+                    onClick: (data) => onSelectUser({
                         type: 'delete',
                         user: data
                     }),

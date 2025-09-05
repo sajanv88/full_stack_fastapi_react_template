@@ -18,6 +18,7 @@ export type { NewRole } from './models/NewRole';
 export type { NewUser } from './models/NewUser';
 export type { Permission } from './models/Permission';
 export type { RefreshRequest } from './models/RefreshRequest';
+export type { ResendActivationEmailRequest } from './models/ResendActivationEmailRequest';
 export type { Role } from './models/Role';
 export type { RoleListData } from './models/RoleListData';
 export type { RoleListResponse } from './models/RoleListResponse';
@@ -33,5 +34,6 @@ export type { UserUpdate } from './models/UserUpdate';
 export type { ValidationError } from './models/ValidationError';
 
 export { AuthService } from './services/AuthService';
+export { DefaultService } from './services/DefaultService';
 export { RolesService } from './services/RolesService';
 export { UsersService } from './services/UsersService';

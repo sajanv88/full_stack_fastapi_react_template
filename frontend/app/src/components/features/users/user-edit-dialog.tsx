@@ -37,7 +37,7 @@ interface UserEditDialogProps {
 
 export function UserEditDialog({ open, onDismiss }: UserEditDialogProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const { updateUser, selectedUser } = useUsers();
+    const { onUpdateUser, selectedUser } = useUsers();
 
     const form = useForm<EditUserFormInputs>({
         resolver: zodResolver(editUserSchema),
@@ -52,7 +52,7 @@ export function UserEditDialog({ open, onDismiss }: UserEditDialogProps) {
         console.log("Form Data Submitted: ", data);
         setIsLoading(true);
         try {
-            await updateUser(selectedUser?.user.id!, {
+            await onUpdateUser(selectedUser?.user.id!, {
                 first_name: data.firstName,
                 last_name: data.lastName,
                 gender: data.gender

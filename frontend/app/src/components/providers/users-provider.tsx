@@ -16,17 +16,17 @@ type Action = {
 interface UsersProviderState {
     userResponse: IResponseData<UsersType>;
     refreshUsers: () => void;
-    createNewUser: (params: NewUser) => Promise<void>;
+    onCreateNewUser: (params: NewUser) => Promise<void>;
     loading: boolean;
     selectedUser?: Action;
-    selectUser: (action?: Action) => void;
-    updateUser: (userId: string, params: UserUpdate) => Promise<void>;
+    onSelectUser: (action?: Action) => void;
+    onUpdateUser: (userId: string, params: UserUpdate) => Promise<void>;
     onDeleteUser: () => Promise<void>;
 }
 
 const initialState: UsersProviderState = {
     refreshUsers: () => { },
-    createNewUser: async () => { },
+    onCreateNewUser: async () => { },
     loading: true,
     userResponse: {
         items: [],
@@ -38,11 +38,11 @@ const initialState: UsersProviderState = {
     },
     selectedUser: undefined,
     onDeleteUser: () => Promise.resolve(),
-    updateUser: (userId: string, params: UserUpdate) => {
+    onUpdateUser: (userId: string, params: UserUpdate) => {
         console.debug("Updating user:", userId, params);
         return Promise.resolve();
     },
-    selectUser: () => { }
+    onSelectUser: () => { }
 }
 
 const UsersContext = createContext<UsersProviderState>(initialState);
@@ -58,11 +58,13 @@ export function UsersProvider({ children }: UsersProviderProps) {
     const [userResponse, setUserResponse] = useState<IResponseData<UsersType>>(initialState.userResponse);
     const [selectedUser, setSelectedUser] = useState<Action | undefined>(initialState.selectedUser);
     const accessToken = getAccessToken();
-    const user = new ApiClient({
+    const apiClient = new ApiClient({
         HEADERS: {
             Authorization: `Bearer ${accessToken}`,
         },
-    }).users;
+    });
+    const user = apiClient.users;
+    const auth = apiClient.auth;
 
     async function fetchUsers() {
 
@@ -85,13 +87,13 @@ export function UsersProvider({ children }: UsersProviderProps) {
         });
     }
 
-    async function createNewUser(params: NewUser) {
+    async function onCreateNewUser(params: NewUser) {
         await user.createUserApiV1UsersPost({
             requestBody: params
         });
     }
 
-    async function updateUser(user_id: string, params: UserUpdate) {
+    async function onUpdateUser(user_id: string, params: UserUpdate) {
         await user.updateUserApiV1UsersUserIdPut({
             userId: user_id,
             requestBody: {
@@ -102,12 +104,28 @@ export function UsersProvider({ children }: UsersProviderProps) {
         });
     }
 
-    function selectUser(action?: Action) {
+    async function onSelectUser(action?: Action) {
         if (action?.type === 'resend_email') {
-            toast.success("User email resent successfully", {
-                richColors: true,
-                position: "top-center",
-            });
+            try {
+                await auth.resendActivationEmailApiV1AuthResendActivationEmailPost({
+                    requestBody: {
+                        email: action.user.email,
+                        id: action.user.id,
+                        first_name: action.user.first_name
+                    }
+                });
+                toast.success("User email resent successfully", {
+                    richColors: true,
+                    position: "top-center",
+                });
+            } catch (e) {
+                console.error("Failed to resend user email", e);
+                toast.error("Failed to resend user email", {
+                    richColors: true,
+                    position: "top-center",
+                });
+            }
+
         }
         setSelectedUser(action);
 
@@ -118,7 +136,7 @@ export function UsersProvider({ children }: UsersProviderProps) {
         await user.deleteUserApiV1UsersUserIdDelete({
             userId: selectedUser.user.id
         });
-        selectUser(undefined);
+        onSelectUser(undefined);
         toast.success("User deleted successfully", {
             richColors: true,
             position: "top-center",
@@ -137,10 +155,10 @@ export function UsersProvider({ children }: UsersProviderProps) {
                 userResponse,
                 selectedUser,
                 refreshUsers,
-                createNewUser,
-                selectUser,
+                onCreateNewUser,
+                onSelectUser,
                 loading: pending,
-                updateUser,
+                onUpdateUser,
                 onDeleteUser
             }}>
             {children}

@@ -7,7 +7,7 @@ import { UserEditDialog } from "@/components/features/users/user-edit-dialog";
 import { UserDeleteDialog } from "@/components/features/users/user-delete-dialog";
 
 export function Users() {
-    const { userResponse, refreshUsers, selectedUser, selectUser } = useUsers();
+    const { userResponse, refreshUsers, selectedUser, onSelectUser } = useUsers();
     const [isCreateNewUserDialogOpen, setIsCreateNewUserDialogOpen] = useState(false);
 
     const onCreateNewUserDismissHandler = () => {
@@ -16,7 +16,7 @@ export function Users() {
     }
 
     const onUserEditDismissHandler = () => {
-        selectUser();
+        onSelectUser();
         refreshUsers();
     }
     return (

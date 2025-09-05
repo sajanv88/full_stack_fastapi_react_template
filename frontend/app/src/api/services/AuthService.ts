@@ -6,6 +6,7 @@ import type { ActivationRequest } from '../models/ActivationRequest';
 import type { Body_login_api_v1_auth_login_post } from '../models/Body_login_api_v1_auth_login_post';
 import type { NewUser } from '../models/NewUser';
 import type { RefreshRequest } from '../models/RefreshRequest';
+import type { ResendActivationEmailRequest } from '../models/ResendActivationEmailRequest';
 import type { TokenSet } from '../models/TokenSet';
 import type { UserEmailUpdate } from '../models/UserEmailUpdate';
 import type { UserMeResponse } from '../models/UserMeResponse';
@@ -46,6 +47,26 @@ export class AuthService {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/auth/register',
+      body: requestBody,
+      mediaType: 'application/json',
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Resend Activation Email
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public resendActivationEmailApiV1AuthResendActivationEmailPost({
+    requestBody,
+  }: {
+    requestBody: ResendActivationEmailRequest,
+  }): CancelablePromise<any> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/api/v1/auth/resend_activation_email',
       body: requestBody,
       mediaType: 'application/json',
       errors: {

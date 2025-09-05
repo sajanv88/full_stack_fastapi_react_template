@@ -9,5 +9,6 @@ export type Role = {
   name: RoleType;
   description?: (string | null);
   permissions?: (Array<Permission> | null);
+  created_at: string;
 };
 
