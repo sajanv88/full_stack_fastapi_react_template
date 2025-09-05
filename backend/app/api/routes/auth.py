@@ -39,6 +39,7 @@ class UserMeResponse(BaseModel):
     role: Union[Role, None] = None
     is_active: bool = False
     activated_at: str | None = None
+    image_url: str | None = None
 
 class ResendActivationEmailRequest(BaseModel):
     email: str

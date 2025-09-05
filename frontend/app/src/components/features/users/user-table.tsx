@@ -52,6 +52,19 @@ const columns = [
             )
         }
     }),
+    columHelper.accessor("image_url", {
+        header: "Image",
+        cell: (c) => {
+            const fullName = c.row.original.first_name + ' ' + c.row.original.last_name;
+            return (
+                <img src={c.row.original.image_url ?? "https://github.com/evilrabbit.png"}
+                    onError={(e) => {
+                        e.currentTarget.src = "https://github.com/evilrabbit.png";
+                    }}
+                    alt={fullName} className="w-10 h-10 rounded-full" />
+            )
+        }
+    }),
     columHelper.accessor("first_name", {
         header: "First Name",
     }),

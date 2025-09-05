@@ -19,6 +19,7 @@ class User(BaseModel):
     is_active: bool
     activated_at: Optional[datetime] = None
     created_at: datetime
+    image_url: Optional[str] = None
 
 class NewUser(BaseModel):
     first_name: str

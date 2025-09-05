@@ -105,6 +105,7 @@ function DashboardSidebar() {
 
 export function DashboardLayout() {
     const auth = useAuthContext();
+    const userImage = auth.user?.image_url ? auth.user?.image_url : "https://github.com/evilrabbit.png";
     return (
         <div className="">
             <SidebarProvider>
@@ -114,7 +115,7 @@ export function DashboardLayout() {
                     <div className="flex-1 p-4">
                         <header className="flex items-center">
                             <Avatar>
-                                <AvatarImage src="https://github.com/evilrabbit.png" />
+                                <AvatarImage src={userImage} />
                                 <AvatarFallback>{auth.user?.first_name[0]}</AvatarFallback>
                             </Avatar>
                             <span className="ml-2 mr-auto flex-1 capitalize">

@@ -141,6 +141,7 @@ export function UsersProvider({ children }: UsersProviderProps) {
             richColors: true,
             position: "top-center",
         });
+        await refreshUsers();
     }
 
     useEffect(() => {

@@ -4,7 +4,8 @@ from contextlib import asynccontextmanager
 from fastapi.responses import FileResponse
 
 from app.api.routes import  users
-from app.core.db import ensure_indexes, seed_default_data
+from app.core.db import ensure_indexes
+from app.core.seeder import seed_default_data
 from app.api.routes import auth, role
 import os
 

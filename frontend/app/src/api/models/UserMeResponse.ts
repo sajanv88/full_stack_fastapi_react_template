@@ -12,5 +12,6 @@ export type UserMeResponse = {
   role?: (Role | null);
   is_active?: boolean;
   activated_at?: (string | null);
+  image_url?: (string | null);
 };
 

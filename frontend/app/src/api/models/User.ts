@@ -13,5 +13,6 @@ export type User = {
   is_active: boolean;
   activated_at?: (string | null);
   created_at: string;
+  image_url?: (string | null);
 };
 
