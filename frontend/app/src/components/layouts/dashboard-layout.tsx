@@ -20,6 +20,7 @@ import { clearAllTokens } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react"
 import { Logo } from "@/components/shared/logo";
+import { Toaster } from "sonner";
 
 const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
@@ -131,6 +132,8 @@ export function DashboardLayout() {
                                 </Alert>
                             )}
                             <Outlet />
+                            <Toaster />
+
                         </section>
                     </div>
                 </main>

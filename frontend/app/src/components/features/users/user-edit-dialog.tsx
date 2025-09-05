@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { DialogHeader, DialogFooter, Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { DialogHeader, DialogFooter, Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
     Form, FormField, FormLabel, FormControl, FormItem, FormMessage,
 } from "@/components/ui/form";
@@ -15,11 +15,8 @@ import { useUsers } from "@/components/providers/users-provider";
 
 
 
-const createUserSchema = z.object({
-    email: z.string().email({ message: "Invalid email address" }),
-    password: z.string().min(6).max(100).refine((val) => /[a-zA-Z]/.test(val), {
-        message: "Password must contain at least one letter",
-    }),
+const editUserSchema = z.object({
+
     firstName: z.string()
         .min(1, { message: "First name cannot be empty" })
         .trim(),
@@ -31,46 +28,38 @@ const createUserSchema = z.object({
     })
 });
 
-type CreateUserFormInputs = z.infer<typeof createUserSchema>;
+type EditUserFormInputs = z.infer<typeof editUserSchema>;
 
-interface CreateNewUserDialogProps {
+interface UserEditDialogProps {
     open: boolean;
     onDismiss: () => void;
 }
 
-export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProps) {
+export function UserEditDialog({ open, onDismiss }: UserEditDialogProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const { createNewUser } = useUsers();
+    const { updateUser, selectedUser } = useUsers();
 
-    const form = useForm<CreateUserFormInputs>({
-        resolver: zodResolver(createUserSchema),
+    const form = useForm<EditUserFormInputs>({
+        resolver: zodResolver(editUserSchema),
         defaultValues: {
-            firstName: "",
-            lastName: "",
-            email: "",
-            password: "",
-            gender: Gender.UNKNOWN,
+            firstName: selectedUser?.user.first_name || "",
+            lastName: selectedUser?.user.last_name || "",
+            gender: selectedUser?.user.gender || Gender.UNKNOWN,
         },
     });
 
-    const onSubmit = async (data: CreateUserFormInputs) => {
+    const onSubmit = async (data: EditUserFormInputs) => {
         console.log("Form Data Submitted: ", data);
         setIsLoading(true);
         try {
-            await createNewUser({
-                email: data.email,
-                password: data.password,
+            await updateUser(selectedUser?.user.id!, {
                 first_name: data.firstName,
                 last_name: data.lastName,
                 gender: data.gender
             });
-            toast.success("User created successfully! Please check your email for verification.", {
-                duration: 5000,
-                position: "top-center",
-                richColors: true,
-            });
+
             form.reset();
-            toast.success("User created successfully!", {
+            toast.success("User updated successfully!", {
                 duration: 5000,
                 position: "top-center",
                 richColors: true,
@@ -78,7 +67,7 @@ export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProp
             onDismiss();
 
         } catch (error) {
-            toast.error("User creation failed. Please try again.", {
+            toast.error("User update failed. Please try again.", {
                 duration: 5000,
                 position: "top-center",
                 richColors: true,
@@ -99,10 +88,8 @@ export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProp
         <Dialog open={open} onOpenChange={onDismissDialog} modal>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create New User</DialogTitle>
-                    <DialogDescription>
-                        Fill in the details to create a new user account.
-                    </DialogDescription>
+                    <DialogTitle>Edit New User</DialogTitle>
+
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -146,25 +133,7 @@ export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProp
                             )}
                         />
 
-                        {/* Email */}
-                        <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="email"
-                                            placeholder="Enter your email"
-                                            disabled={isLoading}
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+
 
                         {/* Gender */}
                         <FormField
@@ -193,30 +162,12 @@ export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProp
                             )}
                         />
 
-                        {/* Password */}
-                        <FormField
-                            control={form.control}
-                            name="password"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Password</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="password"
-                                            placeholder="Enter your password"
-                                            disabled={isLoading}
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+
 
                         <DialogFooter>
 
                             <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading ? "Creating User..." : "Create New User"}
+                                {isLoading ? "Updating User..." : "Update User"}
                             </Button>
                         </DialogFooter>
                     </form>

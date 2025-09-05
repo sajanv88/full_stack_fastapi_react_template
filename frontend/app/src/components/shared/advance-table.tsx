@@ -26,7 +26,7 @@ import {
     ArrowLeftIcon,
     ArrowRightIcon
 } from "lucide-react";
-import { useNavigate, useLocation } from "react-router";
+import { useSearchParams } from "react-router";
 import { cn } from "@/lib/utils";
 import type { IResponseData } from "./iresponse-data.inteface";
 
@@ -43,8 +43,8 @@ export default function AdvanceTable<T>({
     columns,
     hasBottomBorder,
 }: Props<T>) {
-    const { search } = useLocation();
-    const searchParams = new URLSearchParams(search);
+
+    const [searchParams, setSearchParams] = useSearchParams();
     const currentPage = useMemo(
         () => Number(searchParams.get("skip")),
         [searchParams],
@@ -56,7 +56,6 @@ export default function AdvanceTable<T>({
 
     const limit = pageLimit === 0 ? DEFAULT_PAGE_LIMIT : pageLimit;
 
-    const navigate = useNavigate();
     const { items, total } = data;
     const totalPage = Math.ceil(total / limit);
     const [pagination, setPagination] = useState<{
@@ -80,10 +79,7 @@ export default function AdvanceTable<T>({
 
     useEffect(() => {
         if (pagination.pageIndex !== Number(currentPage)) {
-            const url = new URLSearchParams(window.location.search);
-            url.set("skip", pagination.pageIndex.toString());
-            const newUrl = `?${url.toString()}`
-            navigate(newUrl);
+            setSearchParams({ 'skip': pagination.pageIndex.toString(), 'limit': limit.toString() });
         }
     }, [pagination.pageIndex]);
 

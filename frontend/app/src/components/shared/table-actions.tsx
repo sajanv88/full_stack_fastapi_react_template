@@ -10,7 +10,7 @@ import {
 import { CogIcon } from 'lucide-react'
 import { useAuthContext } from "@/components/providers/auth-provider";
 
-type ActionOption<D> = {
+export type ActionOption<D> = {
     label: string;
     data: D;
     onClick: (value: D) => void;
