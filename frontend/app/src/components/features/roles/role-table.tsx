@@ -95,9 +95,10 @@ const columns = [
 
 interface RoleTableProps {
     roleResponse: IResponseData<RolesType>;
+    loading?: boolean;
 }
-export function RoleTable({ roleResponse }: RoleTableProps) {
+export function RoleTable({ roleResponse, loading }: RoleTableProps) {
     return (
-        <AdvanceTable<RolesType> data={roleResponse} columns={columns} />
+        <AdvanceTable<RolesType> data={roleResponse} columns={columns} loading={loading} />
     );
 }

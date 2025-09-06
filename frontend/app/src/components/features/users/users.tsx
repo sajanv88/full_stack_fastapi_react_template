@@ -5,11 +5,16 @@ import { useState } from "react";
 import { useUsers } from "@/components/providers/users-provider";
 import { UserEditDialog } from "@/components/features/users/user-edit-dialog";
 import { UserDeleteDialog } from "@/components/features/users/user-delete-dialog";
+import { useAuthContext } from "@/components/providers/auth-provider";
 
 export function Users() {
-    const { userResponse, refreshUsers, selectedUser, onSelectUser } = useUsers();
+    const { userResponse, refreshUsers, selectedUser, onSelectUser, loading } = useUsers();
     const [isCreateNewUserDialogOpen, setIsCreateNewUserDialogOpen] = useState(false);
+    const { can } = useAuthContext();
+    const isAdmin = can("full:access");
+    const isUserManager = can("user:read_and_write_only");
 
+    const disableCreateNewRoleBtn = !isAdmin && !isUserManager;
     const onCreateNewUserDismissHandler = () => {
         refreshUsers();
         setIsCreateNewUserDialogOpen(false);
@@ -21,11 +26,15 @@ export function Users() {
     }
     return (
         <section>
-            <PageHeader title="Users" subtitle="Manage your users" cta={{ label: "Add User", onClick: () => setIsCreateNewUserDialogOpen(true) }} />
+            <PageHeader title="Users" subtitle="Manage your users" cta={{
+                label: "Add User",
+                onClick: () => setIsCreateNewUserDialogOpen(true),
+                disabled: disableCreateNewRoleBtn
+            }} />
             <CreateNewUserDialog open={isCreateNewUserDialogOpen} onDismiss={onCreateNewUserDismissHandler} />
             {selectedUser?.type === 'edit' && <UserEditDialog open={true} onDismiss={onUserEditDismissHandler} />}
             {selectedUser?.type === 'delete' && <UserDeleteDialog open={true} onDismiss={onUserEditDismissHandler} />}
-            {userResponse && <UserTable userResponse={userResponse} />}
+            {userResponse && <UserTable userResponse={userResponse} loading={loading} />}
         </section>
     );
 }

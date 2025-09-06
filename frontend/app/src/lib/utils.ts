@@ -10,6 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 export function storeTokenSet(tokenSet: TokenSet) {
   sessionStorage.setItem("access_token", tokenSet.access_token);
   localStorage.setItem("refresh_token", tokenSet.refresh_token);
+  localStorage.setItem("refresh_token_expires_at", tokenSet.refresh_token_expires_in?.toString() || "");
   sessionStorage.setItem("logged_in", "true");
 
 }
@@ -33,4 +34,30 @@ export function clearIsLoggedIn() {
 export function clearAllTokens() {
   sessionStorage.clear();
   localStorage.removeItem("refresh_token");
+  localStorage.removeItem("refresh_token_expires_at");
+}
+
+
+export function scheduleTokenRefresh(cb: () => Promise<void>) {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    console.error("No refresh token available");
+    return;
+  }
+
+  const refreshTokenExpiresAt = localStorage.getItem("refresh_token_expires_at");
+  if (!refreshTokenExpiresAt) {
+    console.error("No refresh token expiry available");
+    return;
+  }
+  const expiry = parseInt(refreshTokenExpiresAt) * 1000; // exp is in seconds, convert to ms
+
+  const refreshTime = expiry - Date.now() - (5 * 60 * 1000);
+  if (refreshTime > 0) {
+    setTimeout(async () => {
+      console.log("⏰ Refreshing token...");
+      await cb();
+    }, refreshTime);
+  }
+
 }

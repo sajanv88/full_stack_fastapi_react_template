@@ -118,8 +118,13 @@ export function DashboardLayout() {
                                 <AvatarImage src={userImage} />
                                 <AvatarFallback>{auth.user?.first_name[0]}</AvatarFallback>
                             </Avatar>
-                            <span className="ml-2 mr-auto flex-1 capitalize">
+                            <span className="ml-2 mr-auto flex-1 capitalize flex flex-col">
                                 Welcome {auth.user?.last_name} | Your role: {auth.user?.role?.name}
+                                <em className="text-xs text-muted-foreground">
+                                    {auth.user?.role?.name === "guest" && "You are currently a guest user. So, you can only view read-only content."}
+                                    {auth.user?.role?.name === "user" && "You are currently a regular user. So, you can view and edit your own content. Sometimes, edit others if you have permission."}
+                                    {auth.user?.role?.name === "admin" && "You are currently an admin user. So, you have full access to all resources."}
+                                </em>
                             </span>
                             <DarkMode />
                         </header>

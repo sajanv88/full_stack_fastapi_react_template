@@ -10,7 +10,8 @@ from typing import Annotated
 from app.api.routes.auth import get_current_user
 from app.core.smtp_email import send_activation_email, ActivationEmailSchema
 from app.core.password import get_password_hash
-from app.core.role_checker import  read_write_resource, user_assign_or_remove_role_resource
+from app.core.role_checker import  create_permission_checker
+from app.core.permission import Permission
 from app.models.role import RoleType
 
 router = APIRouter(prefix="/users")
@@ -36,7 +37,9 @@ class UserRoleUpdateRequest(BaseModel):
 @router.get("/", response_model=UserListResponse)
 async def get_users(
     current_user: Annotated[User, Depends(get_current_user)],
-    skip: int = 0, limit: int = 10):
+    skip: int = 0, limit: int = 10,
+    _: bool = Depends(create_permission_checker([Permission.USER_VIEW_ONLY]))
+):
     users_cursor = user_collection.find().skip(skip).limit(limit)
     users_data = list_users(await users_cursor.to_list(length=limit))
     total = await user_collection.count_documents({})
@@ -64,7 +67,7 @@ async def create_user(
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks,
     user: NewUser,
-    _: bool = Depends(read_write_resource)):
+    _: bool = Depends(create_permission_checker([Permission.USER_READ_AND_WRITE_ONLY]))):
     try:
         # Hash the password
         hashed_password = get_password_hash(user.password)
@@ -113,7 +116,12 @@ async def create_user(
 @router.get("/{user_id}", response_model=User)
 async def get_user(
     current_user: Annotated[User, Depends(get_current_user)],
-    user_id: str):
+    user_id: str,
+    _: bool = Depends(create_permission_checker([
+        Permission.USER_VIEW_ONLY, 
+        Permission.USER_SELF_READ_AND_WRITE_ONLY
+    ]))
+):
     user = await user_collection.find_one({"_id": ObjectId(user_id)})
     if user:
         return seralize_user_schema(user)
@@ -127,7 +135,8 @@ async def get_user(
 async def delete_user(
     current_user: Annotated[User, Depends(get_current_user)],
     user_id: str,
-    _: bool = Depends(read_write_resource)):
+    _: bool = Depends(create_permission_checker([Permission.FULL_ACCESS, Permission.USER_DELETE_ONLY]))):
+
     result = await user_collection.delete_one({"_id": ObjectId(user_id)})
     if result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -142,7 +151,7 @@ async def update_user(
     current_user: Annotated[User, Depends(get_current_user)],
     user: UserUpdate,
     user_id: str,
-    _: bool = Depends(read_write_resource)):
+    _: bool = Depends(create_permission_checker([Permission.USER_SELF_READ_AND_WRITE_ONLY],any_permission=False, allow_self_access=True))):
     result = await user_collection.update_one(
         {"_id": ObjectId(user_id)},
         {"$set": {
@@ -165,7 +174,7 @@ async def update_user(
 async def patch_user(
     current_user: Annotated[User, Depends(get_current_user)],
     user_id: str, role_update: UserRoleUpdateRequest,
-    _: bool = Depends(user_assign_or_remove_role_resource)):
+    _: bool = Depends(create_permission_checker([Permission.USER_ROLE_ASSIGN_OR_REMOVE_ONLY]))):
     user = await user_collection.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(
@@ -197,7 +206,7 @@ async def remove_user_role(
     current_user: Annotated[User, Depends(get_current_user)],
     user_id: str,
     role_update: UserRoleUpdateRequest,
-    _: bool = Depends(user_assign_or_remove_role_resource)):
+    _: bool = Depends(create_permission_checker([Permission.USER_ROLE_ASSIGN_OR_REMOVE_ONLY]))):
     user = await user_collection.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(
@@ -210,3 +219,4 @@ async def remove_user_role(
     
     user = await user_collection.find_one({"_id": ObjectId(user_id)})
     return seralize_user_schema(user)
+

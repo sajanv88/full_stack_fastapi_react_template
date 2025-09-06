@@ -6,6 +6,7 @@ interface PageHeaderProps {
     cta?: {
         label: string;
         onClick: () => void;
+        disabled?: boolean;
     };
 }
 export function PageHeader({ title, subtitle, cta }: PageHeaderProps) {
@@ -15,7 +16,7 @@ export function PageHeader({ title, subtitle, cta }: PageHeaderProps) {
                 <h1 className="text-2xl font-bold">{title}</h1>
                 {subtitle && <h2 className="text-sm text-muted-foreground">{subtitle}</h2>}
             </div>
-            {cta && <Button onClick={cta.onClick}>{cta.label}</Button>}
+            {cta && <Button onClick={cta.onClick} disabled={cta.disabled}>{cta.label}</Button>}
         </header>
     );
 }

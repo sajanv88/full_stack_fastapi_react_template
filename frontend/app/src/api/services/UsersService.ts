@@ -19,9 +19,11 @@ export class UsersService {
   public getUsersApiV1UsersGet({
     skip,
     limit = 10,
+    resourceId,
   }: {
     skip?: number,
     limit?: number,
+    resourceId?: string,
   }): CancelablePromise<UserListResponse> {
     return this.httpRequest.request({
       method: 'GET',
@@ -29,6 +31,7 @@ export class UsersService {
       query: {
         'skip': skip,
         'limit': limit,
+        'resource_id': resourceId,
       },
       errors: {
         422: `Validation Error`,
@@ -42,12 +45,17 @@ export class UsersService {
    */
   public createUserApiV1UsersPost({
     requestBody,
+    resourceId,
   }: {
     requestBody: NewUser,
+    resourceId?: string,
   }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/users/',
+      query: {
+        'resource_id': resourceId,
+      },
       body: requestBody,
       mediaType: 'application/json',
       errors: {
@@ -62,14 +70,19 @@ export class UsersService {
    */
   public getUserApiV1UsersUserIdGet({
     userId,
+    resourceId,
   }: {
     userId: string,
+    resourceId?: string,
   }): CancelablePromise<User> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/users/{user_id}',
       path: {
         'user_id': userId,
+      },
+      query: {
+        'resource_id': resourceId,
       },
       errors: {
         422: `Validation Error`,
@@ -83,14 +96,19 @@ export class UsersService {
    */
   public deleteUserApiV1UsersUserIdDelete({
     userId,
+    resourceId,
   }: {
     userId: string,
+    resourceId?: string,
   }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'DELETE',
       url: '/api/v1/users/{user_id}',
       path: {
         'user_id': userId,
+      },
+      query: {
+        'resource_id': resourceId,
       },
       errors: {
         422: `Validation Error`,
@@ -105,15 +123,20 @@ export class UsersService {
   public updateUserApiV1UsersUserIdPut({
     userId,
     requestBody,
+    resourceId,
   }: {
     userId: string,
     requestBody: UserUpdate,
+    resourceId?: string,
   }): CancelablePromise<User> {
     return this.httpRequest.request({
       method: 'PUT',
       url: '/api/v1/users/{user_id}',
       path: {
         'user_id': userId,
+      },
+      query: {
+        'resource_id': resourceId,
       },
       body: requestBody,
       mediaType: 'application/json',
@@ -130,15 +153,20 @@ export class UsersService {
   public patchUserApiV1UsersUserIdAssignRolePatch({
     userId,
     requestBody,
+    resourceId,
   }: {
     userId: string,
     requestBody: UserRoleUpdateRequest,
+    resourceId?: string,
   }): CancelablePromise<User> {
     return this.httpRequest.request({
       method: 'PATCH',
       url: '/api/v1/users/{user_id}/assign_role',
       path: {
         'user_id': userId,
+      },
+      query: {
+        'resource_id': resourceId,
       },
       body: requestBody,
       mediaType: 'application/json',
@@ -155,15 +183,20 @@ export class UsersService {
   public removeUserRoleApiV1UsersUserIdRemoveRolePatch({
     userId,
     requestBody,
+    resourceId,
   }: {
     userId: string,
     requestBody: UserRoleUpdateRequest,
+    resourceId?: string,
   }): CancelablePromise<User> {
     return this.httpRequest.request({
       method: 'PATCH',
       url: '/api/v1/users/{user_id}/remove_role',
       path: {
         'user_id': userId,
+      },
+      query: {
+        'resource_id': resourceId,
       },
       body: requestBody,
       mediaType: 'application/json',

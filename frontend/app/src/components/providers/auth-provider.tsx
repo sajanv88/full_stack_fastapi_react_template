@@ -1,5 +1,5 @@
 import { ApiClient, Permission, type UserMeResponse } from "@/api";
-import { clearAllTokens, clearIsLoggedIn, getAccessToken, getRefreshToken, isLoggedIn, storeTokenSet } from "@/lib/utils";
+import { clearAllTokens, clearIsLoggedIn, getAccessToken, getRefreshToken, isLoggedIn, scheduleTokenRefresh, storeTokenSet } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
 import { useNavigate } from "react-router";
 
@@ -25,6 +25,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const navigate = useNavigate();
     useEffect(() => {
+        async function refreshToken() {
+            const accessToken = getAccessToken()
+            const auth = new ApiClient({
+                HEADERS: {
+                    "Authorization": `Bearer ${accessToken}`
+                }
+            }).auth;
+            const refreshToken = getRefreshToken()
+            clearIsLoggedIn();
+            if (!refreshToken) {
+                console.error("No refresh token available");
+                clearAllTokens();
+                navigate("/login");
+                return;
+            }
+
+            try {
+                const authWithRefresh = await auth.refreshTokenApiV1AuthRefreshPost({
+                    requestBody: {
+                        refresh_token: refreshToken
+                    }
+
+                })
+                storeTokenSet(authWithRefresh)
+                await fetchUser();
+            } catch (error) {
+                console.error("Failed to refresh token:", error);
+                clearAllTokens();
+                navigate("/login");
+            }
+        }
         const fetchUser = async () => {
             const accessToken = getAccessToken()
             const auth = new ApiClient({
@@ -46,33 +77,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
                 navigate("/dashboard");
             } catch (error) {
-                const refreshToken = getRefreshToken()
-                clearIsLoggedIn();
-                if (!refreshToken) {
-                    console.error("No refresh token available");
-                    clearAllTokens();
-                    navigate("/login");
-                    return;
-                }
-
-                try {
-                    const authWithRefresh = await auth.refreshTokenApiV1AuthRefreshPost({
-                        requestBody: {
-                            refresh_token: refreshToken
-                        }
-
-                    })
-                    storeTokenSet(authWithRefresh)
-                    await fetchUser();
-                } catch (error) {
-                    console.error("Failed to refresh token:", error);
-                    clearAllTokens();
-                    navigate("/login");
-                }
+                await refreshToken();
             }
 
         };
         fetchUser();
+        scheduleTokenRefresh(refreshToken);
     }, []);
 
     return (

@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { ApiClient, DashboardMetrics } from "@/api";
 import { getAccessToken } from "@/lib/utils";
+import { Loading } from "@/components/shared/loading";
 
 
 
@@ -29,8 +30,16 @@ export function Dashboard() {
                 }
             }).dashboard
 
-            const metrics = await apiClient.getDashboardMetricsApiV1DashboardGet({ filter })
-            setData(metrics);
+            try {
+                const metrics = await apiClient.getDashboardMetricsApiV1DashboardGet({ filter })
+                setData(metrics);
+            } catch (error) {
+                if (error instanceof Error) {
+                    console.error("Error fetching dashboard metrics:", error.cause);
+                    window.location.reload();
+                }
+            }
+
         }
         fetchData();
     }, [filter])
@@ -85,7 +94,7 @@ export function Dashboard() {
                         </div>
                     </div>
                 ) : (
-                    <p>Loading...</p>
+                    <Loading variant="dots" size="md" text="Fetching Metrics..." />
                 )}
             </CardContent>
         </Card>

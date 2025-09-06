@@ -37,6 +37,7 @@ export function CreateNewRoleDialog({ open, onDismiss }: CreateNewRoleDialogProp
     const [isLoading, setIsLoading] = useState(false);
     const { onCreateNewRole } = useRoles();
 
+
     const form = useForm<CreateNewRoleFormInputs>({
         resolver: zodResolver(createNewRoleSchema),
         defaultValues: {
@@ -46,7 +47,6 @@ export function CreateNewRoleDialog({ open, onDismiss }: CreateNewRoleDialogProp
     });
 
     const onSubmit = async (data: CreateNewRoleFormInputs) => {
-        console.log("Form Data Submitted: ", data);
         setIsLoading(true);
         try {
             await onCreateNewRole({

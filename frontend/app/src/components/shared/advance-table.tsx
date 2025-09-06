@@ -29,11 +29,13 @@ import {
 import { useSearchParams } from "react-router";
 import { cn } from "@/lib/utils";
 import type { IResponseData } from "./iresponse-data.inteface";
+import { Loading } from "./loading";
 
 interface Props<T> {
     data: IResponseData<T>;
     columns: ColumnDef<T, any>[];
     hasBottomBorder?: boolean;
+    loading?: boolean;
 }
 
 const DEFAULT_PAGE_LIMIT = 10;
@@ -42,6 +44,7 @@ export default function AdvanceTable<T>({
     data,
     columns,
     hasBottomBorder,
+    loading
 }: Props<T>) {
 
     const [searchParams, setSearchParams] = useSearchParams();
@@ -85,10 +88,17 @@ export default function AdvanceTable<T>({
 
     const showPagination = items.length < total;
     const renderEmptyState = () => {
-        if (items.length === 0 && total === 0) {
+        if (items.length === 0 && total === 0 && !loading) {
             return (
                 <div className="grid place-items-center place-content-center h-40">
                     No Records
+                </div>
+            );
+        }
+        if (loading) {
+            return (
+                <div className="grid place-items-center place-content-center h-40">
+                    <Loading variant="dots" size="md" text="Loading data..." />
                 </div>
             );
         }
@@ -122,6 +132,7 @@ export default function AdvanceTable<T>({
                 </TableHeader>
                 <TableBody>
                     {table.getRowModel().rows.map((row) => {
+                        if (loading) return null;
                         return (
                             <TableRow
                                 key={row.id}

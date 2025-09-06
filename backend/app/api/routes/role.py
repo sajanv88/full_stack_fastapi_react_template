@@ -9,7 +9,7 @@ from app.schemas.role_schema import list_roles, serialize_role_schema
 from bson import ObjectId
 from typing import Annotated
 from app.api.routes.auth import get_current_user
-from app.core.role_checker import  read_write_resource
+from app.core.role_checker import  create_permission_checker
 from app.core.permission import Permission
 
 router = APIRouter(prefix="/roles")
@@ -32,7 +32,8 @@ class RoleListResponse(BaseModel):
 @router.get("/", response_model=RoleListResponse)
 async def get_roles(
     current_user: Annotated[User, Depends(get_current_user)],
-    skip: int = 0, limit: int = 10
+    skip: int = 0, limit: int = 10,
+    _: bool = Depends(create_permission_checker([Permission.ROLE_VIEW_ONLY]))
 ):
     roles_cursor = role_collection.find().skip(skip).limit(limit)
     roles_data = list_roles(await roles_cursor.to_list(length=limit))
@@ -60,7 +61,7 @@ async def get_roles(
 async def create_role(
     current_user: Annotated[User, Depends(get_current_user)],
     role: NewRole,
-    _: bool = Depends(read_write_resource)
+    _: bool = Depends(create_permission_checker([Permission.ROLE_READ_AND_WRITE_ONLY]))
 ):
     try:
         result = await role_collection.insert_one({
@@ -80,8 +81,8 @@ async def create_role(
 @router.get("/{role_id}", response_model=Role)
 async def get_role( 
     current_user: Annotated[User, Depends(get_current_user)],
-    role_id: str
-
+    role_id: str,
+    _: bool = Depends(create_permission_checker([Permission.ROLE_VIEW_ONLY]))
 ):
     role = await role_collection.find_one({"_id": ObjectId(role_id)})
     if role:
@@ -94,8 +95,7 @@ async def get_role(
 async def delete_role(
     current_user: Annotated[User, Depends(get_current_user)],
     role_id: str,
-    _: bool = Depends(read_write_resource)
-
+    _: bool = Depends(create_permission_checker([Permission.ROLE_DELETE_ONLY]))
 ):
     result = await role_collection.delete_one({"_id": ObjectId(role_id)})
     if result.deleted_count == 1:
@@ -109,7 +109,7 @@ async def update_role(
     current_user: Annotated[User, Depends(get_current_user)],
     role_id: str,
     role:  NewRole,
-    _: bool = Depends(read_write_resource)
+    _: bool = Depends(create_permission_checker([Permission.ROLE_READ_AND_WRITE_ONLY]))
 ):
     update_data = {k: v for k, v in role.model_dump().items() if v is not None}
     print("Updating role:", role_id, "with data:", update_data)

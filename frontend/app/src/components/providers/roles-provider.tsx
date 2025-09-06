@@ -23,6 +23,7 @@ interface RolesProviderState {
     onSelectRole: (action?: Action) => void;
     onUpdateRole: (roleId: string, params: NewRole) => Promise<void>;
     onDeleteRole: () => Promise<void>;
+    error: string | null
 }
 
 const initialState: RolesProviderState = {
@@ -43,7 +44,8 @@ const initialState: RolesProviderState = {
         console.debug("Updating role:", roleId, params);
         return Promise.resolve();
     },
-    onSelectRole: () => { }
+    onSelectRole: () => { },
+    error: null
 }
 
 const RolesContext = createContext<RolesProviderState>(initialState);
@@ -53,7 +55,8 @@ interface RolesProviderProps {
 }
 export function RolesProvider({ children }: RolesProviderProps) {
     const [searchParams] = useSearchParams();
-    const [pending, startTransition] = useTransition();
+    const [pending, setPending] = useState(true);
+    const [roleError, setRoleError] = useState<string | null>(null);
 
     const [roleResponse, setRoleResponse] = useState<IResponseData<RolesType>>(initialState.roleResponse);
     const [selectedRole, setSelectedRole] = useState<Action | undefined>(initialState.selectedRole);
@@ -69,21 +72,32 @@ export function RolesProvider({ children }: RolesProviderProps) {
 
         const skip = searchParams.get("skip");
         const limit = searchParams.get("limit");
-        const roles = await role.getRolesApiV1RolesGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
-        setRoleResponse({
-            items: roles.data.roles,
-            hasNext: roles.data.hasNext,
-            total: roles.data.total,
-            hasPrevious: roles.data.hasPrevious,
-            limit: roles.data.limit,
-            skip: roles.data.skip,
-        });
+        try {
+            const roles = await role.getRolesApiV1RolesGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
+            setRoleResponse({
+                items: roles.data.roles,
+                hasNext: roles.data.hasNext,
+                total: roles.data.total,
+                hasPrevious: roles.data.hasPrevious,
+                limit: roles.data.limit,
+                skip: roles.data.skip,
+            });
+        } catch (error) {
+            console.error("Error fetching roles:", error);
+            if (error instanceof Error) {
+                setRoleError(error.message);
+            } else {
+                setRoleError("Failed to fetch roles");
+            }
+
+        }
+
     }
 
     async function refreshRoles() {
-        startTransition(() => {
-            fetchRoles();
-        });
+        setPending(true);
+        await fetchRoles();
+        setPending(false);
     }
 
     async function onCreateNewRole(params: NewRole) {
@@ -147,9 +161,7 @@ export function RolesProvider({ children }: RolesProviderProps) {
     }
 
     useEffect(() => {
-        startTransition(() => {
-            fetchRoles();
-        });
+        refreshRoles();
     }, [searchParams]);
 
     return (
@@ -162,7 +174,8 @@ export function RolesProvider({ children }: RolesProviderProps) {
                 onSelectRole,
                 loading: pending,
                 onUpdateRole,
-                onDeleteRole
+                onDeleteRole,
+                error: roleError
             }}>
             {children}
         </RolesContext.Provider>

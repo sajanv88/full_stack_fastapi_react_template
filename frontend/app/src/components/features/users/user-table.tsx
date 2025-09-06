@@ -84,9 +84,10 @@ const columns = [
 
 interface UserTableProps {
     userResponse: IResponseData<UsersType>;
+    loading?: boolean;
 }
-export function UserTable({ userResponse }: UserTableProps) {
+export function UserTable({ userResponse, loading }: UserTableProps) {
     return (
-        <AdvanceTable<UsersType> data={userResponse} columns={columns} />
+        <AdvanceTable<UsersType> data={userResponse} columns={columns} loading={loading} />
     );
 }

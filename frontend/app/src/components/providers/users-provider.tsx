@@ -53,8 +53,7 @@ interface UsersProviderProps {
 
 export function UsersProvider({ children }: UsersProviderProps) {
     const [searchParams] = useSearchParams();
-    const [pending, startTransition] = useTransition();
-
+    const [pending, setPending] = useState(true);
     const [userResponse, setUserResponse] = useState<IResponseData<UsersType>>(initialState.userResponse);
     const [selectedUser, setSelectedUser] = useState<Action | undefined>(initialState.selectedUser);
     const accessToken = getAccessToken();
@@ -82,9 +81,9 @@ export function UsersProvider({ children }: UsersProviderProps) {
     }
 
     async function refreshUsers() {
-        startTransition(() => {
-            fetchUsers();
-        });
+        setPending(true);
+        await fetchUsers();
+        setPending(false);
     }
 
     async function onCreateNewUser(params: NewUser) {
@@ -153,9 +152,7 @@ export function UsersProvider({ children }: UsersProviderProps) {
     }
 
     useEffect(() => {
-        startTransition(() => {
-            fetchUsers();
-        });
+        refreshUsers();
     }, [searchParams]);
 
     return (
