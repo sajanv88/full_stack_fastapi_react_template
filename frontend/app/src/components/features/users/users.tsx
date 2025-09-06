@@ -6,9 +6,12 @@ import { useUsers } from "@/components/providers/users-provider";
 import { UserEditDialog } from "@/components/features/users/user-edit-dialog";
 import { UserDeleteDialog } from "@/components/features/users/user-delete-dialog";
 import { useAuthContext } from "@/components/providers/auth-provider";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from 'lucide-react'
+
 
 export function Users() {
-    const { userResponse, refreshUsers, selectedUser, onSelectUser, loading } = useUsers();
+    const { userResponse, refreshUsers, selectedUser, onSelectUser, loading, userError } = useUsers();
     const [isCreateNewUserDialogOpen, setIsCreateNewUserDialogOpen] = useState(false);
     const { can } = useAuthContext();
     const isAdmin = can("full:access");
@@ -35,6 +38,15 @@ export function Users() {
             {selectedUser?.type === 'edit' && <UserEditDialog open={true} onDismiss={onUserEditDismissHandler} />}
             {selectedUser?.type === 'delete' && <UserDeleteDialog open={true} onDismiss={onUserEditDismissHandler} />}
             {userResponse && <UserTable userResponse={userResponse} loading={loading} />}
+            {userError && (
+                <Alert variant="destructive">
+                    <InfoIcon className="h-4 w-4" />
+                    <AlertTitle>Attention</AlertTitle>
+                    <AlertDescription>
+                        There was an error loading users status: {userError}
+                    </AlertDescription>
+                </Alert>
+            )}
         </section>
     );
 }

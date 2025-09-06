@@ -22,6 +22,7 @@ interface UsersProviderState {
     onSelectUser: (action?: Action) => void;
     onUpdateUser: (userId: string, params: UserUpdate) => Promise<void>;
     onDeleteUser: () => Promise<void>;
+    userError: string | null;
 }
 
 const initialState: UsersProviderState = {
@@ -36,6 +37,7 @@ const initialState: UsersProviderState = {
         limit: 0,
         skip: 0
     },
+    userError: null,
     selectedUser: undefined,
     onDeleteUser: () => Promise.resolve(),
     onUpdateUser: (userId: string, params: UserUpdate) => {
@@ -54,6 +56,7 @@ interface UsersProviderProps {
 export function UsersProvider({ children }: UsersProviderProps) {
     const [searchParams] = useSearchParams();
     const [pending, setPending] = useState(true);
+    const [userError, setUserError] = useState<string | null>(null);
     const [userResponse, setUserResponse] = useState<IResponseData<UsersType>>(initialState.userResponse);
     const [selectedUser, setSelectedUser] = useState<Action | undefined>(initialState.selectedUser);
     const accessToken = getAccessToken();
@@ -69,15 +72,25 @@ export function UsersProvider({ children }: UsersProviderProps) {
 
         const skip = searchParams.get("skip");
         const limit = searchParams.get("limit");
-        const users = await user.getUsersApiV1UsersGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
-        setUserResponse({
-            items: users.data.users,
-            hasNext: users.data.hasNext,
-            total: users.data.total,
-            hasPrevious: users.data.hasPrevious,
-            limit: users.data.limit,
-            skip: users.data.skip,
-        });
+        try {
+            const users = await user.getUsersApiV1UsersGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
+            setUserResponse({
+                items: users.data.users,
+                hasNext: users.data.hasNext,
+                total: users.data.total,
+                hasPrevious: users.data.hasPrevious,
+                limit: users.data.limit,
+                skip: users.data.skip,
+            });
+        } catch (error) {
+            console.error("Failed to fetch users:", error);
+            if (error instanceof Error) {
+                setUserError(error.message);
+            } else {
+                setUserError("Failed to fetch users");
+            }
+        }
+
     }
 
     async function refreshUsers() {
@@ -165,7 +178,8 @@ export function UsersProvider({ children }: UsersProviderProps) {
                 onSelectUser,
                 loading: pending,
                 onUpdateUser,
-                onDeleteUser
+                onDeleteUser,
+                userError
             }}>
             {children}
         </UsersContext.Provider>
