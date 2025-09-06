@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { InfoIcon, Brain, Cpu, Zap, Sparkles } from 'lucide-react'
 
 interface ListLocalAIModelsProps {
