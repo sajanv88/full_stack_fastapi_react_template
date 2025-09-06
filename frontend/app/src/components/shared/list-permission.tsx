@@ -1,7 +1,7 @@
 import { ApiClient, PermissionBase } from "@/api";
 import { getAccessToken } from "@/lib/utils";
 import { useEffect, useState, useTransition } from "react";
-import { CheckIcon, ChevronsUpDownIcon, InfoIcon, XIcon } from "lucide-react"
+import { CheckIcon, ChevronsUpDownIcon, InfoIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
