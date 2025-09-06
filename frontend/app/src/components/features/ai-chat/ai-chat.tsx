@@ -4,10 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
 import { Loading } from '@/components/shared/loading'
 import { cn, getAccessToken } from '@/lib/utils'
 import { Send, Bot, User, Sparkles, Copy, RefreshCw, Trash2 } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
+import { ListLocalAIModels } from '@/components/shared/list-local-ai-models'
+import { AIRequest, ModelsResponse } from '@/api'
 
 interface Message {
     id: string
@@ -30,6 +33,7 @@ export function AIChat() {
         isLoading: false,
         error: null
     })
+    const [selectedModel, setSelectedModel] = useState<ModelsResponse>()
     const [input, setInput] = useState('')
     const scrollAreaRef = useRef<HTMLDivElement>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -108,14 +112,20 @@ export function AIChat() {
 
         try {
             const accessToken = getAccessToken();
+
+            const payload: AIRequest = {
+                question: userMessage.content,
+                model_name: selectedModel?.name
+            }
             const response = await fetch('/api/v1/ai/ask', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${accessToken}`
                 },
-                body: JSON.stringify({ question: userMessage.content })
+                body: JSON.stringify(payload)
             })
+            if (!response.ok) throw new Error(response.statusText + " Check if you have selected AI Model.")
             if (!response.body) throw new Error('No response body.')
 
             const reader = response.body.getReader()
@@ -210,50 +220,77 @@ export function AIChat() {
                             </div>
                             <div className="min-w-0 flex-1">
                                 <h1 className="text-lg sm:text-2xl font-bold truncate">AI Assistant</h1>
-                                <p className="text-muted-foreground text-sm sm:text-base hidden sm:block">
-                                    Chat with our intelligent AI assistant
-                                </p>
+                                <div className="flex items-center space-x-2">
+                                    <p className="text-muted-foreground text-sm sm:text-base hidden sm:block">
+                                        Chat with our intelligent AI assistant
+                                    </p>
+
+                                </div>
+                                {selectedModel && (
+                                    <Badge variant="secondary" className="text-xs bg-primary/10 hover:bg-primary/20">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full mr-1.5"></div>
+                                        {selectedModel.name}
+                                    </Badge>
+                                )}
                             </div>
                         </div>
-                        <div className="flex space-x-1 sm:space-x-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={retryLastMessage}
-                                disabled={chatState.isLoading || chatState.messages.length === 0}
-                                className="hidden sm:flex"
-                            >
-                                <RefreshCw className="w-4 h-4 sm:mr-2" />
-                                <span className="hidden sm:inline">Retry</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={retryLastMessage}
-                                disabled={chatState.isLoading || chatState.messages.length === 0}
-                                className="sm:hidden"
-                            >
-                                <RefreshCw className="w-4 h-4" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={clearChat}
-                                disabled={chatState.isLoading}
-                                className="hidden sm:flex"
-                            >
-                                <Trash2 className="w-4 h-4 sm:mr-2" />
-                                <span className="hidden sm:inline">Clear</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={clearChat}
-                                disabled={chatState.isLoading}
-                                className="sm:hidden"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
+
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                            <div className="hidden sm:block">
+                                <ListLocalAIModels
+                                    onModelSelect={setSelectedModel}
+                                    selectedModel={selectedModel}
+                                />
+                            </div>
+
+                            <div className="flex space-x-1 sm:space-x-2 mt-6">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={retryLastMessage}
+                                    disabled={chatState.isLoading || chatState.messages.length === 0}
+                                    className="hidden sm:flex"
+                                >
+                                    <RefreshCw className="w-4 h-4 sm:mr-2" />
+                                    <span className="hidden sm:inline">Retry</span>
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={retryLastMessage}
+                                    disabled={chatState.isLoading || chatState.messages.length === 0}
+                                    className="sm:hidden"
+                                >
+                                    <RefreshCw className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={clearChat}
+                                    disabled={chatState.isLoading}
+                                    className="hidden sm:flex"
+                                >
+                                    <Trash2 className="w-4 h-4 sm:mr-2" />
+                                    <span className="hidden sm:inline">Clear</span>
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={clearChat}
+                                    disabled={chatState.isLoading}
+                                    className="sm:hidden"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Mobile Model Selection */}
+                        <div className="sm:hidden mt-4">
+                            <ListLocalAIModels
+                                onModelSelect={setSelectedModel}
+                                selectedModel={selectedModel}
+                            />
                         </div>
                     </div>
                 </div>

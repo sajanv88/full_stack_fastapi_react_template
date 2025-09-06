@@ -16,6 +16,7 @@ export type { Body_login_api_v1_auth_login_post } from './models/Body_login_api_
 export type { DashboardMetrics } from './models/DashboardMetrics';
 export type { Gender } from './models/Gender';
 export type { HTTPValidationError } from './models/HTTPValidationError';
+export type { ModelsResponse } from './models/ModelsResponse';
 export type { NewRole } from './models/NewRole';
 export type { NewUser } from './models/NewUser';
 export type { Permission } from './models/Permission';

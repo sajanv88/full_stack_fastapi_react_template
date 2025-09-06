@@ -2,8 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type AIRequest = {
-  question: string;
-  model_name?: (string | null);
+export type ModelsResponse = {
+  name: string;
+  digest: string;
+  size: string;
+  created: string;
 };
 
