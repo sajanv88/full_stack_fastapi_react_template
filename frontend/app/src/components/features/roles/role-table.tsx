@@ -14,14 +14,24 @@ const columns = [
         header: "Actions",
         cell: (c) => {
             const { onSelectRole } = useRoles()
-            const actionOptions: ActionOption<typeof c.row.original> = {
-                label: "Clone",
-                data: c.row.original,
-                onClick: (data) => onSelectRole({
-                    type: 'clone',
-                    role: data
-                }),
-            }
+            const actionOptions: ActionOption<typeof c.row.original>[] = [
+                {
+                    label: "Clone",
+                    data: c.row.original,
+                    onClick: (data) => onSelectRole({
+                        type: 'clone',
+                        role: data
+                    }),
+                },
+                {
+                    label: "Manage Permissions",
+                    data: c.row.original,
+                    onClick: (data) => onSelectRole({
+                        type: 'manage_permissions',
+                        role: data
+                    }),
+                }
+            ]
 
             const baseOptions: ActionOption<typeof c.row.original>[] = [
                 {
@@ -45,7 +55,7 @@ const columns = [
 
             // Add "Clone" option only for non admin users
             const options = !c.row.original.name.toLowerCase().includes('admin')
-                ? [...baseOptions, actionOptions]
+                ? [...baseOptions, ...actionOptions]
                 : baseOptions;
 
             return (
@@ -68,7 +78,7 @@ const columns = [
         cell: (c) => {
             const permissions: Array<Permission> = c.row.original.permissions ?? [];
             return (
-                <ul>
+                <ul className="flex flex-wrap max-w-2xs">
                     {permissions.map((perm) => (
                         <Badge key={perm} variant="outline" className="m-1">
                             {perm}

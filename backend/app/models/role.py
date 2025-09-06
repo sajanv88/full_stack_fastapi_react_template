@@ -22,3 +22,4 @@ class Role(BaseModel):
 class NewRole(BaseModel):
     name: str
     description: Union[str, None] = None
+    permissions: Union[list[Permission], None] = None

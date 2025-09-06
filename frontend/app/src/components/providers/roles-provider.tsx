@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 export type RoleResponse = RoleListResponse["data"]
 export type RolesType = RoleResponse["roles"][0]
-type ActionType = 'edit' | 'delete' | 'clone'
+type ActionType = 'edit' | 'delete' | 'clone' | 'manage_permissions'
 type Action = {
     type: ActionType;
     role: RolesType;
@@ -95,10 +95,7 @@ export function RolesProvider({ children }: RolesProviderProps) {
     async function onUpdateRole(role_id: string, params: NewRole) {
         await role.updateRoleApiV1RolesRoleIdPut({
             roleId: role_id,
-            requestBody: {
-                name: params.name,
-                description: params.description,
-            }
+            requestBody: params
         });
     }
 

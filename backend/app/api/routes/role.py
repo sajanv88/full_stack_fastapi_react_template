@@ -112,6 +112,7 @@ async def update_role(
     _: bool = Depends(read_write_resource)
 ):
     update_data = {k: v for k, v in role.model_dump().items() if v is not None}
+    print("Updating role:", role_id, "with data:", update_data)
     if not update_data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No data provided for update")
     
