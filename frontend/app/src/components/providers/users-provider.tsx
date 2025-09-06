@@ -125,7 +125,7 @@ export function UsersProvider({ children }: UsersProviderProps) {
                     position: "top-center",
                 });
             }
-
+            return;
         }
         setSelectedUser(action);
 
@@ -133,15 +133,23 @@ export function UsersProvider({ children }: UsersProviderProps) {
 
     async function onDeleteUser() {
         if (!selectedUser) return;
-        await user.deleteUserApiV1UsersUserIdDelete({
-            userId: selectedUser.user.id
-        });
-        onSelectUser(undefined);
-        toast.success("User deleted successfully", {
-            richColors: true,
-            position: "top-center",
-        });
-        await refreshUsers();
+        try {
+            await user.deleteUserApiV1UsersUserIdDelete({
+                userId: selectedUser.user.id
+            });
+            onSelectUser(undefined);
+            toast.success("User deleted successfully", {
+                richColors: true,
+                position: "top-center",
+            });
+            await refreshUsers();
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            toast.error("Failed to delete user", {
+                richColors: true,
+                position: "top-center",
+            });
+        }
     }
 
     useEffect(() => {

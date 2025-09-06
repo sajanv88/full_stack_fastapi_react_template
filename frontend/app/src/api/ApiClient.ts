@@ -8,6 +8,7 @@ import { FetchHttpRequest } from './core/FetchHttpRequest';
 import { AuthService } from './services/AuthService';
 import { DashboardService } from './services/DashboardService';
 import { DefaultService } from './services/DefaultService';
+import { PermissionsService } from './services/PermissionsService';
 import { RolesService } from './services/RolesService';
 import { UsersService } from './services/UsersService';
 type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
@@ -15,6 +16,7 @@ export class ApiClient {
   public readonly auth: AuthService;
   public readonly dashboard: DashboardService;
   public readonly default: DefaultService;
+  public readonly permissions: PermissionsService;
   public readonly roles: RolesService;
   public readonly users: UsersService;
   public readonly request: BaseHttpRequest;
@@ -33,6 +35,7 @@ export class ApiClient {
     this.auth = new AuthService(this.request);
     this.dashboard = new DashboardService(this.request);
     this.default = new DefaultService(this.request);
+    this.permissions = new PermissionsService(this.request);
     this.roles = new RolesService(this.request);
     this.users = new UsersService(this.request);
   }

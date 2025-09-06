@@ -70,11 +70,7 @@ export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProp
                 richColors: true,
             });
             form.reset();
-            toast.success("User created successfully!", {
-                duration: 5000,
-                position: "top-center",
-                richColors: true,
-            });
+
             onDismiss();
 
         } catch (error) {

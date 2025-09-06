@@ -8,6 +8,7 @@ import { Roles } from "@/components/features/roles/roles";
 import { Users } from "@/components/features/users/users";
 import Register from "@/components/features/auth/register";
 import { UsersProvider } from "@/components/providers/users-provider";
+import { RolesProvider } from "@/components/providers/roles-provider";
 
 function App() {
 
@@ -26,7 +27,12 @@ function App() {
           </UsersProvider>
         }
         />
-        <Route path="roles" element={<Roles />} />
+        <Route path="roles" element={
+          <RolesProvider>
+            <Roles />
+          </RolesProvider>
+        }
+        />
         <Route path="profile" element={<Profile />} />
       </Route>
     </Routes>

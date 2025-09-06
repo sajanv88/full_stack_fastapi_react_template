@@ -18,13 +18,15 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Test@123!")
 
 async def generate_fake_users(range_count: int = 100, restart: bool = False):
     total_users = await user_collection.count_documents({})
-    if total_users >= range_count and not restart:
+    if total_users >= range_count:
         print(f"Users collection already has {total_users} users. Skipping fake user generation.")
         return
     
-    await user_collection.delete_many({
-        "email": {"$ne": ADMIN_EMAIL}
-    })  # Clear existing users for fresh seeding
+    if restart:
+        await user_collection.delete_many({
+            "email": {"$ne": ADMIN_EMAIL}
+        })  # Clear existing users for fresh seeding
+    
     print(f"Generating {range_count} fake users...")
     guest_role = await role_collection.find_one({"name": RoleType.GUEST})
     for _ in range(range_count):
@@ -143,7 +145,7 @@ async def seed_default_data():
             )
 
     # Uncomment to generate fake users when you need feed fake users
-    # await generate_fake_users(100) 
+    # await generate_fake_users(200) 
     print("Seeding completed.")
     # Example:
     # await check_new_fields_and_add([DBField("users", "created_at", datetime.utcnow()), DBField("roles", "created_at", datetime.utcnow())])

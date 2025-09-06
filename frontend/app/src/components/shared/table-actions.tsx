@@ -18,13 +18,16 @@ export type ActionOption<D> = {
 
 interface TableActionsProps<D> {
     options: ActionOption<D>[];
+    resource: 'user' | 'role';
 }
-export function TableActions<D>({ options }: TableActionsProps<D>) {
+export function TableActions<D>({ options, resource }: TableActionsProps<D>) {
     const { can } = useAuthContext();
     const isAdmin = can("full:access");
-    const isUserSelfUpdate = can("user:self_read_and_write_only");
-
-    const shouldDisableBtn = !isAdmin && !isUserSelfUpdate;
+    let shouldDisableBtn = !isAdmin;
+    if (resource === 'user') {
+        const isUserSelfUpdate = can("user:self_read_and_write_only");
+        shouldDisableBtn = !isAdmin && !isUserSelfUpdate;
+    }
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>

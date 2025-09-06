@@ -2,4 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type RoleType = 'admin' | 'user' | 'guest';
+export type PermissionBase = {
+  name: string;
+};
+

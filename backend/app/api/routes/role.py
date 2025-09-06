@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import Depends, APIRouter, status, HTTPException, Response
 from pydantic import BaseModel
 from typing import List
@@ -65,7 +66,8 @@ async def create_role(
         result = await role_collection.insert_one({
             "name": role.name,
             "description": role.description,
-            "permissions": [Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY]  # Default permissions
+            "permissions": [Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY],  # Default permissions
+            "created_at": datetime.utcnow()
         })
         if result.inserted_id:
             return Response(status_code=status.HTTP_201_CREATED)

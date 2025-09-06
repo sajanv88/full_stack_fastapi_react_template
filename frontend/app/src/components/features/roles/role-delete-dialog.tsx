@@ -1,4 +1,4 @@
-import { useUsers } from "@/components/providers/users-provider";
+import { useRoles } from "@/components/providers/roles-provider";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -10,12 +10,12 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-interface DeleteNewUserDialogProps {
+interface DeleteNewRoleDialogProps {
     open: boolean;
     onDismiss: () => void;
 }
-export function UserDeleteDialog({ open, onDismiss }: DeleteNewUserDialogProps) {
-    const { selectedUser, onDeleteUser } = useUsers();
+export function RoleDeleteDialog({ open, onDismiss }: DeleteNewRoleDialogProps) {
+    const { selectedRole, onDeleteRole } = useRoles();
     function onDismissHandler(flag: boolean) {
         if (!flag) onDismiss();
     }
@@ -26,12 +26,12 @@ export function UserDeleteDialog({ open, onDismiss }: DeleteNewUserDialogProps) 
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete this
-                        user <strong className="font-bold text-red-500">{selectedUser?.user?.email}</strong>.
+                        role <strong className="font-bold text-red-500">{selectedRole?.role?.name}</strong>.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onDeleteUser}>Continue</AlertDialogAction>
+                    <AlertDialogAction onClick={onDeleteRole}>Continue</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

@@ -48,6 +48,7 @@ const columns = [
             return (
                 <TableActions<typeof c.row.original>
                     options={options}
+                    resource="user"
                 />
             )
         }
