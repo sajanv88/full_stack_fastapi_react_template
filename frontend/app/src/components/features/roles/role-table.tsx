@@ -1,4 +1,5 @@
 import { Permission } from "@/api";
+import { useAuthContext } from "@/components/providers/auth-provider";
 import { RolesType, useRoles } from "@/components/providers/roles-provider";
 import AdvanceTable from "@/components/shared/advance-table";
 import { IResponseData } from "@/components/shared/iresponse-data.inteface";
@@ -14,6 +15,13 @@ const columns = [
         header: "Actions",
         cell: (c) => {
             const { onSelectRole } = useRoles()
+            const { can } = useAuthContext();
+            const isDeleteRole = can("role:delete_only");
+            const isEditRole = can("role:read_and_write_only");
+            const isAdmin = can("full:access");
+            const shouldAllowDeleteRole = isAdmin || isDeleteRole;
+            const shouldAllowEditRole = isAdmin || isEditRole;
+
             const actionOptions: ActionOption<typeof c.row.original>[] = [
                 {
                     label: "Clone",
@@ -22,6 +30,7 @@ const columns = [
                         type: 'clone',
                         role: data
                     }),
+                    disabled: shouldAllowEditRole
                 },
                 {
                     label: "Manage Permissions",
@@ -30,6 +39,7 @@ const columns = [
                         type: 'manage_permissions',
                         role: data
                     }),
+                    disabled: shouldAllowEditRole
                 }
             ]
 
@@ -41,6 +51,7 @@ const columns = [
                         type: 'edit',
                         role: data
                     }),
+                    disabled: shouldAllowEditRole
                 },
                 {
                     label: "Delete",
@@ -49,6 +60,7 @@ const columns = [
                         type: 'delete',
                         role: data
                     }),
+                    disabled: shouldAllowDeleteRole
                 }
             ];
 
