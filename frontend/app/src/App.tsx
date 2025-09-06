@@ -9,6 +9,7 @@ import { Users } from "@/components/features/users/users";
 import Register from "@/components/features/auth/register";
 import { UsersProvider } from "@/components/providers/users-provider";
 import { RolesProvider } from "@/components/providers/roles-provider";
+import { AIChat } from "@/components/features/ai-chat/ai-chat";
 
 function App() {
 
@@ -34,6 +35,7 @@ function App() {
         }
         />
         <Route path="profile" element={<Profile />} />
+        <Route path="ai" element={<AIChat />} />
       </Route>
     </Routes>
 

@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 from app.api.routes import  users
 from app.core.db import ensure_indexes
 from app.core.seeder import seed_default_data
-from app.api.routes import auth, role, dashboard, permissions
+from app.api.routes import auth, role, dashboard, permissions, ai
 import os
 
 build_path = os.path.join(os.path.dirname(__file__), "ui")
@@ -49,6 +49,7 @@ router_v1.include_router(auth.router)
 router_v1.include_router(role.router)
 router_v1.include_router(dashboard.router)
 router_v1.include_router(permissions.router)
+router_v1.include_router(ai.router)
 
 app.include_router(router_v1)
 

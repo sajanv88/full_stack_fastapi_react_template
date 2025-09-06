@@ -30,6 +30,7 @@ const navLinks = [
 
 const bottomLinks = [
     { href: "/profile", label: "Profile" },
+    { href: "/ai", label: "Chat" },
 ];
 
 
