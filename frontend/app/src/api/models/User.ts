@@ -14,5 +14,6 @@ export type User = {
   activated_at?: (string | null);
   created_at: string;
   image_url?: (string | null);
+  tenant_id?: (string | null);
 };
 

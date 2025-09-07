@@ -75,7 +75,6 @@ async def create_tenant(
 ):
     tenant_service = TenantService(db)
     result = await tenant_service.create_tenant(tenant)
-
     if not result:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create tenant")
     return await tenant_service.get_tenant(str(result.inserted_id))

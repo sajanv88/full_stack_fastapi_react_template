@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Tenant } from '../models/Tenant';
 import type { TenantListResponse } from '../models/TenantListResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
@@ -26,6 +27,26 @@ export class TenantsService {
         'skip': skip,
         'limit': limit,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Create Tenant
+   * @returns Tenant Successful Response
+   * @throws ApiError
+   */
+  public createTenantApiV1TenantsPost({
+    requestBody,
+  }: {
+    requestBody: Tenant,
+  }): CancelablePromise<Tenant> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/api/v1/tenants/',
+      body: requestBody,
+      mediaType: 'application/json',
       errors: {
         422: `Validation Error`,
       },

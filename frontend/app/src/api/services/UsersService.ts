@@ -2,7 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_update_profile_picture_api_v1_users__user_id__update_profile_picture_put } from '../models/Body_update_profile_picture_api_v1_users__user_id__update_profile_picture_put';
 import type { NewUser } from '../models/NewUser';
+import type { ProfileImageUpdateResponse } from '../models/ProfileImageUpdateResponse';
 import type { User } from '../models/User';
 import type { UserListResponse } from '../models/UserListResponse';
 import type { UserRoleUpdateRequest } from '../models/UserRoleUpdateRequest';
@@ -117,6 +119,31 @@ export class UsersService {
       },
       body: requestBody,
       mediaType: 'application/json',
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Update Profile Picture
+   * @returns ProfileImageUpdateResponse Successful Response
+   * @throws ApiError
+   */
+  public updateProfilePictureApiV1UsersUserIdUpdateProfilePicturePut({
+    userId,
+    formData,
+  }: {
+    userId: string,
+    formData: Body_update_profile_picture_api_v1_users__user_id__update_profile_picture_put,
+  }): CancelablePromise<ProfileImageUpdateResponse> {
+    return this.httpRequest.request({
+      method: 'PUT',
+      url: '/api/v1/users/{user_id}/update_profile_picture',
+      path: {
+        'user_id': userId,
+      },
+      formData: formData,
+      mediaType: 'multipart/form-data',
       errors: {
         422: `Validation Error`,
       },

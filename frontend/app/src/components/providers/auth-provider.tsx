@@ -1,5 +1,5 @@
 import { ApiClient, Gender, Permission, type UserMeResponse } from "@/api";
-import { clearAllTokens, clearIsLoggedIn, getAccessToken, getRefreshToken, isLoggedIn, scheduleTokenRefresh, storeTokenSet } from "@/lib/utils";
+import { clearAllTokens, clearIsLoggedIn, getAccessToken, getRefreshToken, isLoggedIn, scheduleTokenRefresh, storeTokenSet, userProfileImageUrl } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -16,13 +16,15 @@ type AuthProviderState = {
     user: UserMeResponse | null;
     can: (action: Permission) => boolean;
     onUpdateProfile: (data: UpdateProfileType) => Promise<void>;
+    refreshCurrentUser: () => Promise<void>;
 }
 
 const authContext = createContext<AuthProviderState>({
     isLoggedIn: false,
     user: null,
     can: () => false,
-    onUpdateProfile: async () => { }
+    onUpdateProfile: async () => { },
+    refreshCurrentUser: async () => { }
 });
 
 
@@ -31,7 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoggedIn: false,
         user: null,
         can: () => false,
-        onUpdateProfile: async () => { }
+        onUpdateProfile: async () => { },
+        refreshCurrentUser: async () => { }
     });
     const navigate = useNavigate();
     useEffect(() => {
@@ -80,8 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setAuthState({
                     isLoggedIn: true,
                     user: {
-                        ...user,
-                        image_url: user?.image_url ? user?.image_url : "https://github.com/evilrabbit.png",
+                        ...user, // Todo: Replace this with cloud storage URL once configured in the backend
+                        image_url: userProfileImageUrl(user?.image_url),
                     },
                     can: (action: Permission) => {
                         return user?.role?.permissions?.includes(action) ?? false;
@@ -107,6 +110,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                                 richColors: true
                             });
                         }
+                    },
+                    refreshCurrentUser: async () => {
+                        await fetchUser();
                     }
                 });
                 if (isLoggedIn()) {

@@ -9,5 +9,6 @@ export type NewUser = {
   email: string;
   gender: Gender;
   password: string;
+  sub_domain?: (string | null);
 };
 

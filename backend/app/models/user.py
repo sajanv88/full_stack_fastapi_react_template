@@ -28,6 +28,7 @@ class NewUser(BaseModel):
     email: str
     gender: Gender
     password: str
+    sub_domain: Optional[str] = None
 
 class UserUpdate(BaseModel):
     first_name: Optional[str] = None

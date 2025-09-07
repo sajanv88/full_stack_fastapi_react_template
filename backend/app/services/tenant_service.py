@@ -1,28 +1,21 @@
 from app.models.tenant import Tenant
 from bson import ObjectId
-from app.core.db import client
-from app.services.users_service import UserService
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
 
 class TenantService:
-    def __init__(self, db):
+    def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
-        self.tenant_collection = db.tenants
+        self.tenant_collection: AsyncIOMotorCollection = db.tenants
 
     async def total_count(self):
         return await self.tenant_collection.count_documents({})
 
     async def create_tenant(self, tenant: dict):
-        result = await self.tenant_collection.insert_one(tenant)
-        if result.inserted_id:
-            tenant_id = await self.get_tenant(str(result.inserted_id))
-            user_service = UserService(client[f"tenant_{str(result.inserted_id)}"])
-            await user_service.create_user({
-                "email": f"user@{tenant['subdomain']}.com",
-                "name": "Default User",
-                "password": "password"
-            })
-        return result
-
+        existing_tenant = await self.tenant_collection.find_one({"name": tenant["name"]})
+        if existing_tenant:
+            raise Exception(f"Tenant with this name '{tenant['name']}' already exists")
+        return await self.tenant_collection.insert_one(tenant)
+         
     async def get_tenant(self, tenant_id: str):
         tenant = await self.tenant_collection.find_one({"_id": ObjectId(tenant_id)})
         return await self.serialize(tenant)

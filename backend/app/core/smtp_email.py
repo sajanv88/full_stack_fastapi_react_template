@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from starlette.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from pydantic import EmailStr, BaseModel
-from typing import List
+from typing import List, Optional
 import os
 import jwt
 from datetime import datetime, timedelta, timezone
@@ -31,6 +31,7 @@ class ActivationEmailSchema(BaseModel):
     email: EmailStr
     user_id: str
     first_name: str
+    tenant_id: Optional[str] = None
 
 
 

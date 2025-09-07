@@ -41,6 +41,7 @@ import {
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { toast } from 'sonner'
 import { getAccessToken } from '@/lib/utils'
+import { ApiClient } from '@/api'
 
 // Form validation schema
 const profileSchema = z.object({
@@ -52,7 +53,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>
 
 export function Profile() {
-    const { user, onUpdateProfile } = useAuthContext()
+    const { user, onUpdateProfile, refreshCurrentUser } = useAuthContext()
 
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
@@ -122,15 +123,21 @@ export function Profile() {
 
             const accessToken = getAccessToken()
             // TODO: Implement image upload API endpoint
-            // const apiClient = new ApiClient({
-            //     HEADERS: {
-            //         Authorization: `Bearer ${accessToken}`
-            //     }
-            // })
-            // const response = await apiClient.users.uploadProfileImageApiV1UsersProfileImagePost({ formData })
-
+            const apiClient = new ApiClient({
+                HEADERS: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            })
+            await apiClient.users.updateProfilePictureApiV1UsersUserIdUpdateProfilePicturePut({
+                formData: {
+                    file: file as File
+                },
+                userId: user?.id!
+            })
             console.log('Image upload ready for API implementation', { accessToken, formData })
             toast.success('Profile image updated successfully!')
+            await refreshCurrentUser()
+
         } catch (error) {
             console.error('Error uploading image:', error)
             toast.error('Failed to upload image')

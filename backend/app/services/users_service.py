@@ -9,9 +9,22 @@ class UserService():
     async def total_count(self):
         return await self.user_collection.count_documents({})
 
+    async def find_by_email(self, email:str):
+        try:
+            user = await self.user_collection.find_one({"email": email})
+            return await self.serialize(user)
+        except Exception as error:
+            print("Error finding user by email:", error)
+            return None
+
+
     async def get_user(self, user_id: str):
-        user = await self.user_collection.find_one({"_id": ObjectId(user_id)})
-        return await self.serialize(user)
+        try:
+            user = await self.user_collection.find_one({"_id": ObjectId(user_id)})
+            return await self.serialize(user)
+        except Exception as error:
+            print("Error getting user:", error)
+            return None
 
     async def create_user(self, user_data: dict):
         return await self.user_collection.insert_one(user_data)

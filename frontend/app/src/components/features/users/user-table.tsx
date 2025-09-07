@@ -2,6 +2,7 @@ import { UsersType, useUsers } from "@/components/providers/users-provider";
 import AdvanceTable from "@/components/shared/advance-table";
 import { IResponseData } from "@/components/shared/iresponse-data.inteface";
 import { ActionOption, TableActions } from "@/components/shared/table-actions";
+import { userProfileImageUrl } from "@/lib/utils";
 import { createColumnHelper } from "@tanstack/react-table";
 
 
@@ -58,11 +59,7 @@ const columns = [
         cell: (c) => {
             const fullName = c.row.original.first_name + ' ' + c.row.original.last_name;
             return (
-                <img src={c.row.original.image_url ?? "https://github.com/evilrabbit.png"}
-                    onError={(e) => {
-                        e.currentTarget.src = "https://github.com/evilrabbit.png";
-                    }}
-                    alt={fullName} className="w-10 h-10 rounded-full" />
+                <img src={userProfileImageUrl(c.row.original.image_url)} alt={fullName} className="w-10 h-10 rounded-full" />
             )
         }
     }),

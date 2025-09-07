@@ -13,5 +13,6 @@ export type UserMeResponse = {
   is_active?: boolean;
   activated_at?: (string | null);
   image_url?: (string | null);
+  tenant_id?: (string | null);
 };
 

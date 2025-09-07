@@ -61,3 +61,8 @@ export function scheduleTokenRefresh(cb: () => Promise<void>) {
   }
 
 }
+
+export function userProfileImageUrl(url: string | null | undefined) {
+  if (!url) return "https://github.com/evilrabbit.png";
+  return url.replace("app/ui", "");
+}

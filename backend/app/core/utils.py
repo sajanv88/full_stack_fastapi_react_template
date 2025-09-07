@@ -23,3 +23,13 @@ def get_date_range(filter_type: str):
 def is_tenancy_enabled() -> bool:
     multi_tenancy_strategy = os.getenv("MULTI_TENANCY_STRATEGY", "none").lower()
     return multi_tenancy_strategy != "none"
+
+
+# Simple utility function to store file. Later, will configure AWS S3, Azure storage etc..
+def save_file(file, upload_dir="app/ui/assets/user_profiles"):
+    os.makedirs(upload_dir, exist_ok=True)
+    file_location = os.path.join(upload_dir, f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}")
+    with open(file_location, "wb+") as file_object:
+        file_object.write(file.file.read())
+    print(f"File saved at {file_location}")
+    return file_location

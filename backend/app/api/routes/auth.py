@@ -3,7 +3,7 @@ from jwt import InvalidTokenError
 import jwt
 from datetime import datetime
 from pydantic import BaseModel
-from app.core.db import user_collection, role_collection
+from app.core.db import get_db_reference, user_collection, role_collection
 from app.models.user import NewUser, User, UserEmailUpdate
 from app.models.role import Role, RoleType
 from app.schemas.role_schema import serialize_role_schema
@@ -14,8 +14,10 @@ from app.core.token import TokenSet, verify_refresh_token, verify_token, TokenDa
 from app.schemas.user_schema import seralize_user_schema
 from app.core.password import get_password_hash, verify_password
 from app.core.smtp_email import ActivationEmailSchema, send_activation_email, verify_activation_token, send_email_change_activation
-
-
+from app.core.utils import is_tenancy_enabled
+from app.services.tenant_service import TenantService
+from app.services.users_service import UserService
+from app.core.db import client
 
 router = APIRouter(prefix="/auth")
 router.tags = ["Auth"]
@@ -108,8 +110,9 @@ async def login(login_request: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 
 @router.post("/register", response_class=Response)
-async def register(background_tasks: BackgroundTasks, new_user: NewUser):
-    existing_user = await user_collection.find_one({"email": new_user.email})
+async def register(background_tasks: BackgroundTasks, new_user: NewUser, db = Depends(get_db_reference)):
+    user_service = UserService(db)
+    existing_user = await user_service.find_by_email(new_user.email)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -123,15 +126,53 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser):
     guest_role = await get_guest_role_detail()
     user_dict["role_id"] = ObjectId(guest_role["id"])
     user_dict["created_at"] = datetime.utcnow()
-    result = await user_collection.insert_one(user_dict)
+
+    
+    if is_tenancy_enabled():
+        sub_domain = user_dict['sub_domain']
+        if sub_domain is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Subdomain is required"
+            )
+        
+        tenant_service = TenantService(db)
+        try:
+            result = await tenant_service.create_tenant({
+                "name": sub_domain.split(".")[0],
+                "sub_domain": sub_domain
+            })
+            if result.inserted_id is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to create tenant"
+                )
+            print("Tenant created:", result.inserted_id)
+            user_dict["tenant_id"] = ObjectId(result.inserted_id)
+            tenant_id = str(user_dict["tenant_id"])
+            db = client[f"tenant_{tenant_id}"]
+            user_service = UserService(db)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+
+ 
+    
+    result = await user_service.create_user(user_dict)
+
     if result.inserted_id:
         activation_email_data = ActivationEmailSchema(
                 email=user_dict["email"],
                 user_id=str(result.inserted_id),
-                first_name=user_dict["first_name"]
+                first_name=user_dict["first_name"],
+                tenant_id=str(user_dict["tenant_id"]) if user_dict["tenant_id"] in user_dict else None
             )
 
         background_tasks.add_task(send_activation_email, activation_email_data)
+        if user_dict["tenant_id"] in user_dict:
+            return Response(status_code=status.HTTP_201_CREATED, headers={"X-Tenant-ID": str(user_dict["tenant_id"])})
         return Response(status_code=status.HTTP_201_CREATED)
     else:
         raise HTTPException(

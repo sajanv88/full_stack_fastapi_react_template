@@ -1,5 +1,6 @@
 from datetime import datetime
-from fastapi import BackgroundTasks, Depends, APIRouter, status, HTTPException, Response
+import shutil
+from fastapi import BackgroundTasks, Depends, APIRouter, File, UploadFile, status, HTTPException, Response
 from pydantic import BaseModel
 from typing import List
 from app.core.db import get_db_reference, role_collection
@@ -14,6 +15,7 @@ from app.core.role_checker import  create_permission_checker
 from app.core.permission import Permission
 from app.models.role import RoleType
 from app.services.users_service import UserService
+from app.core.utils import save_file
 
 router = APIRouter(prefix="/users")
 router.tags = ["Users"]
@@ -34,6 +36,10 @@ class UserListResponse(BaseModel):
 
 class UserRoleUpdateRequest(BaseModel):
     role_id: str
+
+class ProfileImageUpdateResponse(BaseModel):
+    image_url: str
+
 
 @router.get("/", response_model=UserListResponse)
 async def get_users(
@@ -182,6 +188,36 @@ async def update_user(
     if result.modified_count == 1:
         return await user_service.get_user(user_id)
     
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="User not found or no changes made"
+    )
+
+@router.put("/{user_id}/update_profile_picture", response_model=ProfileImageUpdateResponse)
+async def update_profile_picture(
+    current_user: Annotated[User, Depends(get_current_user)],
+    user_id: str,
+    file: UploadFile = File(...),
+    _: bool = Depends(create_permission_checker([Permission.USER_SELF_READ_AND_WRITE_ONLY])),
+    db = Depends(get_db_reference)
+):
+    user_service = UserService(db)
+    existing_user = await user_service.get_user(user_id)
+
+    if not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Process the uploaded file and update the user's profile picture
+    file_location = save_file(file)
+
+    result = await user_service.update_user(user_id, {"image_url": file_location})
+
+    if result.modified_count == 1:
+        return ProfileImageUpdateResponse(image_url=file_location)
+
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="User not found or no changes made"

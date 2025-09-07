@@ -28,7 +28,6 @@ tenant_collection = db.tenants
 async def ensure_indexes():
     await user_collection.create_index("email", unique=True)
     await role_collection.create_index("name", unique=True)
-    await tenant_collection.create_index("subdomain", unique=True)
     await tenant_collection.create_index("name", unique=True)
 
 
