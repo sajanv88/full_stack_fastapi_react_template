@@ -11,6 +11,7 @@ class RoleType(str, Enum):
     ADMIN = "admin"
     USER = "user"
     GUEST = "guest"
+    HOST = "host"
 
 class Role(BaseModel):
     id: str

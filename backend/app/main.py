@@ -1,13 +1,22 @@
-from fastapi import FastAPI, APIRouter
+import os
+from fastapi import FastAPI, APIRouter, Security
+
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from fastapi.responses import FileResponse
-
+from fastapi.security.api_key import APIKeyHeader
 from app.api.routes import  users
 from app.core.db import ensure_indexes
 from app.core.seeder import seed_default_data
-from app.api.routes import auth, role, dashboard, permissions, ai
-import os
+from app.api.routes import auth, role, dashboard, permissions, ai, tenant
+from app.core.subdomain_tenant_db_middleware import SubdomainTenantDBMiddleware
+from app.core.header_tenant_db_middleware import TenantDBMiddleware
+from app.core.utils import is_tenancy_enabled
+
+
+multi_tenancy_strategy = os.getenv("MULTI_TENANCY_STRATEGY", "none").lower()
+api_key_header = APIKeyHeader(name="x-tenant-id", auto_error=False)
+
 
 build_path = os.path.join(os.path.dirname(__file__), "ui")
 
@@ -22,7 +31,21 @@ async def lifespan(app: FastAPI):
     # Shutdown
     print("Application shutting down")
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    title="FastAPI React & MongoDb Template",
+    description="A template for building full-stack applications with FastAPI, React and MongoDB. Optional multi-tenancy support.",
+    version="1.0.0"
+)
+
+
+if multi_tenancy_strategy == "subdomain":
+    print("Using subdomain multi-tenancy")
+    app.add_middleware(SubdomainTenantDBMiddleware)
+elif multi_tenancy_strategy == "header":
+    print("Using header multi-tenancy")
+    app.add_middleware(TenantDBMiddleware)
+
 
 # Mount static files only if they exist (for production Docker deployment)
 if os.path.exists(build_path) and os.path.exists(os.path.join(build_path, "assets")):
@@ -31,7 +54,7 @@ if os.path.exists(build_path) and os.path.exists(os.path.join(build_path, "asset
 else:
     print("Static files directory not found - running in development mode")
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def serve_react_app():
     try:
         if os.path.exists(os.path.join(build_path, "index.html")):
@@ -42,7 +65,14 @@ async def serve_react_app():
         print(f"Error serving React app: {e}")
         return {"message": "FastAPI backend is running", "mode": "development", "docs": "/docs"}
 
+
+
 router_v1 = APIRouter(prefix="/api/v1")
+
+# Only enable tenant endpoint when multi-tenancy is enabled
+if is_tenancy_enabled():
+    router_v1 = APIRouter(prefix="/api/v1", dependencies=[Security(api_key_header)])
+    router_v1.include_router(tenant.router)
 
 router_v1.include_router(users.router)
 router_v1.include_router(auth.router)
@@ -51,10 +81,12 @@ router_v1.include_router(dashboard.router)
 router_v1.include_router(permissions.router)
 router_v1.include_router(ai.router)
 
+
+
 app.include_router(router_v1)
 
 # Catch-all route for React Router (only in production with static files)
-@app.get("/{full_path:path}")
+@app.get("/{full_path:path}", include_in_schema=False)
 async def react_router(full_path: str):
     if os.path.exists(os.path.join(build_path, "index.html")):
         return FileResponse(os.path.join(build_path, "index.html"))

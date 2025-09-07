@@ -1,0 +1,81 @@
+from typing import List
+from huggingface_hub import User
+from typing_extensions import Annotated
+from fastapi import Depends, APIRouter, status, HTTPException
+from pydantic import BaseModel
+
+from app.models.tenant import Tenant
+from app.api.routes.auth import get_current_user
+from app.core.permission import Permission
+from app.services.tenant_service import TenantService
+from app.core.db import get_db_reference
+from app.core.role_checker import create_permission_checker
+
+router = APIRouter(prefix="/tenants")
+router.tags = ["Tenants"]
+
+
+class TenantListData(BaseModel):
+    tenants: List[Tenant]
+    skip: int
+    limit: int
+    total: int
+    hasPrevious: bool
+    hasNext: bool
+
+class TenantListResponse(BaseModel):
+    status: int
+    message: str
+    data: TenantListData
+
+class NewTenantCreateRequest(BaseModel):
+    name: str
+    subdomain: str
+    admin_email: str
+    admin_password: str
+    first_name: str
+    last_name: str
+    gender: str
+
+
+@router.get("/", response_model=TenantListResponse)
+async def get_tenants(
+    current_user: Annotated[User, Depends(get_current_user)],
+    skip: int = 0, limit: int = 10,
+     _: bool = Depends(create_permission_checker([Permission.HOST_MANAGE_TENANTS])),
+    db = Depends(get_db_reference)
+):
+    tenant_service = TenantService(db)
+    tenants = await tenant_service.list_tenants(skip=skip, limit=limit)
+    total = await tenant_service.total_count()
+    hasPrevious = skip > 0
+    hasNext = (skip + limit) < total
+    
+    data = TenantListData(
+        tenants=tenants,
+        skip=skip,
+        limit=limit,
+        total=total,
+        hasPrevious=hasPrevious,
+        hasNext=hasNext
+    )
+    
+    return TenantListResponse(
+        status=status.HTTP_200_OK,
+        message="Tenants retrieved successfully",
+        data=data
+    )
+
+@router.post("/", response_model=Tenant)
+async def create_tenant(
+    current_user: Annotated[User, Depends(get_current_user)],
+    tenant: Tenant,
+    _: bool = Depends(create_permission_checker([Permission.HOST_MANAGE_TENANTS])),
+    db = Depends(get_db_reference)
+):
+    tenant_service = TenantService(db)
+    result = await tenant_service.create_tenant(tenant)
+
+    if not result:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create tenant")
+    return await tenant_service.get_tenant(str(result.inserted_id))

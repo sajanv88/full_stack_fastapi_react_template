@@ -7,6 +7,7 @@ from app.core.db import role_collection
 from app.schemas.role_schema import serialize_role_schema
 from bson import ObjectId
 from app.core.permission import Permission
+from app.core.utils import is_tenancy_enabled
 
 class DynamicRoleChecker:
     def __init__(self, required_permissions: List[Permission], any_permission: bool = True, allow_self_access: bool = True):
@@ -61,7 +62,13 @@ class DynamicRoleChecker:
             
             print(f"User permissions: {[p.value if hasattr(p, 'value') else str(p) for p in user_permissions]}")
             print(f"Required permissions: {[p.value if hasattr(p, 'value') else str(p) for p in self.required_permissions]}")
-            
+
+            if is_tenancy_enabled():
+                if Permission.HOST_MANAGE_TENANTS in user_permissions:
+                    print("Host Permission detected - Granting all permissions")
+                    return True
+
+
             # Check for full access (admin override)
             if Permission.FULL_ACCESS in user_permissions:
                 print("Full access granted - User has admin privileges")

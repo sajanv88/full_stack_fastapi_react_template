@@ -20,6 +20,7 @@ class User(BaseModel):
     activated_at: Optional[datetime] = None
     created_at: datetime
     image_url: Optional[str] = None
+    tenant_id: Optional[str] = None
 
 class NewUser(BaseModel):
     first_name: str

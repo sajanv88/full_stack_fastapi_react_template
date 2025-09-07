@@ -26,6 +26,9 @@ export type { ResendActivationEmailRequest } from './models/ResendActivationEmai
 export type { Role } from './models/Role';
 export type { RoleListData } from './models/RoleListData';
 export type { RoleListResponse } from './models/RoleListResponse';
+export type { Tenant } from './models/Tenant';
+export type { TenantListData } from './models/TenantListData';
+export type { TenantListResponse } from './models/TenantListResponse';
 export type { TokenSet } from './models/TokenSet';
 export type { User } from './models/User';
 export type { UserEmailUpdate } from './models/UserEmailUpdate';
@@ -39,7 +42,7 @@ export type { ValidationError } from './models/ValidationError';
 export { AiService } from './services/AiService';
 export { AuthService } from './services/AuthService';
 export { DashboardService } from './services/DashboardService';
-export { DefaultService } from './services/DefaultService';
 export { PermissionsService } from './services/PermissionsService';
 export { RolesService } from './services/RolesService';
+export { TenantsService } from './services/TenantsService';
 export { UsersService } from './services/UsersService';

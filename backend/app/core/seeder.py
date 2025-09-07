@@ -8,11 +8,13 @@ from app.models.role import RoleType
 from app.core.permission import Permission
 from app.core.db import user_collection, role_collection
 import os
+from app.core.utils import is_tenancy_enabled
 from faker import Faker
 fake = Faker()
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Test@123!")
+
 
 
 
@@ -124,6 +126,9 @@ async def seed_default_data():
         {"name": RoleType.GUEST, "description": "Guest user has read only access to resources.", "permissions": [Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY]}
     ]
 
+    if is_tenancy_enabled():
+        roles.append({"name": RoleType.HOST, "description": "Host role can manage tenants.", "permissions": [Permission.HOST_MANAGE_TENANTS, Permission.FULL_ACCESS]})
+
     print("Seeding roles...")
     if await role_collection.count_documents({}) != len(roles):
         print("Roles collection is empty or outdated. Seeding roles...")
@@ -132,17 +137,31 @@ async def seed_default_data():
             await role_collection.find_one_and_replace({"name": role["name"]}, role, upsert=True)
             print(f"Role upserted: {role['name']}")
 
-    admin_role = await role_collection.find_one({"name": RoleType.ADMIN})
     admin_user = await user_collection.find_one({"email": ADMIN_EMAIL})
-    if admin_role and admin_user :
-        if "role_id" in admin_user and admin_user["role_id"] == admin_role["_id"]:
-            print(f"Admin user already has admin role assigned. Hence, skipping...")
-        else:
-            print(f"Assigning admin role to user: {ADMIN_EMAIL}")
-            await user_collection.update_one(
-                {"email": ADMIN_EMAIL},
-                {"$set": {"role_id": ObjectId(admin_role["_id"])}}
-            )
+
+    if is_tenancy_enabled():
+        host_role = await role_collection.find_one({"name": RoleType.HOST})
+        if host_role and admin_user:
+            if "role_id" in admin_user and admin_user["role_id"] == host_role["_id"]:
+                print(f"Admin user already has host role assigned. Hence, skipping...")
+            else:
+                print(f"Assigning host role to user: {ADMIN_EMAIL}")
+                await user_collection.update_one(
+                    {"email": ADMIN_EMAIL},
+                    {"$set": {"role_id": ObjectId(host_role["_id"])}}
+                )
+    else:
+        print("Seeding admin role...")
+        admin_role = await role_collection.find_one({"name": RoleType.ADMIN})
+        if admin_role and admin_user :
+            if "role_id" in admin_user and admin_user["role_id"] == admin_role["_id"]:
+                print(f"Admin user already has admin role assigned. Hence, skipping...")
+            else:
+                print(f"Assigning admin role to user: {ADMIN_EMAIL}")
+                await user_collection.update_one(
+                    {"email": ADMIN_EMAIL},
+                    {"$set": {"role_id": ObjectId(admin_role["_id"])}}
+                )
 
     # Uncomment to generate fake users when you need feed fake users
     # await generate_fake_users(200) 

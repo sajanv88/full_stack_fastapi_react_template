@@ -40,6 +40,7 @@ class UserMeResponse(BaseModel):
     is_active: bool = False
     activated_at: str | None = None
     image_url: str | None = None
+    tenant_id: Union[str, None] = None
 
 class ResendActivationEmailRequest(BaseModel):
     email: str
@@ -70,7 +71,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
 
 async def get_token_data(user):
-    token_data = {"sub": str(user["_id"]), "email": user["email"], "is_active": user["is_active"], "activated_at": str(user["activated_at"]) if "activated_at" in user else None}.copy()
+    token_data = {
+        "sub": str(user["_id"]),
+        "email": user["email"],
+        "is_active": user["is_active"],
+        "activated_at": str(user["activated_at"]) if "activated_at" in user else None,
+        "tenant_id": str(user["tenant_id"]) if "tenant_id" in user else None
+    }.copy()
     if user["role_id"] is not None:
         role = await role_collection.find_one({"_id": user["role_id"]})
         token_data["role"] = serialize_role_schema(role)

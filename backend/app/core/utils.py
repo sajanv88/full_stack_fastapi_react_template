@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import os
 
 def get_date_range(filter_type: str):
     """Return (start, end, group_format) based on filter type"""
@@ -17,3 +18,8 @@ def get_date_range(filter_type: str):
         start = None
         group_format = "%Y-%m-%d"
     return start, now, group_format
+
+
+def is_tenancy_enabled() -> bool:
+    multi_tenancy_strategy = os.getenv("MULTI_TENANCY_STRATEGY", "none").lower()
+    return multi_tenancy_strategy != "none"

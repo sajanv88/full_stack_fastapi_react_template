@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi import BackgroundTasks, Depends, APIRouter, status, HTTPException, Response
 from pydantic import BaseModel
 from typing import List
-from app.core.db import user_collection, role_collection
+from app.core.db import get_db_reference, role_collection
 from app.models.user import NewUser, User, UserUpdate
 from app.schemas.user_schema import list_users, seralize_user_schema
 from bson import ObjectId
@@ -13,6 +13,7 @@ from app.core.password import get_password_hash
 from app.core.role_checker import  create_permission_checker
 from app.core.permission import Permission
 from app.models.role import RoleType
+from app.services.users_service import UserService
 
 router = APIRouter(prefix="/users")
 router.tags = ["Users"]
@@ -38,11 +39,12 @@ class UserRoleUpdateRequest(BaseModel):
 async def get_users(
     current_user: Annotated[User, Depends(get_current_user)],
     skip: int = 0, limit: int = 10,
-    _: bool = Depends(create_permission_checker([Permission.USER_VIEW_ONLY]))
+    _: bool = Depends(create_permission_checker([Permission.USER_VIEW_ONLY])),
+    db = Depends(get_db_reference)
 ):
-    users_cursor = user_collection.find().skip(skip).limit(limit)
-    users_data = list_users(await users_cursor.to_list(length=limit))
-    total = await user_collection.count_documents({})
+    user_service = UserService(db)
+    users_data = await user_service.list_users(skip=skip, limit=limit)
+    total = await user_service.total_count()
     hasPrevious = skip > 0
     hasNext = (skip + limit) < total
     
@@ -67,11 +69,14 @@ async def create_user(
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks,
     user: NewUser,
-    _: bool = Depends(create_permission_checker([Permission.USER_READ_AND_WRITE_ONLY]))):
+    _: bool = Depends(create_permission_checker([Permission.USER_READ_AND_WRITE_ONLY])),
+    db = Depends(get_db_reference)
+):
     try:
         # Hash the password
         hashed_password = get_password_hash(user.password)
 
+        # Todo: Move this to a role service
         role_guest = await role_collection.find_one({"name": RoleType.GUEST})
 
         # Create user document
@@ -86,8 +91,8 @@ async def create_user(
             
             "is_active": False  # User starts as inactive until activation
         }
-        
-        result = await user_collection.insert_one(user_doc)
+        user_service = UserService(db)
+        result = await user_service.create_user(user_doc)
         print(f"User created with ID: {result.inserted_id}")
         if result.inserted_id:
             # Send activation email
@@ -120,11 +125,13 @@ async def get_user(
     _: bool = Depends(create_permission_checker([
         Permission.USER_VIEW_ONLY, 
         Permission.USER_SELF_READ_AND_WRITE_ONLY
-    ]))
+    ])),
+     db = Depends(get_db_reference)
 ):
-    user = await user_collection.find_one({"_id": ObjectId(user_id)})
+    user_service = UserService(db)
+    user = await user_service.get_user(user_id)
     if user:
-        return seralize_user_schema(user)
+        return user
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="User not found"
@@ -135,9 +142,12 @@ async def get_user(
 async def delete_user(
     current_user: Annotated[User, Depends(get_current_user)],
     user_id: str,
-    _: bool = Depends(create_permission_checker([Permission.FULL_ACCESS, Permission.USER_DELETE_ONLY]))):
+    _: bool = Depends(create_permission_checker([Permission.FULL_ACCESS, Permission.USER_DELETE_ONLY])),
+    db = Depends(get_db_reference)
+):
 
-    result = await user_collection.delete_one({"_id": ObjectId(user_id)})
+    user_service = UserService(db)
+    result = await user_service.delete_user(user_id)
     if result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     raise HTTPException(
@@ -151,19 +161,27 @@ async def update_user(
     current_user: Annotated[User, Depends(get_current_user)],
     user: UserUpdate,
     user_id: str,
-    _: bool = Depends(create_permission_checker([Permission.USER_SELF_READ_AND_WRITE_ONLY],any_permission=False, allow_self_access=True))):
-    result = await user_collection.update_one(
-        {"_id": ObjectId(user_id)},
-        {"$set": {
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "gender": user.gender.value
-        }}
-    )
+    _: bool = Depends(create_permission_checker([Permission.USER_SELF_READ_AND_WRITE_ONLY],any_permission=False, allow_self_access=True)),
+    db = Depends(get_db_reference)
+):
+    user_service = UserService(db)
+    exsiting_user = await user_service.get_user(user_id)
+
+    if not exsiting_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    result = await user_service.update_user(user_id, {
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "gender": user.gender.value
+    })
+    
     if result.modified_count == 1:
-        updated_user = await user_collection.find_one({"_id": ObjectId(user_id)})
-        if updated_user:
-            return seralize_user_schema(updated_user)
+        return await user_service.get_user(user_id)
+    
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="User not found or no changes made"
@@ -174,8 +192,12 @@ async def update_user(
 async def patch_user(
     current_user: Annotated[User, Depends(get_current_user)],
     user_id: str, role_update: UserRoleUpdateRequest,
-    _: bool = Depends(create_permission_checker([Permission.USER_ROLE_ASSIGN_OR_REMOVE_ONLY]))):
-    user = await user_collection.find_one({"_id": ObjectId(user_id)})
+    _: bool = Depends(create_permission_checker([Permission.USER_ROLE_ASSIGN_OR_REMOVE_ONLY])),
+    db = Depends(get_db_reference)
+
+):
+    user_service = UserService(db)
+    user = await user_service.get_user(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -183,18 +205,14 @@ async def patch_user(
         )
 
     if "role_id" in user and user["role_id"] == ObjectId(role_update.role_id):
-         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already has this role assigned")
-    
-    result = await user_collection.update_one(
-        {"_id": ObjectId(user_id)},
-        {"$set": {
-            "role_id": ObjectId(role_update.role_id)
-        }}
-    )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already has this role assigned")
+
+
+    result = await user_service.assign_role(user_id, role_update.role_id)
+
     if result.modified_count == 1:
-        updated_user = await user_collection.find_one({"_id": ObjectId(user_id)})
-        if updated_user:
-            return seralize_user_schema(updated_user)
+        return await user_service.get_user(user_id)
+
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="User not found or no changes made"
@@ -206,17 +224,19 @@ async def remove_user_role(
     current_user: Annotated[User, Depends(get_current_user)],
     user_id: str,
     role_update: UserRoleUpdateRequest,
-    _: bool = Depends(create_permission_checker([Permission.USER_ROLE_ASSIGN_OR_REMOVE_ONLY]))):
-    user = await user_collection.find_one({"_id": ObjectId(user_id)})
+    _: bool = Depends(create_permission_checker([Permission.USER_ROLE_ASSIGN_OR_REMOVE_ONLY])),
+    db = Depends(get_db_reference)
+):
+    user_service = UserService(db)
+    user = await user_service.get_user(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
+
     if "role_id" in user and user["role_id"] == ObjectId(role_update.role_id):
-        user["role_id"] = None
-        await user_collection.update_one({"_id": ObjectId(user_id)}, {"$set": {"role_id": None}})
+        await user_service.remove_role(user_id)
     
-    user = await user_collection.find_one({"_id": ObjectId(user_id)})
-    return seralize_user_schema(user)
+    return await user_service.get_user(user_id)
 
