@@ -1,24 +1,24 @@
 import { DarkMode } from "@/components/features/dark-mode/dark-mode"
+import { Footer } from "@/components/shared/footer"
 import { Outlet } from "react-router";
 import { Toaster } from 'sonner'
 export function DefaultLayout() {
 
     return (
-        <div className="grid grid-rows-[auto_1fr_auto] h-screen gap-4 text-accent-foreground bg-primary-foreground">
-            <header className="p-4 bg-secondary">
-                <section className="flex justify-between items-center">
+        <div className="flex flex-col min-h-screen bg-primary-foreground">
+            <header className="p-4 bg-secondary border-b border-border">
+                <section className="container mx-auto flex justify-between items-center">
                     <h1 className="text-xl font-bold text-primary">
+                        FullStack Template
                     </h1>
                     <DarkMode />
                 </section>
             </header>
-            <main>
+            <main className="flex-1">
                 <Outlet />
                 <Toaster />
             </main>
-            <footer className="p-4 bg-accent">
-                <p>Footer content</p>
-            </footer>
+            <Footer />
         </div>
     );
 }

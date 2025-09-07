@@ -7,10 +7,11 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Loading } from '@/components/shared/loading'
 import { cn, getAccessToken } from '@/lib/utils'
-import { Send, Bot, User, Sparkles, Copy, RefreshCw, Trash2 } from 'lucide-react'
+import { Send, Bot, User, Sparkles, Copy, RefreshCw, Trash2, InfoIcon } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { ListLocalAIModels } from '@/components/shared/list-local-ai-models'
 import { AIRequest, ModelsResponse } from '@/api'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 interface Message {
     id: string
@@ -205,45 +206,44 @@ export function AIChat() {
             e.preventDefault()
             sendMessage()
         }
-        // Shift+Enter is handled naturally by textarea for new lines
     }
 
     return (
-        <div className="h-full flex flex-col">
+        <section className="h-full flex flex-col pb-10">
             {/* Page Header */}
-            <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2 sm:space-x-3">
-                            <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+            <section className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <section className="px-3 sm:px-4 py-4 sm:py-6">
+                    <section className="flex items-center justify-between">
+                        <section className="flex items-center space-x-2 sm:space-x-3">
+                            <section className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
                                 <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                            </div>
-                            <div className="min-w-0 flex-1">
+                            </section>
+                            <section className="min-w-0 flex-1">
                                 <h1 className="text-lg sm:text-2xl font-bold truncate">AI Assistant</h1>
-                                <div className="flex items-center space-x-2">
+                                <section className="flex items-center space-x-2">
                                     <p className="text-muted-foreground text-sm sm:text-base hidden sm:block">
                                         Chat with our intelligent AI assistant
                                     </p>
 
-                                </div>
+                                </section>
                                 {selectedModel && (
                                     <Badge variant="secondary" className="text-xs bg-primary/10 hover:bg-primary/20">
-                                        <div className="w-2 h-2 bg-green-500 rounded-full mr-1.5"></div>
+                                        <section className="w-2 h-2 bg-green-500 rounded-full mr-1.5"></section>
                                         {selectedModel.name}
                                     </Badge>
                                 )}
-                            </div>
-                        </div>
+                            </section>
+                        </section>
 
-                        <div className="flex items-center space-x-3 sm:space-x-4">
-                            <div className="hidden sm:block">
+                        <section className="flex items-center space-x-3 sm:space-x-4">
+                            <section className="hidden sm:block">
                                 <ListLocalAIModels
                                     onModelSelect={setSelectedModel}
                                     selectedModel={selectedModel}
                                 />
-                            </div>
+                            </section>
 
-                            <div className="flex space-x-1 sm:space-x-2 mt-6">
+                            <section className="flex space-x-1 sm:space-x-2 mt-6">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -282,39 +282,45 @@ export function AIChat() {
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </Button>
-                            </div>
-                        </div>
+                            </section>
+                        </section>
 
                         {/* Mobile Model Selection */}
-                        <div className="sm:hidden mt-4">
+                        <section className="sm:hidden mt-4">
                             <ListLocalAIModels
                                 onModelSelect={setSelectedModel}
                                 selectedModel={selectedModel}
                             />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+                        </section>
+                    </section>
+                </section>
+            </section>
+            {!selectedModel?.name && (
+                <Alert className='mt-4'>
+                    <InfoIcon className="w-4 h-4 mr-2" />
+                    <AlertTitle>Information</AlertTitle>
+                    <AlertDescription>Please select a local AI model to start chatting with the assistant.</AlertDescription>
+                </Alert>
+            )}
             {/* Chat Container */}
-            <div className="flex-1 container w-full mx-auto py-3 sm:py-6">
-                <div className="flex flex-col h-full space-y-3 sm:space-y-4">
+            <section className="flex-1 py-3 sm:py-6">
+                <section className="flex flex-col h-full space-y-3 sm:space-y-4">
                     {/* Chat Messages */}
                     <Card className="flex-1 flex flex-col">
                         <CardContent className="flex-1 p-0">
                             <ScrollArea className="h-[calc(100vh-280px)] sm:h-[600px] p-3 sm:p-6" ref={scrollAreaRef}>
                                 {chatState.messages.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center h-full text-center space-y-4 sm:space-y-6 px-4">
-                                        <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full">
+                                    <section className="flex flex-col items-center justify-center h-full text-center space-y-4 sm:space-y-6 px-4">
+                                        <section className="p-4 sm:p-6 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full">
                                             <Bot className="w-8 h-8 sm:w-12 sm:h-12 text-blue-600" />
-                                        </div>
-                                        <div className="max-w-md">
+                                        </section>
+                                        <section className="max-w-md">
                                             <h3 className="text-lg sm:text-xl font-semibold mb-2">Welcome to AI Chat</h3>
                                             <p className="text-muted-foreground text-sm sm:text-base">
                                                 Start a conversation with our AI assistant. Ask questions, get help with coding, brainstorm ideas, or just have a friendly chat!
                                             </p>
-                                        </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md w-full">
+                                        </section>
+                                        <section className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md w-full">
                                             {[
                                                 "What can you help me with?",
                                                 "Explain quantum computing",
@@ -334,12 +340,12 @@ export function AIChat() {
                                                     {suggestion}
                                                 </Button>
                                             ))}
-                                        </div>
-                                    </div>
+                                        </section>
+                                    </section>
                                 ) : (
-                                    <div className="space-y-4 sm:space-y-6">
+                                    <section className="space-y-4 sm:space-y-6">
                                         {chatState.messages.map((message) => (
-                                            <div
+                                            <section
                                                 key={message.id}
                                                 className={cn(
                                                     "flex space-x-2 sm:space-x-4",
@@ -354,7 +360,7 @@ export function AIChat() {
                                                     </Avatar>
                                                 )}
 
-                                                <div
+                                                <section
                                                     className={cn(
                                                         "max-w-[85%] sm:max-w-[75%] rounded-xl px-3 sm:px-4 py-2 sm:py-3 break-words group relative",
                                                         message.role === 'user'
@@ -362,19 +368,19 @@ export function AIChat() {
                                                             : 'bg-muted hover:bg-muted/80 transition-colors'
                                                     )}
                                                 >
-                                                    <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                                                    <section className="whitespace-pre-wrap text-sm leading-relaxed">
                                                         {message.content}
-                                                    </div>
+                                                    </section>
                                                     {message.isStreaming && (
-                                                        <div className="mt-2 sm:mt-3 flex items-center space-x-2">
+                                                        <section className="mt-2 sm:mt-3 flex items-center space-x-2">
                                                             <Loading variant="dots" size="sm" />
                                                             <span className="text-xs opacity-70">AI is typing...</span>
-                                                        </div>
+                                                        </section>
                                                     )}
 
                                                     {/* Message actions */}
                                                     {!message.isStreaming && message.content && (
-                                                        <div className="flex items-center justify-between mt-2 border-t border-border/50">
+                                                        <section className="flex items-center justify-between mt-2 border-t border-border/50">
                                                             <span className="text-xs ">
                                                                 {message.timestamp.toLocaleTimeString()}
                                                             </span>
@@ -387,9 +393,9 @@ export function AIChat() {
                                                                 <Copy className="w-3 h-3 sm:mr-1" />
                                                                 <span className="hidden sm:inline">Copy</span>
                                                             </Button>
-                                                        </div>
+                                                        </section>
                                                     )}
-                                                </div>
+                                                </section>
 
                                                 {message.role === 'user' && (
                                                     <Avatar className="w-6 h-6 sm:w-8 sm:h-8 mt-1 flex-shrink-0">
@@ -399,11 +405,11 @@ export function AIChat() {
                                                         </AvatarFallback>
                                                     </Avatar>
                                                 )}
-                                            </div>
+                                            </section>
                                         ))}
-                                        {/* Invisible div for scrolling to bottom */}
-                                        <div ref={messagesEndRef} />
-                                    </div>
+                                        {/* Invisible section for scrolling to bottom */}
+                                        <section ref={messagesEndRef} />
+                                    </section>
                                 )}
                             </ScrollArea>
                         </CardContent>
@@ -413,10 +419,10 @@ export function AIChat() {
                     {chatState.error && (
                         <Card className="border-destructive bg-destructive/5">
                             <CardContent className="p-3 sm:p-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2 text-destructive">
+                                <section className="flex items-center justify-between">
+                                    <section className="flex items-center space-x-2 text-destructive">
                                         <span className="text-sm font-medium">Error: {chatState.error}</span>
-                                    </div>
+                                    </section>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -424,7 +430,7 @@ export function AIChat() {
                                     >
                                         Dismiss
                                     </Button>
-                                </div>
+                                </section>
                             </CardContent>
                         </Card>
                     )}
@@ -432,8 +438,8 @@ export function AIChat() {
                     {/* Input Area */}
                     <Card className="border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors">
                         <CardContent className="p-3 sm:p-4">
-                            <div className="flex space-x-2 sm:space-x-3">
-                                <div className="flex-1 relative">
+                            <section className="flex space-x-2 sm:space-x-3">
+                                <section className="flex-1 relative">
                                     <Textarea
                                         ref={inputRef}
                                         value={input}
@@ -446,11 +452,11 @@ export function AIChat() {
                                         rows={1}
                                     />
                                     {chatState.isLoading && (
-                                        <div className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2">
+                                        <section className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2">
                                             <Loading variant="spinner" size="sm" />
-                                        </div>
+                                        </section>
                                     )}
-                                </div>
+                                </section>
                                 <Button
                                     onClick={sendMessage}
                                     disabled={!input.trim() || chatState.isLoading}
@@ -460,8 +466,8 @@ export function AIChat() {
                                     <Send className="w-4 h-4 sm:mr-2" />
                                     <span className="hidden sm:inline">Send</span>
                                 </Button>
-                            </div>
-                            <div className="flex items-center justify-between mt-2 sm:mt-3 text-xs text-muted-foreground">
+                            </section>
+                            <section className="flex items-center justify-between mt-2 sm:mt-3 text-xs text-muted-foreground">
                                 <span className="hidden sm:inline">Press Enter to send • Shift+Enter for new line</span>
                                 <span className="sm:hidden">Enter to send</span>
                                 <span className={cn(
@@ -471,11 +477,11 @@ export function AIChat() {
                                 )}>
                                     {input.length}/2000
                                 </span>
-                            </div>
+                            </section>
                         </CardContent>
                     </Card>
-                </div>
-            </div>
-        </div>
+                </section>
+            </section>
+        </section>
     )
 }

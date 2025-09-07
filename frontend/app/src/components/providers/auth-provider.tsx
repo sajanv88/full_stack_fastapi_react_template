@@ -1,19 +1,28 @@
-import { ApiClient, Permission, type UserMeResponse } from "@/api";
+import { ApiClient, Gender, Permission, type UserMeResponse } from "@/api";
 import { clearAllTokens, clearIsLoggedIn, getAccessToken, getRefreshToken, isLoggedIn, scheduleTokenRefresh, storeTokenSet } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
 
+export type UpdateProfileType = {
+    firstName: string;
+    lastName: string;
+    gender: Gender;
+    imageUrl: string | null;
+}
 type AuthProviderState = {
     isLoggedIn: boolean;
     user: UserMeResponse | null;
     can: (action: Permission) => boolean;
+    onUpdateProfile: (data: UpdateProfileType) => Promise<void>;
 }
 
 const authContext = createContext<AuthProviderState>({
     isLoggedIn: false,
     user: null,
-    can: () => false
+    can: () => false,
+    onUpdateProfile: async () => { }
 });
 
 
@@ -21,7 +30,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [authState, setAuthState] = useState<AuthProviderState>({
         isLoggedIn: false,
         user: null,
-        can: () => false
+        can: () => false,
+        onUpdateProfile: async () => { }
     });
     const navigate = useNavigate();
     useEffect(() => {
@@ -58,18 +68,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         const fetchUser = async () => {
             const accessToken = getAccessToken()
-            const auth = new ApiClient({
+            const apiClient = new ApiClient({
                 HEADERS: {
                     "Authorization": `Bearer ${accessToken}`
                 }
-            }).auth;
+            });
+            const auth = apiClient.auth;
+            const users = apiClient.users;
             try {
                 const user = await auth.readUsersMeApiV1AuthMeGet();
                 setAuthState({
                     isLoggedIn: true,
-                    user,
+                    user: {
+                        ...user,
+                        image_url: user?.image_url ? user?.image_url : "https://github.com/evilrabbit.png",
+                    },
                     can: (action: Permission) => {
                         return user?.role?.permissions?.includes(action) ?? false;
+                    },
+                    onUpdateProfile: async (data: UpdateProfileType) => {
+                        try {
+                            await users.updateUserApiV1UsersUserIdPut({
+                                userId: user.id,
+                                requestBody: {
+                                    first_name: data.firstName,
+                                    last_name: data.lastName,
+                                    gender: data.gender,
+                                    image_url: data.imageUrl,
+                                }
+                            })
+                            toast.success("Profile updated successfully", {
+                                richColors: true
+                            });
+                            await fetchUser();
+                        } catch (error) {
+                            console.error("Error updating profile:", error);
+                            toast.error("Failed to update profile", {
+                                richColors: true
+                            });
+                        }
                     }
                 });
                 if (isLoggedIn()) {

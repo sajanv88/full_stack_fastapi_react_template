@@ -7,5 +7,6 @@ export type UserUpdate = {
   first_name?: (string | null);
   last_name?: (string | null);
   gender?: (Gender | null);
+  image_url?: (string | null);
 };
 
