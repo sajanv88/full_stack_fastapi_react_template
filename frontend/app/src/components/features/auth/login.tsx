@@ -17,6 +17,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { NavLink } from "react-router";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Logo } from "@/components/shared/logo";
+import { useAppConfig } from "@/components/providers/app-config-provider";
+import { TenantSelection } from "../tenant/tenant-selection";
 
 
 
@@ -35,6 +37,7 @@ export function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { login } = useAuth();
+    const appConfig = useAppConfig();
 
     const form = useForm<LoginFormInputs>({
         resolver: zodResolver(loginSchema),
@@ -64,6 +67,10 @@ export function Login() {
 
     return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+            {appConfig.is_multi_tenant_enabled && (
+                
+                <TenantSelection />
+            )}
             <Card className="w-full max-w-md shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-2xl font-bold text-center">

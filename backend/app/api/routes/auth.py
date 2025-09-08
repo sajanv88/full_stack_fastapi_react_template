@@ -17,7 +17,7 @@ from app.core.smtp_email import ActivationEmailSchema, send_activation_email, ve
 from app.core.utils import is_tenancy_enabled
 from app.services.tenant_service import TenantService
 from app.services.users_service import UserService
-from app.core.db import client
+from app.core.db import client, get_db_reference
 
 router = APIRouter(prefix="/auth")
 router.tags = ["Auth"]
@@ -93,8 +93,12 @@ async def get_guest_role_detail():
 
 
 @router.post("/login", response_model=TokenSet)
-async def login(login_request: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user = await user_collection.find_one({"email": login_request.username})
+async def login(
+    login_request: Annotated[OAuth2PasswordRequestForm, Depends()], 
+     db = Depends(get_db_reference)
+):
+    user_service =  UserService(db)
+    user = await user_service.get_raw_find_by_email(login_request.username)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -199,7 +203,7 @@ async def resend_activation_email(
 
 
 @router.get("/me", response_model=UserMeResponse)
-async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
+async def read_users_me(current_user: Annotated[User, Depends(get_current_user)], db = Depends(get_db_reference)):
     user = seralize_user_schema(current_user)
     if current_user['role_id']:
         role = await role_collection.find_one({"_id": ObjectId(current_user["role_id"])})
@@ -209,7 +213,7 @@ async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]
 
 
 @router.post("/refresh", response_model=TokenSet)
-async def refresh_token(token: RefreshRequest):
+async def refresh_token(token: RefreshRequest, db = Depends(get_db_reference)):
     try:
         refresh_token = token.refresh_token
         payload = verify_refresh_token(refresh_token)
@@ -219,7 +223,8 @@ async def refresh_token(token: RefreshRequest):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid refresh token"
             )
-        user = await user_collection.find_one({"_id": ObjectId(user_id)})
+        user_service = UserService(db)
+        user = await user_service.get_user(user_id)
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -237,9 +242,11 @@ async def refresh_token(token: RefreshRequest):
 async def change_email(
     current_user: Annotated[User, Depends(get_current_user)],
     email_update: UserEmailUpdate,
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
+    db = Depends(get_db_reference)
 ):
-    user = await user_collection.find_one({"_id": ObjectId(current_user["_id"])})
+    user_service = UserService(db)
+    user = await user_service.get_user(current_user["_id"])
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -251,10 +258,12 @@ async def change_email(
             detail="Email is the same as the current email"
         )
 
-    result = await user_collection.update_one(
-        {"_id": ObjectId(current_user["_id"])},
-        {"$set": {"email": email_update.new_email, "is_active": False, "activated_at": None}}
-    )
+    result = await user_service.update_user(current_user["_id"], {
+        "email": email_update.new_email,
+        "is_active": False,
+        "activated_at": None
+    })
+
 
     if result.modified_count == 1:
         activation_email_data = ActivationEmailSchema(
@@ -270,7 +279,7 @@ async def change_email(
     
 
 @router.post("/activate")
-async def activate_account(request: ActivationRequest):
+async def activate_account(request: ActivationRequest, db = Depends(get_db_reference)):
     """
     Activate user account using the activation token.
     """
@@ -281,7 +290,8 @@ async def activate_account(request: ActivationRequest):
         email = token_data.get("email")
         
         # Find the user in the database
-        user = await user_collection.find_one({"_id": ObjectId(user_id), "email": email})
+        user_service = UserService(db)
+        user = await user_service.get_user(user_id)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -296,11 +306,11 @@ async def activate_account(request: ActivationRequest):
             )
         
         # Activate the user account
-        await user_collection.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"is_active": True, "activated_at": datetime.utcnow()}}
-        )
-        
+        await user_service.update_user(user_id, {
+            "is_active": True,
+            "activated_at": datetime.utcnow()
+        })
+
         return {
             "message": "Account activated successfully",
             "email": email

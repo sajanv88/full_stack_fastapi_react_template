@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Loading } from '@/components/shared/loading'
-import { cn, getAccessToken } from '@/lib/utils'
+import { cn, getAccessToken, getTenant } from '@/lib/utils'
 import { Send, Bot, User, Sparkles, Copy, RefreshCw, Trash2, InfoIcon } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { ListLocalAIModels } from '@/components/shared/list-local-ai-models'
@@ -113,7 +113,7 @@ export function AIChat() {
 
         try {
             const accessToken = getAccessToken();
-
+            const tenant = getTenant();
             const payload: AIRequest = {
                 question: userMessage.content,
                 model_name: selectedModel?.name
@@ -122,7 +122,8 @@ export function AIChat() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${accessToken}`
+                    Authorization: `Bearer ${accessToken}`,
+                    ...tenant?.id && { 'X-Tenant-ID': tenant.id }
                 },
                 body: JSON.stringify(payload)
             })

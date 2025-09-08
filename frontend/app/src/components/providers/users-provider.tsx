@@ -1,7 +1,7 @@
-import { ApiClient, NewUser, UserListResponse, UserUpdate } from '@/api';
+import { NewUser, UserListResponse, UserUpdate } from '@/api';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { IResponseData } from '../shared/iresponse-data.inteface';
-import { getAccessToken } from '@/lib/utils';
+import { getApiClient } from '@/lib/utils';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 
@@ -59,12 +59,7 @@ export function UsersProvider({ children }: UsersProviderProps) {
     const [userError, setUserError] = useState<string | null>(null);
     const [userResponse, setUserResponse] = useState<IResponseData<UsersType>>(initialState.userResponse);
     const [selectedUser, setSelectedUser] = useState<Action | undefined>(initialState.selectedUser);
-    const accessToken = getAccessToken();
-    const apiClient = new ApiClient({
-        HEADERS: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-    });
+    const apiClient = getApiClient();
     const user = apiClient.users;
     const auth = apiClient.auth;
 

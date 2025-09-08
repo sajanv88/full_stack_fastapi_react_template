@@ -78,3 +78,15 @@ async def create_tenant(
     if not result:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create tenant")
     return await tenant_service.get_tenant(str(result.inserted_id))
+
+
+@router.get("/search_by_name", response_model=Tenant)
+async def search_tenant_by_name(
+    name: str,
+    db = Depends(get_db_reference)
+):
+    tenant_service = TenantService(db)
+    tenant = await tenant_service.find_by_name(name)
+    if not tenant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+    return tenant

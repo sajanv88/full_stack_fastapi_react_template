@@ -1,5 +1,5 @@
-import { ApiClient, Gender, Permission, type UserMeResponse } from "@/api";
-import { clearAllTokens, clearIsLoggedIn, getAccessToken, getRefreshToken, isLoggedIn, scheduleTokenRefresh, storeTokenSet, userProfileImageUrl } from "@/lib/utils";
+import { Gender, Permission, type UserMeResponse } from "@/api";
+import { clearAllTokens, clearIsLoggedIn, getApiClient, getRefreshToken, isLoggedIn, scheduleTokenRefresh, storeTokenSet, userProfileImageUrl } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -40,12 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { pathname } = useLocation();
     useEffect(() => {
         async function refreshToken() {
-            const accessToken = getAccessToken()
-            const auth = new ApiClient({
-                HEADERS: {
-                    "Authorization": `Bearer ${accessToken}`
-                }
-            }).auth;
+
+            const auth = getApiClient().auth;
             const refreshToken = getRefreshToken()
             clearIsLoggedIn();
             if (!refreshToken) {
@@ -71,12 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         }
         const fetchUser = async () => {
-            const accessToken = getAccessToken()
-            const apiClient = new ApiClient({
-                HEADERS: {
-                    "Authorization": `Bearer ${accessToken}`
-                }
-            });
+            const apiClient = getApiClient();
             const auth = apiClient.auth;
             const users = apiClient.users;
             try {

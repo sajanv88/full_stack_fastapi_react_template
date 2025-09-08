@@ -18,6 +18,7 @@ import {
 import { NavLink, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/shared/logo";
+import { useAppConfig } from "@/components/providers/app-config-provider";
 
 // Gender enum matching the backend
 export const Gender = {
@@ -35,6 +36,7 @@ const signupSchema = z.object({
     lastName: z.string()
         .min(1, { message: "Last name cannot be empty" })
         .trim(),
+    subdomain: z.string().optional(),
     email: z.email({ message: "Email must be a valid email address" }),
     password: z.string()
         .min(8, { message: "Password must be at least 8 characters" })
@@ -57,6 +59,11 @@ export default function Register() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate()
     const { register } = useAuth();
+    const appConfig = useAppConfig();
+
+    const isMultiTenancyEnabled = appConfig.is_multi_tenant_enabled;
+    const multiTenancyStrategy = appConfig.multi_tenancy_strategy;
+
 
     const form = useForm<SignupFormInputs>({
         resolver: zodResolver(signupSchema),
@@ -67,6 +74,7 @@ export default function Register() {
             password: "",
             confirmPassword: "",
             gender: Gender.UNKNOWN,
+            subdomain: "",
         },
     });
 
@@ -78,7 +86,8 @@ export default function Register() {
                 password: data.password,
                 first_name: data.firstName,
                 last_name: data.lastName,
-                gender: data.gender
+                gender: data.gender,
+                sub_domain: data.subdomain
             });
             toast.success("Registration successful! Please check your email for verification.", {
                 duration: 5000,
@@ -97,6 +106,8 @@ export default function Register() {
         }
 
     };
+
+
 
     return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
@@ -151,6 +162,27 @@ export default function Register() {
                                     </FormItem>
                                 )}
                             />
+                            {isMultiTenancyEnabled && multiTenancyStrategy === "subdomain" && (
+                                <FormField
+                                    control={form.control}
+                                    name="subdomain"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Subdomain</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="text"
+                                                    placeholder="Enter your subdomain"
+                                                    disabled={isLoading}
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
+
 
                             {/* Email */}
                             <FormField

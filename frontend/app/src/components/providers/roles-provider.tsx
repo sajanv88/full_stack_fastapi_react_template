@@ -1,9 +1,9 @@
-import { ApiClient, NewRole, RoleListResponse } from '@/api';
+import { NewRole, RoleListResponse } from '@/api';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { IResponseData } from '../shared/iresponse-data.inteface';
-import { getAccessToken } from '@/lib/utils';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
+import { getApiClient } from '@/lib/utils';
 
 
 export type RoleResponse = RoleListResponse["data"]
@@ -60,12 +60,7 @@ export function RolesProvider({ children }: RolesProviderProps) {
 
     const [roleResponse, setRoleResponse] = useState<IResponseData<RolesType>>(initialState.roleResponse);
     const [selectedRole, setSelectedRole] = useState<Action | undefined>(initialState.selectedRole);
-    const accessToken = getAccessToken();
-    const apiClient = new ApiClient({
-        HEADERS: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-    });
+    const apiClient = getApiClient();
     const role = apiClient.roles;
 
     async function fetchRoles() {

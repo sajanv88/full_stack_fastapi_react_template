@@ -1,10 +1,11 @@
-import { ApiClient, type NewUser } from "@/api";
-import { storeTokenSet } from "@/lib/utils";
+import { type NewUser } from "@/api";
+import { getApiClient, storeTokenSet } from "@/lib/utils";
 import { toast } from "sonner";
 
-const auth = new ApiClient().auth
+
 
 export function useAuth() {
+    const auth = getApiClient().auth
     async function login(data: { email: string; password: string }) {
         try {
             const result = await auth.loginApiV1AuthLoginPost({

@@ -40,8 +40,7 @@ import {
 } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { toast } from 'sonner'
-import { getAccessToken } from '@/lib/utils'
-import { ApiClient } from '@/api'
+import { getApiClient } from '@/lib/utils'
 
 // Form validation schema
 const profileSchema = z.object({
@@ -121,20 +120,14 @@ export function Profile() {
             const formData = new FormData()
             formData.append('file', file)
 
-            const accessToken = getAccessToken()
             // TODO: Implement image upload API endpoint
-            const apiClient = new ApiClient({
-                HEADERS: {
-                    Authorization: `Bearer ${accessToken}`
-                }
-            })
+            const apiClient = getApiClient();
             await apiClient.users.updateProfilePictureApiV1UsersUserIdUpdateProfilePicturePut({
                 formData: {
                     file: file as File
                 },
                 userId: user?.id!
             })
-            console.log('Image upload ready for API implementation', { accessToken, formData })
             toast.success('Profile image updated successfully!')
             await refreshCurrentUser()
 

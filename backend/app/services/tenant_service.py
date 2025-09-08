@@ -20,6 +20,10 @@ class TenantService:
         tenant = await self.tenant_collection.find_one({"_id": ObjectId(tenant_id)})
         return await self.serialize(tenant)
 
+    async def find_by_name(self, name: str):
+        tenant = await self.tenant_collection.find_one({"name": name})
+        return await self.serialize(tenant)
+
     async def update_tenant(self, tenant_id: str, tenant: dict):
         return await self.tenant_collection.update_one({"_id": ObjectId(tenant_id)}, {"$set": tenant})
 
@@ -34,5 +38,5 @@ class TenantService:
         return {
             "id": str(tenant["_id"]),
             "name": tenant["name"],
-            "subdomain": tenant["subdomain"]
+            "subdomain": tenant["sub_domain"] if "sub_domain" in tenant else None
         }

@@ -12,7 +12,11 @@ class SubdomainTenantDBMiddleware(BaseHTTPMiddleware):
         # Extract subdomain (tenant1.myapp.com → tenant1)
         parts = host.split(".")
         if len(parts) < 3:  # e.g., myapp.com (no subdomain)
-            raise HTTPException(status_code=400, detail="Tenant subdomain missing")
+            print("No subdomain found, hence using default.")
+            request.state.db = None
+            request.state.tenant_id = None
+            return await call_next(request)
+            
 
         tenant = tenant_collection.find_one({"name": parts[0]})
 

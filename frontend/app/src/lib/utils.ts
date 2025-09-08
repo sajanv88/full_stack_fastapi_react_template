@@ -1,4 +1,4 @@
-import type { TokenSet } from "@/api"
+import { ApiClient, type Tenant, type TokenSet } from "@/api"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -38,6 +38,19 @@ export function clearAllTokens() {
 }
 
 
+export function setTenant(tenant: Tenant | null) {
+  if (!tenant) {
+    localStorage.removeItem("_tenant");
+    return;
+  }
+  localStorage.setItem("_tenant", JSON.stringify(tenant));
+}
+
+export function getTenant(): Tenant | null {
+  const tenant = localStorage.getItem("_tenant");
+  return tenant ? JSON.parse(tenant) : null;
+}
+
 export function scheduleTokenRefresh(cb: () => Promise<void>) {
   const refreshToken = getRefreshToken();
   if (!refreshToken) {
@@ -65,4 +78,26 @@ export function scheduleTokenRefresh(cb: () => Promise<void>) {
 export function userProfileImageUrl(url: string | null | undefined) {
   if (!url) return "https://github.com/evilrabbit.png";
   return url.replace("app/ui", "");
+}
+
+
+export function getApiClient() {
+  const accessToken = getAccessToken();
+  const tenant = getTenant();
+  if (!accessToken) {
+    if (tenant) {
+      return new ApiClient({
+        HEADERS: {
+          "X-Tenant-ID": tenant.id
+        }
+      })
+    }
+    return new ApiClient();
+  }
+  return new ApiClient({
+    HEADERS: {
+      Authorization: `Bearer ${accessToken}`,
+      ...tenant?.id && { "X-Tenant-ID": tenant.id }
+    }
+  });
 }

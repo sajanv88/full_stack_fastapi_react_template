@@ -52,4 +52,25 @@ export class TenantsService {
       },
     });
   }
+  /**
+   * Search Tenant By Name
+   * @returns Tenant Successful Response
+   * @throws ApiError
+   */
+  public searchTenantByNameApiV1TenantsSearchByNameGet({
+    name,
+  }: {
+    name: string,
+  }): CancelablePromise<Tenant> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/tenants/search_by_name',
+      query: {
+        'name': name,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

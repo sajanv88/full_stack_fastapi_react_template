@@ -17,6 +17,13 @@ class UserService():
             print("Error finding user by email:", error)
             return None
 
+    async def get_raw_find_by_email(self, email: str):
+        try:
+            user = await self.user_collection.find_one({"email": email})
+            return user
+        except Exception as error:
+            print("Error getting raw user data:", error)
+            return None
 
     async def get_user(self, user_id: str):
         try:

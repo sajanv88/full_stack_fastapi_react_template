@@ -10,9 +10,9 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
-import { ApiClient, DashboardMetrics } from "@/api";
-import { getAccessToken } from "@/lib/utils";
+import { DashboardMetrics } from "@/api";
 import { Loading } from "@/components/shared/loading";
+import { getApiClient } from "@/lib/utils";
 
 
 
@@ -23,15 +23,8 @@ export function Dashboard() {
 
     useEffect(() => {
         async function fetchData() {
-            const token = getAccessToken()
-            const apiClient = new ApiClient({
-                HEADERS: {
-                    Authorization: `Bearer ${token}`
-                }
-            }).dashboard
-
             try {
-                const metrics = await apiClient.getDashboardMetricsApiV1DashboardGet({ filter })
+                const metrics = await getApiClient().dashboard.getDashboardMetricsApiV1DashboardGet({ filter })
                 setData(metrics);
             } catch (error) {
                 if (error instanceof Error) {
