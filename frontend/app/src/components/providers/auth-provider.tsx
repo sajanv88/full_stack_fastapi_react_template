@@ -1,7 +1,7 @@
 import { ApiClient, Gender, Permission, type UserMeResponse } from "@/api";
 import { clearAllTokens, clearIsLoggedIn, getAccessToken, getRefreshToken, isLoggedIn, scheduleTokenRefresh, storeTokenSet, userProfileImageUrl } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 
 
@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         refreshCurrentUser: async () => { }
     });
     const navigate = useNavigate();
+    const { pathname } = useLocation();
     useEffect(() => {
         async function refreshToken() {
             const accessToken = getAccessToken()
@@ -124,8 +125,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
         };
-        fetchUser();
-        scheduleTokenRefresh(refreshToken);
+
+        if (pathname !== "/register") {
+            fetchUser();
+            scheduleTokenRefresh(refreshToken);
+        }
+
     }, []);
 
     return (

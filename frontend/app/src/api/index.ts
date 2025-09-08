@@ -12,6 +12,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { ActivationRequest } from './models/ActivationRequest';
 export type { AIRequest } from './models/AIRequest';
+export type { AppConfigResponse } from './models/AppConfigResponse';
 export type { Body_login_api_v1_auth_login_post } from './models/Body_login_api_v1_auth_login_post';
 export type { Body_update_profile_picture_api_v1_users__user_id__update_profile_picture_put } from './models/Body_update_profile_picture_api_v1_users__user_id__update_profile_picture_put';
 export type { DashboardMetrics } from './models/DashboardMetrics';
@@ -42,6 +43,7 @@ export type { UserUpdate } from './models/UserUpdate';
 export type { ValidationError } from './models/ValidationError';
 
 export { AiService } from './services/AiService';
+export { AppConfigService } from './services/AppConfigService';
 export { AuthService } from './services/AuthService';
 export { DashboardService } from './services/DashboardService';
 export { PermissionsService } from './services/PermissionsService';

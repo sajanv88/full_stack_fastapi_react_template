@@ -24,6 +24,9 @@ def is_tenancy_enabled() -> bool:
     multi_tenancy_strategy = os.getenv("MULTI_TENANCY_STRATEGY", "none").lower()
     return multi_tenancy_strategy != "none"
 
+def get_tenancy_strategy() -> str:
+    return os.getenv("MULTI_TENANCY_STRATEGY", "none").lower()
+
 
 # Simple utility function to store file. Later, will configure AWS S3, Azure storage etc..
 def save_file(file, upload_dir="app/ui/assets/user_profiles"):

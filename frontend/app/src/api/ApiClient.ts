@@ -6,6 +6,7 @@ import type { BaseHttpRequest } from './core/BaseHttpRequest';
 import type { OpenAPIConfig } from './core/OpenAPI';
 import { FetchHttpRequest } from './core/FetchHttpRequest';
 import { AiService } from './services/AiService';
+import { AppConfigService } from './services/AppConfigService';
 import { AuthService } from './services/AuthService';
 import { DashboardService } from './services/DashboardService';
 import { PermissionsService } from './services/PermissionsService';
@@ -15,6 +16,7 @@ import { UsersService } from './services/UsersService';
 type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
 export class ApiClient {
   public readonly ai: AiService;
+  public readonly appConfig: AppConfigService;
   public readonly auth: AuthService;
   public readonly dashboard: DashboardService;
   public readonly permissions: PermissionsService;
@@ -35,6 +37,7 @@ export class ApiClient {
       ENCODE_PATH: config?.ENCODE_PATH,
     });
     this.ai = new AiService(this.request);
+    this.appConfig = new AppConfigService(this.request);
     this.auth = new AuthService(this.request);
     this.dashboard = new DashboardService(this.request);
     this.permissions = new PermissionsService(this.request);

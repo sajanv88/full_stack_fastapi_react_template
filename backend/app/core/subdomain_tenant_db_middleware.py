@@ -1,6 +1,6 @@
 from fastapi import  Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.core.db import client
+from app.core.db import client, tenant_collection
 
 class SubdomainTenantDBMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -14,10 +14,16 @@ class SubdomainTenantDBMiddleware(BaseHTTPMiddleware):
         if len(parts) < 3:  # e.g., myapp.com (no subdomain)
             raise HTTPException(status_code=400, detail="Tenant subdomain missing")
 
-        tenant_id = parts[0]
+        tenant = tenant_collection.find_one({"name": parts[0]})
+
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant not found")
+
+        tenant_id = str(tenant["_id"])
 
         # Assign tenant-specific DB
         request.state.db = client[f"tenant_{tenant_id}"]
+        request.state.tenant_id = tenant_id
         print(f"Using database: tenant_{tenant_id} for the domain {host}")
         response = await call_next(request)
         return response

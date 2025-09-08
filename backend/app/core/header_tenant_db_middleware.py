@@ -9,10 +9,12 @@ class TenantDBMiddleware(BaseHTTPMiddleware):
         if not tenant_id:
             print("Missing X-Tenant-ID header hence, considering default!")
             request.state.db = None
+            request.state.tenant_id = None
             return await call_next(request)
 
         # Select tenant database
         request.state.db = client[f"tenant_{tenant_id}"]
+        request.state.tenant_id = tenant_id
         print(f"Using database: tenant_{tenant_id}")
         response = await call_next(request)
         return response
