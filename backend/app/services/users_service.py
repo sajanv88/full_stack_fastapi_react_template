@@ -7,8 +7,8 @@ class UserService():
         self.db = db
         self.user_collection: AsyncIOMotorCollection = db.users
 
-    async def total_count(self):
-        return await self.user_collection.count_documents({})
+    async def total_count(self, params: dict = {}):
+        return await self.user_collection.count_documents(params)
 
     async def find_by_email(self, email:str):
         try:
