@@ -2,15 +2,16 @@ from datetime import datetime
 from fastapi import Depends, APIRouter, status, HTTPException, Response
 from pydantic import BaseModel
 from typing import List
-from app.core.db import role_collection
 from app.models.user import  User
 from app.models.role import NewRole, Role
-from app.schemas.role_schema import list_roles, serialize_role_schema
-from bson import ObjectId
+
 from typing import Annotated
 from app.api.routes.auth import get_current_user
 from app.core.role_checker import  create_permission_checker
 from app.core.permission import Permission
+from app.services.role_service import RoleService
+from app.core.db import get_db_reference
+
 
 router = APIRouter(prefix="/roles")
 router.tags = ["Roles"]
@@ -33,11 +34,12 @@ class RoleListResponse(BaseModel):
 async def get_roles(
     current_user: Annotated[User, Depends(get_current_user)],
     skip: int = 0, limit: int = 10,
-    _: bool = Depends(create_permission_checker([Permission.ROLE_VIEW_ONLY]))
+    _: bool = Depends(create_permission_checker([Permission.ROLE_VIEW_ONLY])),
+     db = Depends(get_db_reference)
 ):
-    roles_cursor = role_collection.find().skip(skip).limit(limit)
-    roles_data = list_roles(await roles_cursor.to_list(length=limit))
-    total = await role_collection.count_documents({})
+    role_service = RoleService(db)
+    roles_data = await role_service.list_roles(skip=skip, limit=limit)
+    total = await role_service.total_count()
     hasPrevious = skip > 0
     hasNext = (skip + limit) < total
     
@@ -61,10 +63,12 @@ async def get_roles(
 async def create_role(
     current_user: Annotated[User, Depends(get_current_user)],
     role: NewRole,
-    _: bool = Depends(create_permission_checker([Permission.ROLE_READ_AND_WRITE_ONLY]))
+    _: bool = Depends(create_permission_checker([Permission.ROLE_READ_AND_WRITE_ONLY])),
+     db = Depends(get_db_reference)
 ):
+    role_service = RoleService(db)
     try:
-        result = await role_collection.insert_one({
+        result = await role_service.create_role({
             "name": role.name,
             "description": role.description,
             "permissions": [Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY],  # Default permissions
@@ -82,11 +86,13 @@ async def create_role(
 async def get_role( 
     current_user: Annotated[User, Depends(get_current_user)],
     role_id: str,
-    _: bool = Depends(create_permission_checker([Permission.ROLE_VIEW_ONLY]))
+    _: bool = Depends(create_permission_checker([Permission.ROLE_VIEW_ONLY])),
+    db = Depends(get_db_reference)
 ):
-    role = await role_collection.find_one({"_id": ObjectId(role_id)})
+    role_service = RoleService(db)
+    role = await role_service.get_role(role_id)
     if role:
-        return serialize_role_schema(role)
+        return role
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
 
@@ -95,9 +101,11 @@ async def get_role(
 async def delete_role(
     current_user: Annotated[User, Depends(get_current_user)],
     role_id: str,
-    _: bool = Depends(create_permission_checker([Permission.ROLE_DELETE_ONLY]))
+    _: bool = Depends(create_permission_checker([Permission.ROLE_DELETE_ONLY])),
+    db = Depends(get_db_reference)
 ):
-    result = await role_collection.delete_one({"_id": ObjectId(role_id)})
+    role_service = RoleService(db)
+    result = await role_service.delete_role(role_id)
     if result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     else:
@@ -109,20 +117,19 @@ async def update_role(
     current_user: Annotated[User, Depends(get_current_user)],
     role_id: str,
     role:  NewRole,
-    _: bool = Depends(create_permission_checker([Permission.ROLE_READ_AND_WRITE_ONLY]))
+    _: bool = Depends(create_permission_checker([Permission.ROLE_READ_AND_WRITE_ONLY])),
+    db = Depends(get_db_reference)
 ):
+    role_service = RoleService(db)
     update_data = {k: v for k, v in role.model_dump().items() if v is not None}
     print("Updating role:", role_id, "with data:", update_data)
     if not update_data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No data provided for update")
-    
-    result = await role_collection.update_one(
-        {"_id": ObjectId(role_id)},
-        {"$set": update_data}
-    )
-    
+
+    result = await role_service.update_role(role_id, update_data)
+
     if result.matched_count == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+
+    return await role_service.get_role(role_id)
     
-    updated_role = await role_collection.find_one({"_id": ObjectId(role_id)})
-    return serialize_role_schema(updated_role)

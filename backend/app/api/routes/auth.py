@@ -18,6 +18,7 @@ from app.core.utils import is_tenancy_enabled
 from app.services.tenant_service import TenantService
 from app.services.users_service import UserService
 from app.core.db import client, get_db_reference
+from app.core.seeder import SeedDataForNewlyCreatedTenant
 
 router = APIRouter(prefix="/auth")
 router.tags = ["Auth"]
@@ -156,6 +157,8 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser, db = De
             tenant_id = str(user_dict["tenant_id"])
             db = client[f"tenant_{tenant_id}"]
             user_service = UserService(db)
+            tenant_seeder = SeedDataForNewlyCreatedTenant(db)
+            background_tasks.add_task(tenant_seeder.fill_roles, user_dict["email"])
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -177,13 +180,14 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser, db = De
         background_tasks.add_task(send_activation_email, activation_email_data)
         if user_dict["tenant_id"] in user_dict:
             return Response(status_code=status.HTTP_201_CREATED, headers={"X-Tenant-ID": str(user_dict["tenant_id"])})
+
         return Response(status_code=status.HTTP_201_CREATED)
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to create user"
         )
-    
+
 
 @router.post("/resend_activation_email", response_class=Response)
 async def resend_activation_email(

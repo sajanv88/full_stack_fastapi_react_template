@@ -3,9 +3,8 @@ import shutil
 from fastapi import BackgroundTasks, Depends, APIRouter, File, UploadFile, status, HTTPException, Response
 from pydantic import BaseModel
 from typing import List
-from app.core.db import get_db_reference, role_collection
+from app.core.db import get_db_reference
 from app.models.user import NewUser, User, UserUpdate
-from app.schemas.user_schema import list_users, seralize_user_schema
 from bson import ObjectId
 from typing import Annotated
 from app.api.routes.auth import get_current_user
@@ -16,6 +15,7 @@ from app.core.permission import Permission
 from app.models.role import RoleType
 from app.services.users_service import UserService
 from app.core.utils import save_file
+from app.services.role_service import RoleService
 
 router = APIRouter(prefix="/users")
 router.tags = ["Users"]
@@ -82,8 +82,8 @@ async def create_user(
         # Hash the password
         hashed_password = get_password_hash(user.password)
 
-        # Todo: Move this to a role service
-        role_guest = await role_collection.find_one({"name": RoleType.GUEST})
+        role_service = RoleService(db)
+        role_guest = await role_service.find_by_name(RoleType.GUEST)
 
         # Create user document
         user_doc = {

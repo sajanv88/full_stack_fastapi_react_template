@@ -1,10 +1,11 @@
 from app.models.user import User
 from bson import ObjectId
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
 
 class UserService():
-    def __init__(self, db):
+    def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
-        self.user_collection = db.users
+        self.user_collection: AsyncIOMotorCollection = db.users
 
     async def total_count(self):
         return await self.user_collection.count_documents({})

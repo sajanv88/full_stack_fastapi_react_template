@@ -1,5 +1,5 @@
 import { Gender, Permission, type UserMeResponse } from "@/api";
-import { clearAllTokens, clearIsLoggedIn, getApiClient, getRefreshToken, isLoggedIn, scheduleTokenRefresh, storeTokenSet, userProfileImageUrl } from "@/lib/utils";
+import { clearAllTokens, clearIsLoggedIn, getAccessToken, getApiClient, getRefreshToken, isLoggedIn, scheduleTokenRefresh, storeTokenSet, userProfileImageUrl } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -117,7 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         };
 
-        if (pathname !== "/register") {
+        const accessToken = getAccessToken();
+        if (pathname !== "/register" && accessToken) {
             fetchUser();
             scheduleTokenRefresh(refreshToken);
         }

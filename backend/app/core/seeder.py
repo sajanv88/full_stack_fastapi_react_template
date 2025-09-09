@@ -7,9 +7,13 @@ from app.core.password import get_password_hash
 from app.models.role import RoleType
 from app.core.permission import Permission
 from app.core.db import user_collection, role_collection
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
+
 import os
 from app.core.utils import is_tenancy_enabled
+
 from faker import Faker
+
 fake = Faker()
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com")
@@ -168,4 +172,33 @@ async def seed_default_data():
     print("Seeding completed.")
     # Example:
     # await check_new_fields_and_add([DBField("users", "created_at", datetime.utcnow()), DBField("roles", "created_at", datetime.utcnow())])
+
+
+
+# Invoke this only when a new tenant is created.
+class SeedDataForNewlyCreatedTenant:
+    def __init__(self, db: AsyncIOMotorDatabase):
+        self.db = db
+        self.user_collection: AsyncIOMotorCollection = db.users
+        self.role_collection: AsyncIOMotorCollection = db.roles
     
+    async def fill_roles(self, admin_email: str):
+        print(f"Filling roles for admin user: {admin_email}")
+        roles = [
+            {"name": RoleType.ADMIN, "description": "Admin role can give full access to application. Can read, write and delete any resource.", "permissions": [Permission.FULL_ACCESS]},
+            {"name": RoleType.USER, "description": "Regular user has read and update their own resources.", "permissions": [Permission.USER_SELF_READ_AND_WRITE_ONLY, Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY]},
+            {"name": RoleType.GUEST, "description": "Guest user has read only access to resources.", "permissions": [Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY]}
+        ]
+        if await self.role_collection.count_documents({}) != len(roles):
+            print("Roles collection is empty or outdated. Seeding roles...")
+            for role in roles:
+                role["created_at"] = datetime.utcnow()
+                await self.role_collection.find_one_and_replace({"name": role["name"]}, role, upsert=True)
+                print(f"Role upserted: {role['name']}")
+
+        admin_role = await self.role_collection.find_one({"name": RoleType.ADMIN})
+        await self.user_collection.update_one(
+            {"email": admin_email},
+            {"$set": {"role_id": ObjectId(admin_role["_id"])}}
+        )
+

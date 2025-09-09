@@ -36,7 +36,7 @@ export function useAuth() {
             toast.success("Registration successful!", {
                 richColors: true
             });
-            window.location.href = "/dashboard";
+            window.location.href = "/login";
         } catch (e) {
             if (e instanceof Error) {
                 throw e;
