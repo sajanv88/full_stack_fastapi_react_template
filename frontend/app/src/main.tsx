@@ -10,13 +10,13 @@ import { AppConfigProvider } from '@/components/providers/app-config-provider.ts
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename='/'>
-      <AppConfigProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <AppConfigProvider>
           <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <App />
           </ThemeProvider>
-        </AuthProvider>
-      </AppConfigProvider>
+        </AppConfigProvider>
+      </AuthProvider>
     </BrowserRouter>
 
   </StrictMode>,

@@ -19,7 +19,7 @@ export type ActionOption<D> = {
 
 interface TableActionsProps<D> {
     options: ActionOption<D>[];
-    resource: 'user' | 'role';
+    resource: 'user' | 'role' | 'tenant';
 }
 export function TableActions<D>({ options, resource }: TableActionsProps<D>) {
     const { can } = useAuthContext();
@@ -33,6 +33,11 @@ export function TableActions<D>({ options, resource }: TableActionsProps<D>) {
         const isRoleReadAndWrite = can("role:read_and_write_only");
         const isRoleDelete = can("role:delete_only");
         shouldDisableBtn = !isAdmin && !isRoleReadAndWrite && !isRoleDelete;
+    }
+    if (resource === 'tenant') {
+        const isHostManageTenants = can("host:manage_tenants");
+        console.log({ isHostManageTenants });
+        shouldDisableBtn = !isAdmin && !isHostManageTenants;
     }
     return (
         <DropdownMenu>

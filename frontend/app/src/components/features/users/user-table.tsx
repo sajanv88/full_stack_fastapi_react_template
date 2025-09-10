@@ -1,3 +1,4 @@
+import { useAuthContext } from "@/components/providers/auth-provider";
 import { UsersType, useUsers } from "@/components/providers/users-provider";
 import AdvanceTable from "@/components/shared/advance-table";
 import { IResponseData } from "@/components/shared/iresponse-data.inteface";
@@ -13,6 +14,12 @@ const columns = [
         header: "Actions",
         cell: (c) => {
             const { onSelectUser } = useUsers()
+            const { can } = useAuthContext()
+            const isUserSelfUpdate = can("user:self_read_and_write_only");
+            const isAdmin = can("full:access");
+            const shouldAllowUserActions = isAdmin || isUserSelfUpdate;
+
+
             const actionOptions: ActionOption<typeof c.row.original> = {
                 label: "Resend Activation Email",
                 data: c.row.original,
@@ -20,6 +27,7 @@ const columns = [
                     type: 'resend_email',
                     user: data
                 }),
+                disabled: shouldAllowUserActions
             }
 
             const baseOptions: ActionOption<typeof c.row.original>[] = [
@@ -30,6 +38,7 @@ const columns = [
                         type: 'edit',
                         user: data
                     }),
+                    disabled: shouldAllowUserActions
                 },
                 {
                     label: "Delete",
@@ -38,6 +47,7 @@ const columns = [
                         type: 'delete',
                         user: data
                     }),
+                    disabled: shouldAllowUserActions
                 }
             ];
 

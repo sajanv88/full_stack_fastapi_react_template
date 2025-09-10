@@ -29,6 +29,7 @@ const authContext = createContext<AuthProviderState>({
 
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+    // Todo: Fix this state later..
     const [authState, setAuthState] = useState<AuthProviderState>({
         isLoggedIn: false,
         user: null,
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!refreshToken) {
                 console.error("No refresh token available");
                 clearAllTokens();
-                navigate("/login");
+                window.location.href = "/login";
                 return;
             }
 
@@ -110,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (isLoggedIn()) {
                     return;
                 }
-                navigate("/dashboard");
+                window.location.href = "/dashboard";
             } catch (error) {
                 await refreshToken();
             }
@@ -121,6 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (pathname !== "/register" && accessToken) {
             fetchUser();
             scheduleTokenRefresh(refreshToken);
+        } else if (pathname !== "/login") {
+            window.location.href = "/login";
         }
 
     }, []);

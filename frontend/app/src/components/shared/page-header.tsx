@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-
+import { Plus } from "lucide-react"
 interface PageHeaderProps {
     title: string;
     subtitle?: string;
@@ -16,7 +16,11 @@ export function PageHeader({ title, subtitle, cta }: PageHeaderProps) {
                 <h1 className="text-2xl font-bold">{title}</h1>
                 {subtitle && <h2 className="text-sm text-muted-foreground">{subtitle}</h2>}
             </div>
-            {cta && <Button onClick={cta.onClick} disabled={cta.disabled}>{cta.label}</Button>}
+            {cta && <Button onClick={cta.onClick} disabled={cta.disabled}>
+                <Plus className="w-4 h-4" />
+                {cta.label}
+            </Button>
+            }
         </header>
     );
 }

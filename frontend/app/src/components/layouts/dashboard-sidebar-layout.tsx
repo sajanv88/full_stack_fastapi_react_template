@@ -20,18 +20,22 @@ import {
     User,
     MessageSquare,
     LogOut,
-    ChevronRight
+    ChevronRight,
+    Tent,
+    Cog
 } from 'lucide-react';
 
 const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/users?skip=0&limit=10", label: "Users", icon: Users },
     { href: "/roles?skip=0&limit=10", label: "Roles", icon: Shield },
+    { href: "/tenants?skip=0&limit=10", label: "Tenants", icon: Tent },
+    { href: "/settings", label: "Settings", icon: Cog },
 ];
 
 const bottomLinks = [
     { href: "/profile", label: "Profile", icon: User },
-    { href: "/ai", label: "Chat", icon: MessageSquare },
+    { href: "/ai", label: "AI Chat", icon: MessageSquare },
 ];
 
 

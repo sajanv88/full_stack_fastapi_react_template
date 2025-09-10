@@ -69,15 +69,15 @@ async def get_tenants(
 @router.post("/", response_model=Tenant)
 async def create_tenant(
     current_user: Annotated[User, Depends(get_current_user)],
-    tenant: Tenant,
+    tenant: NewTenantCreateRequest,
     _: bool = Depends(create_permission_checker([Permission.HOST_MANAGE_TENANTS])),
     db = Depends(get_db_reference)
 ):
-    tenant_service = TenantService(db)
-    result = await tenant_service.create_tenant(tenant)
-    if not result:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create tenant")
-    return await tenant_service.get_tenant(str(result.inserted_id))
+    # Todo: Reuse Auth service here... 
+    
+    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
+    
+    
 
 
 @router.get("/search_by_name", response_model=Tenant)

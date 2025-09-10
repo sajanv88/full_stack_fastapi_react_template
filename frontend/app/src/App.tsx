@@ -10,6 +10,10 @@ import Register from "@/components/features/auth/register";
 import { UsersProvider } from "@/components/providers/users-provider";
 import { RolesProvider } from "@/components/providers/roles-provider";
 import { AIChat } from "@/components/features/ai-chat/ai-chat";
+import { TenantsProvider } from "@/components/providers/tenant-provider";
+import { Tenants } from "@/components/features/tenant/tenant";
+import { SettingsProvider } from "@/components/providers/settings-provider";
+import { Settings } from "@/components/features/settings/settings";
 
 function App() {
 
@@ -34,6 +38,20 @@ function App() {
           </RolesProvider>
         }
         />
+        <Route path="tenants" element={
+          <TenantsProvider>
+            <Tenants />
+          </TenantsProvider>
+        }
+        />
+
+        <Route path="settings" element={
+          <SettingsProvider>
+            <Settings />
+          </SettingsProvider>
+        }
+        />
+
         <Route path="profile" element={<Profile />} />
         <Route path="ai" element={<AIChat />} />
       </Route>
