@@ -3,12 +3,11 @@ from jwt import InvalidTokenError
 import jwt
 from datetime import datetime
 from pydantic import BaseModel
-from app.core.db import get_db_reference, user_collection, role_collection
+from app.core.db import get_db_reference
 from app.models.user import NewUser, User, UserEmailUpdate
 from app.models.role import Role, RoleType
-from app.schemas.role_schema import serialize_role_schema
 from bson import ObjectId
-from typing import Annotated, Union
+from typing import Annotated, Optional, Union
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.core.token import TokenSet, verify_refresh_token, verify_token, TokenData, generate_token_set
 from app.schemas.user_schema import seralize_user_schema
@@ -19,6 +18,8 @@ from app.services.tenant_service import TenantService
 from app.services.users_service import UserService
 from app.core.db import client, get_db_reference
 from app.core.seeder import SeedDataForNewlyCreatedTenant
+from app.services.role_service import RoleService
+from app.models.tenant import Tenant
 
 router = APIRouter(prefix="/auth")
 router.tags = ["Auth"]
@@ -50,10 +51,14 @@ class ResendActivationEmailRequest(BaseModel):
     id: str
     first_name: str
 
+class NewRegistrationResponse(BaseModel):
+    new_tenant_created: bool
+    tenant: Optional[Tenant] = None
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login", refreshUrl="api/v1/auth/refresh")
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db = Depends(get_db_reference)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -64,33 +69,38 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         subject = payload.get("sub")
         if subject is None:
             raise credentials_exception
-        token_data = TokenData(email=payload["email"], sub=payload["sub"], role=payload["role"], is_active=payload["is_active"], activated_at=payload["activated_at"])
+        token_data = TokenData(
+            email=payload["email"],
+            sub=payload["sub"],
+            role=payload["role"],
+            is_active=payload["is_active"],
+            activated_at=payload["activated_at"],
+            tenant_id=payload["tenant_id"] 
+        )
     except InvalidTokenError:
         raise credentials_exception
-    user = await user_collection.find_one({"_id": ObjectId(token_data.sub)})
+    
+    user_service = UserService(db)
+    user = await user_service.get_user(token_data.sub)
     if user is None:
         raise credentials_exception
     return user
 
 
-async def get_token_data(user):
+async def get_token_data(user, role):
+ 
     token_data = {
-        "sub": str(user["_id"]),
+        "sub": str(user["id"]),
         "email": user["email"],
         "is_active": user["is_active"],
         "activated_at": str(user["activated_at"]) if "activated_at" in user else None,
-        "tenant_id": str(user["tenant_id"]) if "tenant_id" in user else None
-    }.copy()
-    if user["role_id"] is not None:
-        role = await role_collection.find_one({"_id": user["role_id"]})
-        token_data["role"] = serialize_role_schema(role)
-
+        "tenant_id": str(user["tenant_id"]) if "tenant_id" in user else None,
+        "role": role
+    }
     return token_data
 
 
-async def get_guest_role_detail():
-    role = await role_collection.find_one({"name": RoleType.GUEST})
-    return serialize_role_schema(role)
+
 
 
 @router.post("/login", response_model=TokenSet)
@@ -98,23 +108,33 @@ async def login(
     login_request: Annotated[OAuth2PasswordRequestForm, Depends()], 
      db = Depends(get_db_reference)
 ):
-    user_service =  UserService(db)
-    user = await user_service.get_raw_find_by_email(login_request.username)
-    if not user:
+    try:
+        user_service =  UserService(db)
+        user = await user_service.get_raw_find_by_email(login_request.username)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        if not verify_password(login_request.password, user["password"]):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        role_service = RoleService(db)
+        role = await role_service.get_role(user["role_id"])
+        user_dump = await user_service.serialize(user)
+        token_data = await get_token_data(user_dump, role)
+        return generate_token_set(token_data)
+    except Exception as e:
+        print(f"Error during login: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+            detail="Failed to authenticate"
         )
-    if not verify_password(login_request.password, user["password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
-    token_data = await get_token_data(user)
-    return generate_token_set(token_data)
 
 
-@router.post("/register", response_class=Response)
+@router.post("/register", response_model=NewRegistrationResponse)
 async def register(background_tasks: BackgroundTasks, new_user: NewUser, db = Depends(get_db_reference)):
     user_service = UserService(db)
     existing_user = await user_service.find_by_email(new_user.email)
@@ -123,15 +143,18 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser, db = De
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered"
         )
-    
+
+    role_service = RoleService(db)
+    tenant_service = TenantService(db)
+
     hashed_password = get_password_hash(new_user.password)
     user_dict = new_user.model_dump().copy()
     user_dict["password"] = hashed_password
     user_dict["is_active"] = False  # User starts as inactive until activation
-    guest_role = await get_guest_role_detail()
+    guest_role = await role_service.find_by_name(RoleType.GUEST)
     user_dict["role_id"] = ObjectId(guest_role["id"])
     user_dict["created_at"] = datetime.utcnow()
-
+    tenant_id = None
     
     if is_tenancy_enabled():
         sub_domain = user_dict['sub_domain']
@@ -141,7 +164,6 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser, db = De
                 detail="Subdomain is required"
             )
         
-        tenant_service = TenantService(db)
         try:
             result = await tenant_service.create_tenant({
                 "name": sub_domain.split(".")[0],
@@ -152,9 +174,9 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser, db = De
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Failed to create tenant"
                 )
+            tenant_id = str(result.inserted_id)
             print("Tenant created:", result.inserted_id)
             user_dict["tenant_id"] = ObjectId(result.inserted_id)
-            tenant_id = str(user_dict["tenant_id"])
             db = client[f"tenant_{tenant_id}"]
             user_service = UserService(db)
             tenant_seeder = SeedDataForNewlyCreatedTenant(db)
@@ -176,17 +198,26 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser, db = De
                 first_name=user_dict["first_name"],
                 tenant_id=str(user_dict["tenant_id"]) if user_dict["tenant_id"] in user_dict else None
             )
-
         background_tasks.add_task(send_activation_email, activation_email_data)
-        if user_dict["tenant_id"] in user_dict:
-            return Response(status_code=status.HTTP_201_CREATED, headers={"X-Tenant-ID": str(user_dict["tenant_id"])})
-
-        return Response(status_code=status.HTTP_201_CREATED)
     else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to create user"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create user"
         )
+
+    if tenant_id is not None:
+        tenant = await tenant_service.get_tenant(tenant_id)
+        return NewRegistrationResponse(
+            tenant=tenant,
+            new_tenant_created=True
+        )
+    else:
+        return NewRegistrationResponse(
+            tenant=None,
+            new_tenant_created=False
+        )
+
+       
 
 
 @router.post("/resend_activation_email", response_class=Response)
@@ -207,13 +238,24 @@ async def resend_activation_email(
 
 
 @router.get("/me", response_model=UserMeResponse)
-async def read_users_me(current_user: Annotated[User, Depends(get_current_user)], db = Depends(get_db_reference)):
-    user = seralize_user_schema(current_user)
-    if current_user['role_id']:
-        role = await role_collection.find_one({"_id": ObjectId(current_user["role_id"])})
-        user["role"] = serialize_role_schema(role)
-
-    return user
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db = Depends(get_db_reference)
+):
+    
+    print(f"Current user in /me: {current_user}")
+    try:
+        user_service = UserService(db)
+        role_service = RoleService(db)
+        user = await user_service.get_user(current_user["id"])
+        user["role"] = await role_service.get_role(user["role_id"])
+        return user
+    except Exception as e:
+        print(f"Error fetching user details: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected error happened. Please contact support."
+        )
 
 
 @router.post("/refresh", response_model=TokenSet)
@@ -234,7 +276,9 @@ async def refresh_token(token: RefreshRequest, db = Depends(get_db_reference)):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found"
             )
-        token_data = await get_token_data(user)
+        role_service = RoleService(db)
+        role = await role_service.get_role(user["role_id"])
+        token_data = await get_token_data(user, role)
         return generate_token_set(token_data)
     except InvalidTokenError:
          raise HTTPException(

@@ -1,5 +1,5 @@
 import { type NewUser } from "@/api";
-import { getApiClient, storeTokenSet } from "@/lib/utils";
+import { getApiClient, setTenant, storeTokenSet } from "@/lib/utils";
 import { toast } from "sonner";
 
 
@@ -30,13 +30,17 @@ export function useAuth() {
 
     async function register(data: NewUser) {
         try {
-            await auth.registerApiV1AuthRegisterPost({
+            const response = await auth.registerApiV1AuthRegisterPost({
                 requestBody: data
             });
-            toast.success("Registration successful!", {
-                richColors: true
-            });
-            window.location.href = "/login";
+
+            if (response.new_tenant_created && response.tenant) {
+                setTenant(response.tenant);
+                
+            }
+            setTimeout(() => {
+                window.location.href = "/login";
+            }, 2000);
         } catch (e) {
             if (e instanceof Error) {
                 throw e;

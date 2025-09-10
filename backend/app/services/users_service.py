@@ -73,6 +73,7 @@ class UserService():
             "is_active": user["is_active"],
             "activated_at": str(user["activated_at"]) if "activated_at" in user else None,
             "created_at": str(user["created_at"]) if "created_at" in user else None,
-            "image_url": user["image_url"] if "image_url" in user else None
+            "image_url": user["image_url"] if "image_url" in user else None,
+            "tenant_id": str(user["tenant_id"]) if "tenant_id" in user and user["tenant_id"] else None
         }
 

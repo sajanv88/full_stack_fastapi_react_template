@@ -1,16 +1,18 @@
-from typing import Annotated, List
+from typing import Annotated, Any, List, Optional
 from fastapi import Depends, HTTPException, status
 from app.api.routes.auth import get_current_user
 from app.models.user import User
-from app.models.role import RoleType
-from app.core.db import role_collection
-from app.schemas.role_schema import serialize_role_schema
-from bson import ObjectId
+from app.core.db import get_db_reference, client
 from app.core.permission import Permission
-from app.core.utils import is_tenancy_enabled
+from app.core.utils import get_default_db_name, is_tenancy_enabled
+from app.services.role_service import RoleService
 
 class DynamicRoleChecker:
-    def __init__(self, required_permissions: List[Permission], any_permission: bool = True, allow_self_access: bool = True):
+    def __init__(self,
+        required_permissions: List[Permission],
+        any_permission: bool = True,
+        allow_self_access: bool = True
+    ):
         """
         Initialize dynamic role checker
         
@@ -23,10 +25,15 @@ class DynamicRoleChecker:
         self.any_permission = any_permission
         self.allow_self_access = allow_self_access
 
-    async def get_role_detail(self, role_id: str):
-        role = await role_collection.find_one({"_id": ObjectId(role_id)})
-        return serialize_role_schema(role)
-    
+    async def get_role_detail(self, role_id: str, tenant_id: Optional[str] = None):
+        db = client[get_default_db_name()]
+        if tenant_id is not None and is_tenancy_enabled():
+            db = client[f"tenant_{tenant_id}"]
+
+        role_service = RoleService(db)
+        role = await role_service.get_role(role_id)
+        return role
+
     async def check_self_access(self, current_user: User, resource_id: str = None) -> bool:
         """Check if user is accessing their own resource"""
         if not resource_id or not self.allow_self_access:
@@ -57,7 +64,7 @@ class DynamicRoleChecker:
                     detail="User has no role assigned"
                 )
             
-            role = await self.get_role_detail(current_user['role_id'])
+            role = await self.get_role_detail(current_user['role_id'], tenant_id=current_user.get('tenant_id'))
             user_permissions = role.get("permissions", [])
             
             print(f"User permissions: {[p.value if hasattr(p, 'value') else str(p) for p in user_permissions]}")

@@ -40,7 +40,8 @@ import {
 } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { toast } from 'sonner'
-import { getApiClient } from '@/lib/utils'
+import { getApiClient, getTenant } from '@/lib/utils'
+import { useAppConfig } from '@/components/providers/app-config-provider'
 
 // Form validation schema
 const profileSchema = z.object({
@@ -59,7 +60,8 @@ export function Profile() {
     const [uploadingImage, setUploadingImage] = useState(false)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    console.log(user, "user");
+    const { is_multi_tenant_enabled } = useAppConfig()
+    const tenantDetails = getTenant();
     const form = useForm<ProfileFormData>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
@@ -409,7 +411,7 @@ export function Profile() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="space-y-2">
                             <Label className="text-sm font-medium text-muted-foreground">Account Status</Label>
                             <div className="flex items-center space-x-2">
@@ -455,6 +457,18 @@ export function Profile() {
                                 {user.id}
                             </p>
                         </div>
+
+                        {is_multi_tenant_enabled && user.tenant_id && (
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-muted-foreground">Tenant Details</Label>
+                                <p className="text-xs font-mono bg-muted px-2 py-1 rounded flex flex-col space-y-1.5">
+                                    <span className="text-xs text-muted-foreground"> {user.tenant_id} (Tenant ID)</span>
+                                    <span className="text-xs text-muted-foreground"> {tenantDetails?.name} (Tenant Name)</span>
+                                </p>
+                            </div>
+                        )}
+
+
                     </div>
                 </CardContent>
             </Card>

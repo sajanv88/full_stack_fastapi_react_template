@@ -1,11 +1,12 @@
 from fastapi import  APIRouter
 from pydantic import BaseModel
 
-from app.core.utils import is_tenancy_enabled,get_tenancy_strategy
+from app.core.utils import is_tenancy_enabled,get_tenancy_strategy, get_host_main_domain_name
 
 class AppConfigResponse(BaseModel):
     is_multi_tenant_enabled: bool
     multi_tenancy_strategy: str  # "subdomain" or "header"
+    host_main_domain: str
 
 
 router = APIRouter(prefix="/config")
@@ -16,5 +17,6 @@ async def get_app_config():
 
     return AppConfigResponse(
         is_multi_tenant_enabled=is_tenancy_enabled(),
-        multi_tenancy_strategy=get_tenancy_strategy()
+        multi_tenancy_strategy=get_tenancy_strategy(),
+        host_main_domain=get_host_main_domain_name()
     )

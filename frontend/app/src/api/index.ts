@@ -19,6 +19,7 @@ export type { DashboardMetrics } from './models/DashboardMetrics';
 export type { Gender } from './models/Gender';
 export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { ModelsResponse } from './models/ModelsResponse';
+export type { NewRegistrationResponse } from './models/NewRegistrationResponse';
 export type { NewRole } from './models/NewRole';
 export type { NewUser } from './models/NewUser';
 export type { Permission } from './models/Permission';

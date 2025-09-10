@@ -19,6 +19,7 @@ import { NavLink, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/shared/logo";
 import { useAppConfig } from "@/components/providers/app-config-provider";
+import { Label } from "@/components/ui/label";
 
 // Gender enum matching the backend
 export const Gender = {
@@ -57,13 +58,11 @@ type SignupFormInputs = z.infer<typeof signupSchema>;
 
 export default function Register() {
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate()
     const { register } = useAuth();
     const appConfig = useAppConfig();
 
     const isMultiTenancyEnabled = appConfig.is_multi_tenant_enabled;
-    const multiTenancyStrategy = appConfig.multi_tenancy_strategy;
-
+    const mainDomainName = appConfig.host_main_domain;
 
     const form = useForm<SignupFormInputs>({
         resolver: zodResolver(signupSchema),
@@ -81,24 +80,29 @@ export default function Register() {
     const onSubmit = async (data: SignupFormInputs) => {
         setIsLoading(true);
         try {
+            if (isMultiTenancyEnabled && (!data.subdomain || data.subdomain.trim() === "")) {
+                form.setError("subdomain", { message: "Subdomain is required" });
+                return;
+            }
             await register({
                 email: data.email,
                 password: data.password,
                 first_name: data.firstName,
                 last_name: data.lastName,
                 gender: data.gender,
-                sub_domain: data.subdomain
+                sub_domain: isMultiTenancyEnabled ? `${data.subdomain}.${mainDomainName}` : ""
             });
             toast.success("Registration successful! Please check your email for verification.", {
                 duration: 5000,
                 position: "top-center",
+                richColors: true
             });
-            navigate("/login");
 
         } catch (error) {
             toast.error("Registration failed. Please try again.", {
                 duration: 5000,
                 position: "top-center",
+                richColors: true
             });
         } finally {
             setIsLoading(false);
@@ -162,25 +166,38 @@ export default function Register() {
                                     </FormItem>
                                 )}
                             />
-                            {isMultiTenancyEnabled && multiTenancyStrategy === "subdomain" && (
-                                <FormField
-                                    control={form.control}
-                                    name="subdomain"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Subdomain</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="text"
-                                                    placeholder="Enter your subdomain"
-                                                    disabled={isLoading}
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            {isMultiTenancyEnabled && (
+                                <div className="flex space-x-2 items-center">
+                                    <FormField
+                                        control={form.control}
+                                        name="subdomain"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Subdomain</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="text"
+                                                        placeholder="subdomain name"
+                                                        disabled={isLoading}
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+
+                                    />
+                                    <span>
+                                        <Label htmlFor="base-domain" className="pb-3">Base Domain</Label>
+                                        <Input
+                                            id="base-domain"
+                                            type="text"
+                                            value={`.${mainDomainName}`}
+                                            disabled={true}
+
+                                        />
+                                    </span>
+                                </div>
                             )}
 
 

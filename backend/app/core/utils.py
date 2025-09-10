@@ -27,6 +27,13 @@ def is_tenancy_enabled() -> bool:
 def get_tenancy_strategy() -> str:
     return os.getenv("MULTI_TENANCY_STRATEGY", "none").lower()
 
+def get_host_main_domain_name() -> str:
+    return os.getenv("HOST_MAIN_DOMAIN", "fsrapp.com").lower()
+
+
+def get_default_db_name() -> str:
+    return os.getenv("MONGO_DB_NAME", "full_stack_fastapi_react_template")
+
 
 # Simple utility function to store file. Later, will configure AWS S3, Azure storage etc..
 def save_file(file, upload_dir="app/ui/assets/user_profiles"):

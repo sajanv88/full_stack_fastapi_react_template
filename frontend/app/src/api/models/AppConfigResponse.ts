@@ -5,5 +5,6 @@
 export type AppConfigResponse = {
   is_multi_tenant_enabled: boolean;
   multi_tenancy_strategy: string;
+  host_main_domain: string;
 };
 

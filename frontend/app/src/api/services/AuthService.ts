@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { ActivationRequest } from '../models/ActivationRequest';
 import type { Body_login_api_v1_auth_login_post } from '../models/Body_login_api_v1_auth_login_post';
+import type { NewRegistrationResponse } from '../models/NewRegistrationResponse';
 import type { NewUser } from '../models/NewUser';
 import type { RefreshRequest } from '../models/RefreshRequest';
 import type { ResendActivationEmailRequest } from '../models/ResendActivationEmailRequest';
@@ -36,14 +37,14 @@ export class AuthService {
   }
   /**
    * Register
-   * @returns any Successful Response
+   * @returns NewRegistrationResponse Successful Response
    * @throws ApiError
    */
   public registerApiV1AuthRegisterPost({
     requestBody,
   }: {
     requestBody: NewUser,
-  }): CancelablePromise<any> {
+  }): CancelablePromise<NewRegistrationResponse> {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/auth/register',
