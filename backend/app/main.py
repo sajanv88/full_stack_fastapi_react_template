@@ -1,6 +1,7 @@
 import os
-from fastapi import FastAPI, APIRouter, Security
-
+import logging
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Security
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from fastapi.responses import FileResponse
@@ -12,7 +13,10 @@ from app.api.routes import auth, role, dashboard, permissions, ai, tenant, confi
 from app.core.subdomain_tenant_db_middleware import SubdomainTenantDBMiddleware
 from app.core.header_tenant_db_middleware import TenantDBMiddleware
 from app.core.utils import is_tenancy_enabled
+from app.loggin_conf import configure_logging
 
+
+logger = logging.getLogger(__name__)
 
 multi_tenancy_strategy = os.getenv("MULTI_TENANCY_STRATEGY", "none").lower()
 api_key_header = APIKeyHeader(name="x-tenant-id", auto_error=False)
@@ -23,13 +27,14 @@ build_path = os.path.join(os.path.dirname(__file__), "ui")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    configure_logging()
     await ensure_indexes()
-    print("Database indexes created successfully")
+    logger.info("Database indexes created successfully")
     await seed_default_data()
-    print("Default data seeded successfully")
+    logger.info("Default data seeded successfully")
     yield
     # Shutdown
-    print("Application shutting down")
+    logger.info("Application shutting down")
 
 app = FastAPI(
     lifespan=lifespan,
@@ -38,21 +43,26 @@ app = FastAPI(
     version="1.0.0"
 )
 
+@app.exception_handler(HTTPException)
+async def http_exception_handler_logging(request: Request, exc: HTTPException):
+    logger.error(f"HTTP error occurred: {exc.status_code} - {exc.detail}")
+    return await http_exception_handler(request, exc)
+
 
 if multi_tenancy_strategy == "subdomain":
-    print("Using subdomain multi-tenancy")
+    logger.info("Using subdomain multi-tenancy")
     app.add_middleware(SubdomainTenantDBMiddleware)
 elif multi_tenancy_strategy == "header":
-    print("Using header multi-tenancy")
+    logger.info("Using header multi-tenancy")
     app.add_middleware(TenantDBMiddleware)
 
 
 # Mount static files only if they exist (for production Docker deployment)
 if os.path.exists(build_path) and os.path.exists(os.path.join(build_path, "assets")):
     app.mount("/assets", StaticFiles(directory=os.path.join(build_path, "assets")), name="assets")
-    print("Static files mounted successfully")
+    logger.info("Static files mounted successfully")
 else:
-    print("Static files directory not found - running in development mode")
+    logger.warning("Static files directory not found - running in development mode")
 
 @app.get("/", include_in_schema=False)
 async def serve_react_app():
@@ -62,7 +72,7 @@ async def serve_react_app():
         else:
             return {"message": "FastAPI backend is running", "mode": "development", "docs": "/docs"}
     except Exception as e:
-        print(f"Error serving React app: {e}")
+        logger.error(f"Error serving React app: {e}")
         return {"message": "FastAPI backend is running", "mode": "development", "docs": "/docs"}
 
 

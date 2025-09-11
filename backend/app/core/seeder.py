@@ -1,4 +1,4 @@
-
+import logging
 from datetime import datetime
 from typing import Any, List
 from bson import ObjectId
@@ -14,6 +14,7 @@ from app.core.utils import is_tenancy_enabled
 
 from faker import Faker
 
+logger = logging.getLogger(__name__)
 fake = Faker()
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com")
@@ -25,15 +26,15 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Test@123!")
 async def generate_fake_users(range_count: int = 100, restart: bool = False):
     total_users = await user_collection.count_documents({})
     if total_users >= range_count:
-        print(f"Users collection already has {total_users} users. Skipping fake user generation.")
+        logger.info(f"Users collection already has {total_users} users. Skipping fake user generation.")
         return
     
     if restart:
         await user_collection.delete_many({
             "email": {"$ne": ADMIN_EMAIL}
         })  # Clear existing users for fresh seeding
-    
-    print(f"Generating {range_count} fake users...")
+
+    logger.info(f"Generating {range_count} fake users...")
     guest_role = await role_collection.find_one({"name": RoleType.GUEST})
     for _ in range(range_count):
         fake_user = {
@@ -48,7 +49,7 @@ async def generate_fake_users(range_count: int = 100, restart: bool = False):
             "image_url": fake.image_url()
         }
         await user_collection.insert_one(fake_user)
-    print("Fake users generated successfully.")
+    logger.info("Fake users generated successfully.")
 
 
 class DBField:
@@ -80,11 +81,11 @@ async def check_new_fields_and_add(new_fields: List[DBField] = []):
     async for role in role_collection.find():
         role_fields.update(role.keys())
 
-    print("User fields Current:", user_fields)
-    print("Role fields Current:", role_fields)
+    logger.info("User fields Current:", user_fields)
+    logger.info("Role fields Current:", role_fields)
 
     if all(field.get_name() in user_fields and field.get_name() in role_fields for field in new_fields):
-        print("No new fields to add.")
+        logger.info("No new fields to add.")
         return
     
     for field in new_fields:
@@ -100,16 +101,16 @@ async def check_new_fields_and_add(new_fields: List[DBField] = []):
     async for role in role_collection.find():
         role_fields.update(role.keys())
 
-    print("User fields Now:", user_fields)
-    print("Role fields Now:", role_fields)
+    logger.info("User fields Now:", user_fields)
+    logger.info("Role fields Now:", role_fields)
 
 
 async def seed_default_data():
-    print("Seeding default data...")
+    logger.info("Seeding default data...")
     # create default admin user
     existing_user = await user_collection.find_one({"email": ADMIN_EMAIL})
     if not existing_user:
-        print(f"Creating default admin user: {ADMIN_EMAIL}")
+        logger.info(f"Creating default admin user: {ADMIN_EMAIL}")
         hashed_password = get_password_hash(ADMIN_PASSWORD)
         admin_user = {
             "first_name": "Admin",
@@ -122,7 +123,7 @@ async def seed_default_data():
         }
         await user_collection.insert_one(admin_user)
     else:
-        print(f"Admin user already exists: {ADMIN_EMAIL}. Hence, skipping...")
+        logger.info(f"Admin user already exists: {ADMIN_EMAIL}. Hence, skipping...")
 
     roles = [
         {"name": RoleType.ADMIN, "description": "Admin role can give full access to application. Can read, write and delete any resource.", "permissions": [Permission.FULL_ACCESS]},
@@ -133,13 +134,13 @@ async def seed_default_data():
     if is_tenancy_enabled():
         roles.append({"name": RoleType.HOST, "description": "Host role can manage tenants.", "permissions": [Permission.HOST_MANAGE_TENANTS, Permission.FULL_ACCESS]})
 
-    print("Seeding roles...")
+    logger.info("Seeding roles...")
     if await role_collection.count_documents({}) != len(roles):
-        print("Roles collection is empty or outdated. Seeding roles...")
+        logger.info("Roles collection is empty or outdated. Seeding roles...")
         for role in roles:
             role["created_at"] = datetime.utcnow()
             await role_collection.find_one_and_replace({"name": role["name"]}, role, upsert=True)
-            print(f"Role upserted: {role['name']}")
+            logger.info(f"Role upserted: {role['name']}")
 
     admin_user = await user_collection.find_one({"email": ADMIN_EMAIL})
 
@@ -147,19 +148,19 @@ async def seed_default_data():
         host_role = await role_collection.find_one({"name": RoleType.HOST})
         if host_role and admin_user:
             if "role_id" in admin_user and admin_user["role_id"] == host_role["_id"]:
-                print(f"Admin user already has host role assigned. Hence, skipping...")
+                logger.info(f"Admin user already has host role assigned. Hence, skipping...")
             else:
-                print(f"Assigning host role to user: {ADMIN_EMAIL}")
+                logger.info(f"Assigning host role to user: {ADMIN_EMAIL}")
                 await user_collection.update_one(
                     {"email": ADMIN_EMAIL},
                     {"$set": {"role_id": ObjectId(host_role["_id"])}}
                 )
     else:
-        print("Seeding admin role...")
+        logger.info("Seeding admin role...")
         admin_role = await role_collection.find_one({"name": RoleType.ADMIN})
         if admin_role and admin_user :
             if "role_id" in admin_user and admin_user["role_id"] == admin_role["_id"]:
-                print(f"Admin user already has admin role assigned. Hence, skipping...")
+                logger.info(f"Admin user already has admin role assigned. Hence, skipping...")
             else:
                 print(f"Assigning admin role to user: {ADMIN_EMAIL}")
                 await user_collection.update_one(
@@ -169,7 +170,7 @@ async def seed_default_data():
 
     # Uncomment to generate fake users when you need feed fake users
     # await generate_fake_users(200) 
-    print("Seeding completed.")
+    logger.info("Seeding completed.")
     # Example:
     # await check_new_fields_and_add([DBField("users", "created_at", datetime.utcnow()), DBField("roles", "created_at", datetime.utcnow())])
 
@@ -183,7 +184,7 @@ class SeedDataForNewlyCreatedTenant:
         self.role_collection: AsyncIOMotorCollection = db.roles
     
     async def fill_roles(self, admin_email: str):
-        print(f"Filling roles for admin user: {admin_email}")
+        logger.info(f"Filling roles for admin user: {admin_email}")
         roles = [
             {"name": RoleType.ADMIN, "description": "Admin role can give full access to application. Can read, write and delete any resource.", "permissions": [Permission.FULL_ACCESS]},
             {"name": RoleType.USER, "description": "Regular user has read and update their own resources.", "permissions": [Permission.USER_SELF_READ_AND_WRITE_ONLY, Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY]},
@@ -194,7 +195,7 @@ class SeedDataForNewlyCreatedTenant:
             for role in roles:
                 role["created_at"] = datetime.utcnow()
                 await self.role_collection.find_one_and_replace({"name": role["name"]}, role, upsert=True)
-                print(f"Role upserted: {role['name']}")
+                logger.info(f"Role upserted: {role['name']}")
 
         admin_role = await self.role_collection.find_one({"name": RoleType.ADMIN})
         await self.user_collection.update_one(

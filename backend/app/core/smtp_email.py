@@ -1,9 +1,12 @@
-from fastapi import FastAPI
+import logging
 from starlette.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from pydantic import EmailStr, BaseModel
 from typing import List, Optional
 import os
+
+logger = logging.getLogger(__name__)
+
 import jwt
 from datetime import datetime, timedelta, timezone
 
@@ -88,8 +91,10 @@ def verify_activation_token(token: str) -> dict:
             "email": payload.get("email")
         }
     except jwt.ExpiredSignatureError:
+        logger.error("Activation token has expired")
         raise jwt.ExpiredSignatureError("Activation token has expired")
     except jwt.InvalidTokenError:
+        logger.error("Invalid activation token")
         raise jwt.InvalidTokenError("Invalid activation token")
 
 
@@ -135,6 +140,7 @@ async def send_activation_email(user_data: ActivationEmailSchema) -> JSONRespons
 
     fm = FastMail(conf)
     await fm.send_message(message)
+    logger.info(f"Activation email sent to {user_data.email}")
     return JSONResponse(status_code=200, content={
         "message": "Activation email has been sent", 
         "email": user_data.email
@@ -180,6 +186,7 @@ async def send_email_change_activation(user_data: ActivationEmailSchema) -> JSON
 
     fm = FastMail(conf)
     await fm.send_message(message)
+    logger.info(f"Email change activation email sent to {user_data.email}")
     return JSONResponse(status_code=200, content={
         "message": "Email change activation email has been sent", 
         "email": user_data.email

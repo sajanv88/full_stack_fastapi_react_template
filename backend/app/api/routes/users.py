@@ -1,5 +1,5 @@
+import logging
 from datetime import datetime
-import shutil
 from fastapi import BackgroundTasks, Depends, APIRouter, File, UploadFile, status, HTTPException, Response
 from pydantic import BaseModel
 from typing import List
@@ -16,6 +16,8 @@ from app.models.role import RoleType
 from app.services.users_service import UserService
 from app.core.utils import save_file
 from app.services.role_service import RoleService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/users")
 router.tags = ["Users"]
@@ -99,7 +101,7 @@ async def create_user(
         }
         user_service = UserService(db)
         result = await user_service.create_user(user_doc)
-        print(f"User created with ID: {result.inserted_id}")
+        logger.info(f"User created with ID: {result.inserted_id}")
         if result.inserted_id:
             # Send activation email
             activation_email_data = ActivationEmailSchema(
@@ -107,19 +109,12 @@ async def create_user(
                 user_id=str(result.inserted_id),
                 first_name=user.first_name
             )
-
             background_tasks.add_task(send_activation_email, activation_email_data)
 
-            return Response(status_code=status.HTTP_201_CREATED)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to create user"
-            )
+        return Response(status_code=status.HTTP_201_CREATED)
     except Exception as e:
-        print(f"Error creating user: {e}")
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error creating user"
         )
 
@@ -134,14 +129,15 @@ async def get_user(
     ])),
      db = Depends(get_db_reference)
 ):
-    user_service = UserService(db)
-    user = await user_service.get_user(user_id)
-    if user:
+    try:
+        user_service = UserService(db)
+        user = await user_service.get_user(user_id)
         return user
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="User not found"
-    )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
 
 
 @router.delete("/{user_id}", response_class=Response)
@@ -232,28 +228,25 @@ async def patch_user(
     db = Depends(get_db_reference)
 
 ):
-    user_service = UserService(db)
-    user = await user_service.get_user(user_id)
-    if not user:
+    try:
+        user_service = UserService(db)
+        user = await user_service.get_user(user_id)
+
+        if "role_id" in user and user["role_id"] == ObjectId(role_update.role_id):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already has this role assigned")
+
+        result = await user_service.assign_role(user_id, role_update.role_id)
+
+        if result.modified_count == 1:
+            return await user_service.get_user(user_id)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or no changes made")
+
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail=str(e)
         )
 
-    if "role_id" in user and user["role_id"] == ObjectId(role_update.role_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already has this role assigned")
-
-
-    result = await user_service.assign_role(user_id, role_update.role_id)
-
-    if result.modified_count == 1:
-        return await user_service.get_user(user_id)
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="User not found or no changes made"
-    )
-    
 
 @router.patch("/{user_id}/remove_role", response_model=User)
 async def remove_user_role(
@@ -263,16 +256,17 @@ async def remove_user_role(
     _: bool = Depends(create_permission_checker([Permission.USER_ROLE_ASSIGN_OR_REMOVE_ONLY])),
     db = Depends(get_db_reference)
 ):
-    user_service = UserService(db)
-    user = await user_service.get_user(user_id)
-    if not user:
+    try:
+        user_service = UserService(db)
+        user = await user_service.get_user(user_id)
+    
+        if "role_id" in user and user["role_id"] == ObjectId(role_update.role_id):
+            await user_service.remove_role(user_id)
+        
+        return await user_service.get_user(user_id)
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail=str(e)
         )
-
-    if "role_id" in user and user["role_id"] == ObjectId(role_update.role_id):
-        await user_service.remove_role(user_id)
-    
-    return await user_service.get_user(user_id)
 

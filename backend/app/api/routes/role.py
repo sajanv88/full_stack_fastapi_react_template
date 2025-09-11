@@ -89,11 +89,10 @@ async def get_role(
     _: bool = Depends(create_permission_checker([Permission.ROLE_VIEW_ONLY])),
     db = Depends(get_db_reference)
 ):
-    role_service = RoleService(db)
-    role = await role_service.get_role(role_id)
-    if role:
-        return role
-    else:
+    try:
+        role_service = RoleService(db)
+        return await role_service.get_role(role_id)
+    except Exception as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
 
 
@@ -104,13 +103,13 @@ async def delete_role(
     _: bool = Depends(create_permission_checker([Permission.ROLE_DELETE_ONLY])),
     db = Depends(get_db_reference)
 ):
-    role_service = RoleService(db)
-    result = await role_service.delete_role(role_id)
-    if result.deleted_count == 1:
+    try:
+        role_service = RoleService(db)
+        await role_service.delete_role(role_id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
-    
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
 
 @router.put("/{role_id}", response_model=Role)
 async def update_role(
@@ -122,7 +121,6 @@ async def update_role(
 ):
     role_service = RoleService(db)
     update_data = {k: v for k, v in role.model_dump().items() if v is not None}
-    print("Updating role:", role_id, "with data:", update_data)
     if not update_data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No data provided for update")
 

@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated, Any, List, Optional
 from fastapi import Depends, HTTPException, status
 from app.api.routes.auth import get_current_user
@@ -6,6 +7,8 @@ from app.core.db import get_db_reference, client
 from app.core.permission import Permission
 from app.core.utils import get_default_db_name, is_tenancy_enabled
 from app.services.role_service import RoleService
+
+logger = logging.getLogger(__name__)
 
 class DynamicRoleChecker:
     def __init__(self,
@@ -52,13 +55,13 @@ class DynamicRoleChecker:
     def __call__(self):
        
         async def check_permission(current_user: Annotated[User, Depends(get_current_user)]) -> bool:
-            print(f"Dynamic Role Checker - User: {current_user.get('email', 'unknown')}")
+            logger.info(f"Dynamic Role Checker - User: {current_user.get('email', 'unknown')}")
 
             resource_id = current_user.get('_id', None)
-            print(f"Resource ID for self-access checking: {resource_id}")
+            logger.info(f"Resource ID for self-access checking: {resource_id}")
 
             if current_user['role_id'] is None:
-                print("User has no role assigned")
+                logger.info("User has no role assigned")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="User has no role assigned"
@@ -67,34 +70,34 @@ class DynamicRoleChecker:
             role = await self.get_role_detail(current_user['role_id'], tenant_id=current_user.get('tenant_id'))
             user_permissions = role.get("permissions", [])
             
-            print(f"User permissions: {[p.value if hasattr(p, 'value') else str(p) for p in user_permissions]}")
-            print(f"Required permissions: {[p.value if hasattr(p, 'value') else str(p) for p in self.required_permissions]}")
+            logger.info(f"User permissions: {[p.value if hasattr(p, 'value') else str(p) for p in user_permissions]}")
+            logger.info(f"Required permissions: {[p.value if hasattr(p, 'value') else str(p) for p in self.required_permissions]}")
 
             if is_tenancy_enabled():
                 if Permission.HOST_MANAGE_TENANTS in user_permissions:
-                    print("Host Permission detected - Granting all permissions")
+                    logger.info("Host Permission detected - Granting all permissions")
                     return True
 
 
             # Check for full access (admin override)
             if Permission.FULL_ACCESS in user_permissions:
-                print("Full access granted - User has admin privileges")
+                logger.info("Full access granted - User has admin privileges")
                 return True
             
             # Check for self-access permissions
             if (Permission.USER_SELF_READ_AND_WRITE_ONLY in user_permissions and 
                 self.allow_self_access and resource_id):
                 if await self.check_self_access(current_user, resource_id):
-                    print("Self access granted - User accessing own resource")
+                    logger.info("Self access granted - User accessing own resource")
                     return True
             
             # Check required permissions
             if await self.has_permission(user_permissions, self.required_permissions):
                 permission_type = "any" if self.any_permission else "all"
-                print(f"Access granted - User has {permission_type} required permissions")
+                logger.info(f"Access granted - User has {permission_type} required permissions")
                 return True
-            
-            print("Access denied - Insufficient permissions")
+
+            logger.error("Access denied - Insufficient permissions")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Insufficient permissions. Required: {[p.value if hasattr(p, 'value') else str(p) for p in self.required_permissions]}"

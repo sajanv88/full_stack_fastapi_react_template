@@ -1,4 +1,4 @@
-
+import logging
 from datetime import datetime
 from bson import ObjectId
 from fastapi import BackgroundTasks
@@ -16,6 +16,8 @@ from app.core.db import client
 from app.core.seeder import SeedDataForNewlyCreatedTenant
 from app.core.smtp_email import ActivationEmailSchema, send_activation_email
 
+
+logger = logging.getLogger(__name__)
 
 async def get_token_data(user, role):
  
@@ -74,7 +76,7 @@ class AuthService:
         tenant_id = None
 
         if is_tenancy_enabled():
-            print("Multi-tenancy is enabled during user registration")
+            logger.info("Multi-tenancy is enabled during user registration")
             sub_domain = user_dict['sub_domain']
             if sub_domain is None:
                 raise Exception(
@@ -93,7 +95,7 @@ class AuthService:
                         detail="Failed to create tenant"
                     )
                 tenant_id = str(result.inserted_id)
-                print("Tenant created:", result.inserted_id)
+                logger.info(f"Tenant created: {result.inserted_id}")
                 user_dict["tenant_id"] = ObjectId(result.inserted_id)
                 db = client[f"tenant_{tenant_id}"]
                 user_service = UserService(db)

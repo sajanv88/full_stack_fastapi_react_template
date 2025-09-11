@@ -1,7 +1,9 @@
 from app.models.tenant import Tenant
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
+import logging
 
+logger = logging.getLogger(__name__)
 class TenantService:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
@@ -18,21 +20,34 @@ class TenantService:
          
     async def get_tenant(self, tenant_id: str):
         tenant = await self.tenant_collection.find_one({"_id": ObjectId(tenant_id)})
+        if tenant is None:
+            raise Exception(f"Tenant not found: {tenant_id}")
         return await self.serialize(tenant)
 
     async def find_by_name(self, name: str):
         tenant = await self.tenant_collection.find_one({"name": name})
+        if tenant is None:
+            raise Exception(f"Tenant not found: {name}")
         return await self.serialize(tenant)
 
     async def update_tenant(self, tenant_id: str, tenant: dict):
-        return await self.tenant_collection.update_one({"_id": ObjectId(tenant_id)}, {"$set": tenant})
+        try:
+            return await self.tenant_collection.update_one({"_id": ObjectId(tenant_id)}, {"$set": tenant})
+        except Exception as error:
+            raise error
 
     async def delete_tenant(self, tenant_id: str):
-        return await self.tenant_collection.delete_one({"_id": ObjectId(tenant_id)})
+        try:
+            return await self.tenant_collection.delete_one({"_id": ObjectId(tenant_id)})
+        except Exception as error:
+            raise error
 
     async def list_tenants(self, skip: int = 0, limit: int = 10):
-        tenants = await self.tenant_collection.find().skip(skip).limit(limit).to_list(length=limit)
-        return [await self.serialize(tenant) for tenant in tenants]
+        try:
+            tenants = await self.tenant_collection.find().skip(skip).limit(limit).to_list(length=limit)
+            return [await self.serialize(tenant) for tenant in tenants]
+        except Exception as error:
+            raise error
 
     async def serialize(self, tenant: Tenant):
         return {

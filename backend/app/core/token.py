@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Optional
+from typing import  Optional
 import jwt
 from jwt.exceptions import InvalidTokenError
 from pydantic import BaseModel

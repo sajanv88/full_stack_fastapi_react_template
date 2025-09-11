@@ -1,6 +1,9 @@
 from app.models.user import User
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
+import logging
+
+logger = logging.getLogger(__name__)
 
 class UserService():
     def __init__(self, db: AsyncIOMotorDatabase):
@@ -11,55 +14,71 @@ class UserService():
         return await self.user_collection.count_documents(params)
 
     async def find_by_email(self, email:str):
-        try:
-            user = await self.user_collection.find_one({"email": email})
-            return await self.serialize(user)
-        except Exception as error:
-            print("Error finding user by email:", error)
-            return None
+   
+        user = await self.user_collection.find_one({"email": email})
+        if user is None:
+            raise Exception(f"User not found: {email}")
+        return await self.serialize(user)
+  
 
     async def get_raw_find_by_email(self, email: str):
         try:
             user = await self.user_collection.find_one({"email": email})
             return user
         except Exception as error:
-            print("Error getting raw user data:", error)
-            return None
+            raise error
 
     async def get_user(self, user_id: str):
-        try:
-            user = await self.user_collection.find_one({"_id": ObjectId(user_id)})
-            return await self.serialize(user)
-        except Exception as error:
-            print("Error getting user:", error)
-            return None
+        user = await self.user_collection.find_one({"_id": ObjectId(user_id)})
+        if user is None:
+            raise Exception(f"User not found: {user_id}")
+        return await self.serialize(user)
+   
 
     async def create_user(self, user_data: dict):
-        return await self.user_collection.insert_one(user_data)
+        try:
+            return await self.user_collection.insert_one(user_data)
+        except Exception as error:
+            raise error
 
     async def update_user(self, user_id: str, user_data: dict):
-       return await self.user_collection.update_one({"_id": ObjectId(user_id)}, {"$set": user_data})
+        try:
+            return await self.user_collection.update_one({"_id": ObjectId(user_id)}, {"$set": user_data})
+        except Exception as error:
+            raise error
 
     async def delete_user(self, user_id: str):
-        return await self.user_collection.delete_one({"_id": ObjectId(user_id)})
+        try:
+            return await self.user_collection.delete_one({"_id": ObjectId(user_id)})
+        except Exception as error:
+            raise error
 
     async def list_users(self, skip: int = 0, limit: int = 10):
-        users = await self.user_collection.find().skip(skip).limit(limit).to_list(length=limit)
-        return [await self.serialize(user) for user in users]
-    
+        try:
+            users = await self.user_collection.find().skip(skip).limit(limit).to_list(length=limit)
+            return [await self.serialize(user) for user in users]
+        except Exception as error:
+            raise error
+
     async def assign_role(self, user_id:str,  role_id: str):
-        return await self.user_collection.update_one({"_id": ObjectId(user_id)}, {
-            "$set": {
-                "role_id": ObjectId(role_id)
-            }
-        })
-    
+        try:
+            return await self.user_collection.update_one({"_id": ObjectId(user_id)}, {
+                "$set": {
+                    "role_id": ObjectId(role_id)
+                }
+            })
+        except Exception as error:
+            raise error
+
     async def remove_role(self, user_id:str):
-        return await self.user_collection.update_one({"_id": ObjectId(user_id)}, {
-            "$set": {
-                "role_id": None
-            }
-        })
+        try:
+            return await self.user_collection.update_one({"_id": ObjectId(user_id)}, {
+                "$set": {
+                    "role_id": None
+                }
+            })
+        except Exception as error:
+            raise error
 
 
     async def serialize(self, user: User):

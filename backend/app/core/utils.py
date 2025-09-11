@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_date_range(filter_type: str):
     """Return (start, end, group_format) based on filter type"""
@@ -41,5 +44,5 @@ def save_file(file, upload_dir="app/ui/assets/user_profiles"):
     file_location = os.path.join(upload_dir, f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}")
     with open(file_location, "wb+") as file_object:
         file_object.write(file.file.read())
-    print(f"File saved at {file_location}")
+    logger.debug(f"File saved at {file_location}")
     return file_location

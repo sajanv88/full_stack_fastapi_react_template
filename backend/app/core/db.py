@@ -3,9 +3,6 @@ from dotenv import load_dotenv
 from fastapi import Request
 from pymongo import AsyncMongoClient
 
-from app.models.user import Gender
-from app.core.password import get_password_hash
-from app.models.role import RoleType
 
 load_dotenv()
 
