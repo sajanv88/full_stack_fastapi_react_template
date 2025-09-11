@@ -169,7 +169,7 @@ async def seed_default_data():
                 )
 
     # Uncomment to generate fake users when you need feed fake users
-    # await generate_fake_users(200) 
+    await generate_fake_users(200) 
     logger.info("Seeding completed.")
     # Example:
     # await check_new_fields_and_add([DBField("users", "created_at", datetime.utcnow()), DBField("roles", "created_at", datetime.utcnow())])

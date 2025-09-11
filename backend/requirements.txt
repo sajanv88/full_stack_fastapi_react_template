@@ -1,0 +1,14 @@
+fastapi[standard]
+pydantic
+pymongo
+passlib
+starlette
+motor
+fastapi_mail
+PyJWT
+python-dotenv
+streamlit
+faker
+langchain
+langchain-openai
+langchain-ollama

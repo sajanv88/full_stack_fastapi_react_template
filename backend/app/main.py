@@ -16,10 +16,16 @@ from app.core.utils import is_tenancy_enabled
 from app.loggin_conf import configure_logging
 
 
+
+
 logger = logging.getLogger(__name__)
 
 multi_tenancy_strategy = os.getenv("MULTI_TENANCY_STRATEGY", "none").lower()
 api_key_header = APIKeyHeader(name="x-tenant-id", auto_error=False)
+
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "myapp")
+
 
 
 build_path = os.path.join(os.path.dirname(__file__), "ui")
@@ -28,6 +34,7 @@ build_path = os.path.join(os.path.dirname(__file__), "ui")
 async def lifespan(app: FastAPI):
     # Startup
     configure_logging()
+    logger.info("Starting application...")
     await ensure_indexes()
     logger.info("Database indexes created successfully")
     await seed_default_data()

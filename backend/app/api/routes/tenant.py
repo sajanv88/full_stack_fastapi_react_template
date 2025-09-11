@@ -1,5 +1,4 @@
 from typing import List
-from huggingface_hub import User
 from typing_extensions import Annotated
 from fastapi import BackgroundTasks, Depends, APIRouter, status, HTTPException
 from pydantic import BaseModel
@@ -11,7 +10,7 @@ from app.services.tenant_service import TenantService
 from app.core.db import get_db_reference
 from app.core.role_checker import create_permission_checker
 from app.services.auth_service import AuthService
-from app.models.user import NewUser
+from app.models.user import NewUser, User
 
 router = APIRouter(prefix="/tenants")
 router.tags = ["Tenants"]

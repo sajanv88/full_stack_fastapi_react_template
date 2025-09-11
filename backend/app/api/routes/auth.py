@@ -1,6 +1,6 @@
 from fastapi import BackgroundTasks, Depends, APIRouter, status, HTTPException, Response
-from jwt import InvalidTokenError
 import jwt
+
 from datetime import datetime
 from pydantic import BaseModel
 from app.core.db import get_db_reference
