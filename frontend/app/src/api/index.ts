@@ -21,6 +21,7 @@ export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { ModelsResponse } from './models/ModelsResponse';
 export type { NewRegistrationResponse } from './models/NewRegistrationResponse';
 export type { NewRole } from './models/NewRole';
+export type { NewTenantCreateRequest } from './models/NewTenantCreateRequest';
 export type { NewUser } from './models/NewUser';
 export type { Permission } from './models/Permission';
 export type { PermissionBase } from './models/PermissionBase';

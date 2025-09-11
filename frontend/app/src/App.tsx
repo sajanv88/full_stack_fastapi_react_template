@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router";
+import { Routes, Route, Navigate } from "react-router";
 import { DefaultLayout } from "@/components/layouts/default-layout";
 import { Login } from "@/components/features/auth/login";
 import { Dashboard } from "@/components/features/dashboard/dashboard";
@@ -14,9 +14,10 @@ import { TenantsProvider } from "@/components/providers/tenant-provider";
 import { Tenants } from "@/components/features/tenant/tenant";
 import { SettingsProvider } from "@/components/providers/settings-provider";
 import { Settings } from "@/components/features/settings/settings";
+import { useAuthContext } from "./components/providers/auth-provider";
 
 function App() {
-
+  const { user } = useAuthContext();
   return (
     <Routes>
       <Route element={<DefaultLayout />}>
@@ -38,12 +39,15 @@ function App() {
           </RolesProvider>
         }
         />
-        <Route path="tenants" element={
-          <TenantsProvider>
-            <Tenants />
-          </TenantsProvider>
-        }
-        />
+        {!user?.tenant_id && (
+          <Route path="tenants" element={
+            <TenantsProvider>
+              <Tenants />
+            </TenantsProvider>
+          }
+          />
+        )}
+
 
         <Route path="settings" element={
           <SettingsProvider>
@@ -54,6 +58,8 @@ function App() {
 
         <Route path="profile" element={<Profile />} />
         <Route path="ai" element={<AIChat />} />
+
+        <Route path="*" element={<Navigate to="/dashboard" />} />
       </Route>
     </Routes>
 

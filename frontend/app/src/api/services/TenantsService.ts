@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { NewTenantCreateRequest } from '../models/NewTenantCreateRequest';
 import type { Tenant } from '../models/Tenant';
 import type { TenantListResponse } from '../models/TenantListResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -40,7 +41,7 @@ export class TenantsService {
   public createTenantApiV1TenantsPost({
     requestBody,
   }: {
-    requestBody: Tenant,
+    requestBody: NewTenantCreateRequest,
   }): CancelablePromise<Tenant> {
     return this.httpRequest.request({
       method: 'POST',

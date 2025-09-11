@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (pathname !== "/register" && accessToken) {
             fetchUser();
             scheduleTokenRefresh(refreshToken);
-        } else if (pathname !== "/login") {
+        } else if (pathname !== "/login" && pathname !== "/register") {
             window.location.href = "/login";
         }
 

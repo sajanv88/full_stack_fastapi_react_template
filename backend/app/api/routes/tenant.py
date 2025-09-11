@@ -1,7 +1,7 @@
 from typing import List
 from huggingface_hub import User
 from typing_extensions import Annotated
-from fastapi import Depends, APIRouter, status, HTTPException
+from fastapi import BackgroundTasks, Depends, APIRouter, status, HTTPException
 from pydantic import BaseModel
 
 from app.models.tenant import Tenant
@@ -10,6 +10,8 @@ from app.core.permission import Permission
 from app.services.tenant_service import TenantService
 from app.core.db import get_db_reference
 from app.core.role_checker import create_permission_checker
+from app.services.auth_service import AuthService
+from app.models.user import NewUser
 
 router = APIRouter(prefix="/tenants")
 router.tags = ["Tenants"]
@@ -29,7 +31,6 @@ class TenantListResponse(BaseModel):
     data: TenantListData
 
 class NewTenantCreateRequest(BaseModel):
-    name: str
     subdomain: str
     admin_email: str
     admin_password: str
@@ -70,14 +71,23 @@ async def get_tenants(
 async def create_tenant(
     current_user: Annotated[User, Depends(get_current_user)],
     tenant: NewTenantCreateRequest,
+    background_tasks: BackgroundTasks,
     _: bool = Depends(create_permission_checker([Permission.HOST_MANAGE_TENANTS])),
     db = Depends(get_db_reference)
 ):
-    # Todo: Reuse Auth service here... 
-    
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented yet")
-    
-    
+    try:
+        auth_service = AuthService(db)
+        return await auth_service.register_user(NewUser(
+            email=tenant.admin_email,
+            password=tenant.admin_password,
+            first_name=tenant.first_name,
+            last_name=tenant.last_name,
+            gender=tenant.gender,
+            sub_domain=tenant.subdomain
+        ), background_tasks=background_tasks)
+    except Exception as e:
+        print(f"Error creating tenant: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create tenant")
 
 
 @router.get("/search_by_name", response_model=Tenant)

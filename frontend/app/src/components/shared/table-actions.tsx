@@ -36,7 +36,6 @@ export function TableActions<D>({ options, resource }: TableActionsProps<D>) {
     }
     if (resource === 'tenant') {
         const isHostManageTenants = can("host:manage_tenants");
-        console.log({ isHostManageTenants });
         shouldDisableBtn = !isAdmin && !isHostManageTenants;
     }
     return (

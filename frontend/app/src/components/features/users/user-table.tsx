@@ -18,6 +18,7 @@ const columns = [
             const isUserSelfUpdate = can("user:self_read_and_write_only");
             const isAdmin = can("full:access");
             const shouldAllowUserActions = isAdmin || isUserSelfUpdate;
+            const shouldAllowDeleteAction = isAdmin || can("user:delete_only");
 
 
             const actionOptions: ActionOption<typeof c.row.original> = {
@@ -47,7 +48,7 @@ const columns = [
                         type: 'delete',
                         user: data
                     }),
-                    disabled: shouldAllowUserActions
+                    disabled: shouldAllowDeleteAction
                 }
             ];
 

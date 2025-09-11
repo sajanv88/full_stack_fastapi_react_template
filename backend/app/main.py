@@ -72,8 +72,8 @@ router_v1 = APIRouter(prefix="/api/v1")
 # Only enable tenant endpoint when multi-tenancy is enabled
 if is_tenancy_enabled():
     router_v1 = APIRouter(prefix="/api/v1", dependencies=[Security(api_key_header)])
-    router_v1.include_router(tenant.router)
 
+router_v1.include_router(tenant.router)
 router_v1.include_router(users.router)
 router_v1.include_router(auth.router)
 router_v1.include_router(role.router)

@@ -24,6 +24,8 @@ import {
     Tent,
     Cog
 } from 'lucide-react';
+import { useAuthContext } from '../providers/auth-provider';
+import { useMemo } from 'react';
 
 const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -43,6 +45,8 @@ export function DashboardSidebar() {
     const location = useLocation();
     const pathname = location.pathname;
     const navigate = useNavigate();
+    const { user } = useAuthContext();
+    const isTenant = user?.tenant_id;
 
     function isLinkActive(href: string) {
         if (href.includes('?')) {
@@ -57,6 +61,8 @@ export function DashboardSidebar() {
         navigate("/login");
     };
 
+    const mainNavLinksToRender = useMemo(() => isTenant ? navLinks.filter(link => !link.href.includes('/tenants')) : navLinks, [isTenant]);
+
     return (
         <Sidebar>
             <SidebarHeader className="pb-6 pt-6 px-4">
@@ -69,7 +75,7 @@ export function DashboardSidebar() {
             </SidebarHeader>
             <SidebarContent>
                 <SidebarMenu>
-                    {navLinks.map((link) => (
+                    {mainNavLinksToRender.map((link) => (
                         <SidebarMenuItem key={link.href}>
                             <SidebarMenuButton
                                 asChild
