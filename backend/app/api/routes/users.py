@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from fastapi import BackgroundTasks, Depends, APIRouter, File, UploadFile, status, HTTPException, Response
+from fastapi import BackgroundTasks, Depends, APIRouter, File, UploadFile, status, HTTPException, Response, Form
 from pydantic import BaseModel
 from typing import List
 from app.core.db import get_db_reference
@@ -13,6 +13,7 @@ from app.core.password import get_password_hash
 from app.core.role_checker import  create_permission_checker
 from app.core.permission import Permission
 from app.models.role import RoleType
+from app.services.storage_service import StorageService
 from app.services.users_service import UserService
 from app.core.utils import save_file
 from app.services.role_service import RoleService
@@ -207,7 +208,8 @@ async def update_profile_picture(
         )
 
     # Process the uploaded file and update the user's profile picture
-    file_location = save_file(file)
+    storage_service = StorageService(db)
+    file_location = await storage_service.upload_file(file)
 
     result = await user_service.update_user(user_id, {"image_url": file_location})
 

@@ -31,6 +31,8 @@ export type { ResendActivationEmailRequest } from './models/ResendActivationEmai
 export type { Role } from './models/Role';
 export type { RoleListData } from './models/RoleListData';
 export type { RoleListResponse } from './models/RoleListResponse';
+export type { StorageProvider } from './models/StorageProvider';
+export type { StorageSettings } from './models/StorageSettings';
 export type { Tenant } from './models/Tenant';
 export type { TenantListData } from './models/TenantListData';
 export type { TenantListResponse } from './models/TenantListResponse';
@@ -50,5 +52,6 @@ export { AuthService } from './services/AuthService';
 export { DashboardService } from './services/DashboardService';
 export { PermissionsService } from './services/PermissionsService';
 export { RolesService } from './services/RolesService';
+export { StorageSettingsService } from './services/StorageSettingsService';
 export { TenantsService } from './services/TenantsService';
 export { UsersService } from './services/UsersService';

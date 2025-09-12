@@ -74,4 +74,25 @@ export class TenantsService {
       },
     });
   }
+  /**
+   * Delete Tenant
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public deleteTenantApiV1TenantsTenantIdDelete({
+    tenantId,
+  }: {
+    tenantId: string,
+  }): CancelablePromise<any> {
+    return this.httpRequest.request({
+      method: 'DELETE',
+      url: '/api/v1/tenants/{tenant_id}',
+      path: {
+        'tenant_id': tenantId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

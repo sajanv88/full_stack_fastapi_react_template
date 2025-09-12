@@ -63,10 +63,16 @@ export function scheduleTokenRefresh(cb: () => Promise<void>) {
     console.error("No refresh token expiry available");
     return;
   }
-  const expiry = parseInt(refreshTokenExpiresAt) * 1000; // exp is in seconds, convert to ms
+  const expiry = Date.now() + (Number(refreshTokenExpiresAt) * 1000); // Convert to milliseconds
+  console.log("Refresh token expiry (ms):", expiry);
 
-  const refreshTime = expiry - Date.now() - (5 * 60 * 1000);
-  if (refreshTime > 0) {
+  const refreshTime = expiry - Date.now() - (5 * 60 * 1000); // refresh 5 mins early
+  console.log("Scheduling token refresh in (ms):", refreshTime);
+
+  if (refreshTime <= 0) {
+    console.log("⏰ Refreshing immediately...");
+    cb();
+  } else {
     setTimeout(async () => {
       console.log("⏰ Refreshing token...");
       await cb();
@@ -77,7 +83,7 @@ export function scheduleTokenRefresh(cb: () => Promise<void>) {
 
 export function userProfileImageUrl(url: string | null | undefined) {
   if (!url) return "https://github.com/evilrabbit.png";
-  return url.replace("app/ui", "");
+  return url;
 }
 
 

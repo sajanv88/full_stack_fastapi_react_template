@@ -12,3 +12,5 @@ faker
 langchain
 langchain-openai
 langchain-ollama
+boto3
+azure-storage-blob

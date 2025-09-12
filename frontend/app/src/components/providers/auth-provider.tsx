@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     isLoggedIn: true,
                     user: {
                         ...user, // Todo: Replace this with cloud storage URL once configured in the backend
-                        image_url: userProfileImageUrl(user?.image_url),
+                        image_url: user?.image_url
                     },
                     can: (action: Permission) => {
                         return user?.role?.permissions?.includes(action) ?? false;

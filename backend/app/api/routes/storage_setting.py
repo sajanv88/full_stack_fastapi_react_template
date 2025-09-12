@@ -41,14 +41,17 @@ async def configure_storage(
     db = Depends(get_db_reference),
     _: bool = Depends(create_permission_checker([Permission.MANAGE_STORAGE_SETTINGS]))
 ):
+    logger.info(f"Configuring storage with provider: {configuration}") 
     try:
         setting_service = SettingService(db)
         setting_dict = {
             "provider": configuration.provider,
             "region": configuration.region,
-            "access_key": configuration.access_key,
-            "secret_key": configuration.secret_key,
-            "connection_string": configuration.connection_string,
+            "aws_access_key": configuration.aws_access_key,
+            "aws_secret_key": configuration.aws_secret_key,
+            "azure_connection_string": configuration.azure_connection_string,
+            "azure_container_name": configuration.azure_container_name,
+            "aws_bucket_name": configuration.aws_bucket_name,
             "is_enabled": configuration.is_enabled
         }
         await setting_service.configure_storage(setting=setting_dict)

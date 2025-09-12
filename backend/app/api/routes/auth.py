@@ -1,5 +1,7 @@
 from fastapi import BackgroundTasks, Depends, APIRouter, status, HTTPException, Response
 import jwt
+import logging
+from jwt import InvalidTokenError
 
 from datetime import datetime
 from pydantic import BaseModel
@@ -15,6 +17,9 @@ from app.services.users_service import UserService
 from app.core.db import  get_db_reference
 from app.services.auth_service import AuthService
 from app.models.tenant import Tenant
+
+
+
 
 router = APIRouter(prefix="/auth")
 router.tags = ["Auth"]

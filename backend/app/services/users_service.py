@@ -3,6 +3,8 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
 import logging
 
+from app.services.storage_service import StorageService
+
 logger = logging.getLogger(__name__)
 
 class UserService:
@@ -82,6 +84,12 @@ class UserService:
 
 
     async def serialize(self, user: User):
+        image_url: str | None = user["image_url"] if "image_url" in user else None
+        storage_service = StorageService(self.db)
+        bucket_or_container_name = await storage_service.bucket_or_container_name()
+        if image_url is not None and image_url.startswith(bucket_or_container_name):
+            image_url = await storage_service.generate_read_url(image_url)
+            
         return {
             "id": str(user["_id"]),
             "first_name": user["first_name"],
@@ -92,7 +100,7 @@ class UserService:
             "is_active": user["is_active"],
             "activated_at": str(user["activated_at"]) if "activated_at" in user else None,
             "created_at": str(user["created_at"]) if "created_at" in user else None,
-            "image_url": user["image_url"] if "image_url" in user else None,
+            "image_url": image_url,
             "tenant_id": str(user["tenant_id"]) if "tenant_id" in user and user["tenant_id"] else None
         }
 

@@ -51,7 +51,7 @@ async def get_dashboard_metrics(
     ]
 
     user_service = UserService(db)
-    cursor = await user_service.user_collection.aggregate(pipeline)
+    cursor =  user_service.user_collection.aggregate(pipeline)
     timeseries = [doc async for doc in cursor]
 
     total_users = await user_service.total_count()

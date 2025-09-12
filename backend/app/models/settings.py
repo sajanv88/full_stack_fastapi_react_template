@@ -11,7 +11,10 @@ class StorageSettings(BaseModel):
     provider: StorageProvider
     is_enabled: bool
     region: str
-    access_key: Optional[str] = None
-    secret_key: Optional[str] = None
-    connection_string: Optional[str] = None
+    aws_access_key: Optional[str] = None # For AWS S3
+    aws_secret_key: Optional[str] = None # For AWS S3
+    aws_bucket_name: Optional[str] = None     # For AWS S3
+    azure_connection_string: Optional[str] = None # For Azure Blob
+    azure_container_name: Optional[str] = None  # For Azure Blob
+   
 
