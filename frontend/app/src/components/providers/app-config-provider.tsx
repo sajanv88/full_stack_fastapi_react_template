@@ -4,7 +4,8 @@ import { createContext, useContext, useEffect, useState } from "react"
 
 const appConfigContext = createContext<AppConfigResponse>({
     is_multi_tenant_enabled: false,
-    multi_tenancy_strategy: "none"
+    multi_tenancy_strategy: "none",
+    host_main_domain: ""
 });
 
 
@@ -15,7 +16,8 @@ interface AppConfigProviderProps {
 export function AppConfigProvider({ children }: AppConfigProviderProps) {
     const [appConfig, setAppConfig] = useState<AppConfigResponse>({
         is_multi_tenant_enabled: false,
-        multi_tenancy_strategy: "none"
+        multi_tenancy_strategy: "none",
+        host_main_domain: ""
     });
 
     useEffect(() => {
