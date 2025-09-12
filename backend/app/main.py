@@ -90,6 +90,7 @@ router_v1 = APIRouter(prefix="/api/v1")
 if is_tenancy_enabled():
     router_v1 = APIRouter(prefix="/api/v1", dependencies=[Security(api_key_header)])
 
+router_v1.include_router(configuration.router)
 router_v1.include_router(tenant.router)
 router_v1.include_router(users.router)
 router_v1.include_router(auth.router)
@@ -98,7 +99,7 @@ router_v1.include_router(dashboard.router)
 router_v1.include_router(permissions.router)
 router_v1.include_router(storage_setting.router)
 router_v1.include_router(ai.router)
-router_v1.include_router(configuration.router)
+
 
 
 

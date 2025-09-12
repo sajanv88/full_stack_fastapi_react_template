@@ -1,12 +1,16 @@
-from datetime import datetime, timedelta, timezone
-from typing import  Optional
+import logging
+import os
+from typing_extensions import Annotated
 import jwt
+from datetime import datetime, timedelta, timezone
+from typing import  Optional, Union
 from jwt.exceptions import InvalidTokenError
 from pydantic import BaseModel
-from fastapi import HTTPException, status
-import os
+from fastapi import Depends, HTTPException, status
 from app.models.role import Role
+from app.core.utils import oauth2_scheme_no_error
 
+logger = logging.getLogger(__name__)
 
 JWT_SECRET = os.getenv("JWT_SECRET", "your_jwt_secret_key")
 REFRESH_TOKEN_SECRET = os.getenv("REFRESH_TOKEN_SECRET", "your_refresh_jwt_secret_key")
@@ -87,3 +91,16 @@ def verify_refresh_token(token: str):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token"
             )
+    
+
+def get_token_decoded_payload(token: Annotated[Union[str, None], Depends(oauth2_scheme_no_error)]) -> Union[TokenData , None]:
+    if token is None:
+        return None
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+        logger.debug(f"Decoded token payload: {payload}")
+        return TokenData(**payload).model_dump()
+    except InvalidTokenError:
+        logger.warning("Invalid token provided")
+        return None
+    

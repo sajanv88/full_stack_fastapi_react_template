@@ -2,9 +2,9 @@ from langchain_ollama import ChatOllama
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import HumanMessage, AIMessage, SystemMessage, BaseMessage
 from typing import List
+from app.models.ai_model import AiModel as ModelsResponse
 import time
 import subprocess
-from pydantic import BaseModel
 
 
 
@@ -34,13 +34,6 @@ class OllamaChat:
                 time.sleep(0.01)
             self.history.append(AIMessage(content=output))
         return event_stream
-
-
-class ModelsResponse(BaseModel):
-    name: str
-    digest: str
-    size: str
-    created: str
 
 
 class OllamaModels:

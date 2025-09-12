@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Optional
 from datetime import datetime
 
+
 class Gender(str, Enum):
     MALE = "male"
     FEMALE = "female"

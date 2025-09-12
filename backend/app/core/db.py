@@ -27,6 +27,7 @@ user_collection = db.users
 role_collection = db.roles
 tenant_collection = db.tenants
 settings_collection = db.settings
+user_preferences_collection = db.user_preferences
 
 async def ensure_indexes():
     try:
@@ -39,6 +40,7 @@ async def ensure_indexes():
     await role_collection.create_index("name", unique=True)
     await tenant_collection.create_index("name", unique=True)
     await settings_collection.create_index("provider", unique=True)
+    await user_preferences_collection.create_index("user_id", unique=True)
 
 
 async def get_db_reference(request: Request):

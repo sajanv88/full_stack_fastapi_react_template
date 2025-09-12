@@ -2,7 +2,13 @@ from datetime import datetime, timedelta
 import os
 import logging
 
+from fastapi.security import OAuth2PasswordBearer
+
 logger = logging.getLogger(__name__)
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login", refreshUrl="api/v1/auth/refresh")
+oauth2_scheme_no_error = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login", auto_error=False)
+
 
 def get_date_range(filter_type: str):
     """Return (start, end, group_format) based on filter type"""

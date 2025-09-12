@@ -2,9 +2,9 @@ from typing import Annotated, List, Optional
 from fastapi import  APIRouter, HTTPException, status
 from fastapi.params import Depends
 from fastapi.responses import StreamingResponse
-
+from app.models.ai_model import AiModel as ModelsResponse
 from pydantic import BaseModel
-from app.core.ai import ModelsResponse, OllamaChat, OllamaModels
+from app.core.ai import  OllamaChat, OllamaModels
 from pydantic import BaseModel
 
 from app.models.user import User

@@ -10,13 +10,14 @@ from app.models.user import NewUser, User, UserEmailUpdate
 from app.models.role import Role
 from bson import ObjectId
 from typing import Annotated, Optional, Union
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import  OAuth2PasswordRequestForm
 from app.core.token import TokenSet, verify_token, TokenData
 from app.core.smtp_email import ActivationEmailSchema, send_activation_email, verify_activation_token, send_email_change_activation
 from app.services.users_service import UserService
 from app.core.db import  get_db_reference
 from app.services.auth_service import AuthService
 from app.models.tenant import Tenant
+from app.core.utils import oauth2_scheme
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,6 @@ class NewRegistrationResponse(BaseModel):
     new_tenant_created: bool
     tenant: Optional[Tenant] = None
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login", refreshUrl="api/v1/auth/refresh")
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db = Depends(get_db_reference)) -> User:
@@ -84,6 +84,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db = D
     if user is None:
         raise credentials_exception
     return user
+
 
 
 

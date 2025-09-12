@@ -15,7 +15,6 @@ from app.core.permission import Permission
 from app.models.role import RoleType
 from app.services.storage_service import StorageService
 from app.services.users_service import UserService
-from app.core.utils import save_file
 from app.services.role_service import RoleService
 
 logger = logging.getLogger(__name__)
