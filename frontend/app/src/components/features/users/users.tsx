@@ -8,6 +8,7 @@ import { UserDeleteDialog } from "@/components/features/users/user-delete-dialog
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from 'lucide-react'
+import { ManageUserRoles } from "@/components/shared/manage-user-roles";
 
 
 export function Users() {
@@ -37,6 +38,10 @@ export function Users() {
             <CreateNewUserDialog open={isCreateNewUserDialogOpen} onDismiss={onCreateNewUserDismissHandler} />
             {selectedUser?.type === 'edit' && <UserEditDialog open={true} onDismiss={onUserEditDismissHandler} />}
             {selectedUser?.type === 'delete' && <UserDeleteDialog open={true} onDismiss={onUserEditDismissHandler} />}
+            {selectedUser?.type === 'manage_roles' && <ManageUserRoles
+                userId={selectedUser.user.id}
+                open={true} onDismiss={onUserEditDismissHandler}
+            />}
             {userResponse && <UserTable userResponse={userResponse} loading={loading} />}
             {userError && (
                 <Alert variant="destructive">

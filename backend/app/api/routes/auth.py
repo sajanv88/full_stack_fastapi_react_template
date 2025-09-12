@@ -18,8 +18,7 @@ from app.core.db import  get_db_reference
 from app.services.auth_service import AuthService
 from app.models.tenant import Tenant
 
-
-
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth")
 router.tags = ["Auth"]
@@ -85,21 +84,6 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db = D
     if user is None:
         raise credentials_exception
     return user
-
-
-async def get_token_data(user, role):
- 
-    token_data = {
-        "sub": str(user["id"]),
-        "email": user["email"],
-        "is_active": user["is_active"],
-        "activated_at": str(user["activated_at"]) if "activated_at" in user else None,
-        "tenant_id": str(user["tenant_id"]) if "tenant_id" in user else None,
-        "role": role
-    }
-    return token_data
-
-
 
 
 

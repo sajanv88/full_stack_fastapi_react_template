@@ -4,6 +4,7 @@ import { IResponseData } from '../shared/iresponse-data.inteface';
 import { getApiClient } from '@/lib/utils';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
+import { useAuthContext } from './auth-provider';
 
 export type TenantResponse = TenantListResponse["data"]
 export type TenantsType = TenantResponse["tenants"][0]
@@ -48,7 +49,8 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
     const [searchParams] = useSearchParams();
     const [selectedTenant, setSelectedTenant] = useState<Action | undefined>(undefined);
     const [pending, setPending] = useState(true);
-
+    const { can } = useAuthContext();
+    const isHost = can("host:manage_tenants");
 
     async function fetchTenants() {
         const skip = searchParams.get("skip");
@@ -68,7 +70,9 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
             console.error("Failed to fetch tenants", error);
             toast.error("Failed to fetch tenants", {
                 richColors: true,
-                duration: 5000
+                duration: 5000,
+                position: "top-center",
+                description: !isHost ? "You do not have permission to view this resource." : undefined
             });
         } finally {
             setPending(false);

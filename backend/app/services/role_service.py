@@ -19,6 +19,10 @@ class RoleService():
             raise Exception(f"Role not found: {name}")
         return await self.serialize(role)
     
+    async def search_role_by_name(self, name: str):
+        roles = await self.role_collection.find({"name": {"$regex": name, "$options": "i"}}).to_list(length=10)
+        return [await self.serialize(role) for role in roles]
+
     async def get_role(self, role_id: str):
         role = await self.role_collection.find_one({"_id": ObjectId(role_id)})
         if role is None:
@@ -55,6 +59,10 @@ class RoleService():
             return [await self.serialize(role) for role in roles]
         except Exception as error:
             raise error
+
+    async def get_permissions_by_role_id(self, role_id: str) -> list[str]:
+        role = await self.get_role(role_id)
+        return role["permissions"]
 
     async def serialize(self, role: Role):
         return {

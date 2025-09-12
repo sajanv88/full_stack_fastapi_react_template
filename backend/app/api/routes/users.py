@@ -150,6 +150,13 @@ async def delete_user(
 ):
 
     user_service = UserService(db)
+    role_service = RoleService(db)
+    permissions = await role_service.get_permissions_by_role_id(current_user["role_id"])
+    
+    for perm in permissions:
+        if perm == Permission.HOST_MANAGE_TENANTS or perm == Permission.FULL_ACCESS:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete user with critical permissions")
+        
     result = await user_service.delete_user(user_id)
     if result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -241,7 +248,7 @@ async def patch_user(
 
         if result.modified_count == 1:
             return await user_service.get_user(user_id)
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or no changes made")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No changes made")
 
     except Exception as e:
         raise HTTPException(

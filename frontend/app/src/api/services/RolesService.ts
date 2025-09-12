@@ -54,6 +54,27 @@ export class RolesService {
     });
   }
   /**
+   * Search Role By Name
+   * @returns Role Successful Response
+   * @throws ApiError
+   */
+  public searchRoleByNameApiV1RolesSearchByNameGet({
+    name,
+  }: {
+    name: string,
+  }): CancelablePromise<Array<Role>> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/roles/search_by_name',
+      query: {
+        'name': name,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Get Role
    * @returns Role Successful Response
    * @throws ApiError

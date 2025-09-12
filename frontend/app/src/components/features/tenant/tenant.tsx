@@ -12,6 +12,7 @@ export function Tenants() {
     const { tenantResponse, isLoading } = useTenants();
 
     const disableCreateNewTenantBtn = !isHost && !isAdmin;
+    const errorMsg = !isHost ? "You do not have permission to view this resource." : undefined
 
     return (
         <section>
@@ -20,7 +21,7 @@ export function Tenants() {
                 onClick: () => setIsCreateNewTenantDialogOpen(true),
                 disabled: disableCreateNewTenantBtn
             }} />
-            {tenantResponse && <TenantTable tenantResponse={tenantResponse} loading={isLoading} />}
+            {tenantResponse && <TenantTable tenantResponse={tenantResponse} loading={isLoading} errorMsg={errorMsg} />}
         </section>
     )
 }

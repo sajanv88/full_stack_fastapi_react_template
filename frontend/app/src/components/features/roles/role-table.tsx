@@ -19,8 +19,11 @@ const columns = [
             const isDeleteRole = can("role:delete_only");
             const isEditRole = can("role:read_and_write_only");
             const isAdmin = can("full:access");
-            const shouldAllowDeleteRole = isAdmin || isDeleteRole;
+
+            const shouldAllowDeleteRole = isDeleteRole || isAdmin;
             const shouldAllowEditRole = isAdmin || isEditRole;
+
+
 
             const actionOptions: ActionOption<typeof c.row.original>[] = [
                 {

@@ -36,6 +36,7 @@ interface Props<T> {
     columns: ColumnDef<T, any>[];
     hasBottomBorder?: boolean;
     loading?: boolean;
+    errorMsg?: string;
 }
 
 const DEFAULT_PAGE_LIMIT = 10;
@@ -44,7 +45,8 @@ export default function AdvanceTable<T>({
     data,
     columns,
     hasBottomBorder,
-    loading
+    loading,
+    errorMsg
 }: Props<T>) {
 
     const [searchParams, setSearchParams] = useSearchParams();
@@ -91,7 +93,7 @@ export default function AdvanceTable<T>({
         if (items.length === 0 && total === 0 && !loading) {
             return (
                 <div className="grid place-items-center place-content-center h-40">
-                    No Records
+                    {errorMsg ? errorMsg : "No Records"}
                 </div>
             );
         }

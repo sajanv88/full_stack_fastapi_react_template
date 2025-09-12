@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from fastapi import Depends, APIRouter, status, HTTPException, Response
 from pydantic import BaseModel
@@ -12,6 +13,7 @@ from app.core.permission import Permission
 from app.services.role_service import RoleService
 from app.core.db import get_db_reference
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/roles")
 router.tags = ["Roles"]
@@ -57,6 +59,19 @@ async def get_roles(
         message="Roles retrieved successfully",
         data=data
     )
+
+
+@router.get("/search_by_name", response_model=List[Role])
+async def search_role_by_name(
+    current_user: Annotated[User, Depends(get_current_user)],
+    name: str,
+    _: bool = Depends(create_permission_checker([Permission.ROLE_VIEW_ONLY])),
+    db = Depends(get_db_reference)
+):
+    role_service = RoleService(db)
+    roles = await role_service.search_role_by_name(name)
+    return roles
+
 
 
 @router.post("/",  response_class=Response)
@@ -105,6 +120,10 @@ async def delete_role(
 ):
     try:
         role_service = RoleService(db)
+        permissions = await role_service.get_permissions_by_role_id(role_id)
+        for perm in permissions:
+            if perm == Permission.HOST_MANAGE_TENANTS or perm == Permission.FULL_ACCESS:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete role with critical permissions")
         await role_service.delete_role(role_id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except Exception as e:
@@ -130,4 +149,6 @@ async def update_role(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
 
     return await role_service.get_role(role_id)
-    
+
+
+

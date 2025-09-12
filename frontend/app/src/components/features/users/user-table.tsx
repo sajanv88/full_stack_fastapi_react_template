@@ -13,12 +13,16 @@ const columns = [
     columHelper.accessor("id", {
         header: "Actions",
         cell: (c) => {
+            const tableId = c.row.original.id
+
             const { onSelectUser } = useUsers()
-            const { can } = useAuthContext()
+            const { can, user } = useAuthContext()
+
             const isUserSelfUpdate = can("user:self_read_and_write_only");
             const isAdmin = can("full:access");
             const shouldAllowUserActions = isAdmin || isUserSelfUpdate;
-            const shouldAllowDeleteAction = isAdmin || can("user:delete_only");
+            const shouldAllowDeleteAction = can("user:delete_only") || isAdmin && user?.id !== tableId;
+            const canUpdateRoles = can("role:read_and_write_only") || isAdmin && user?.id !== tableId;
 
 
             const actionOptions: ActionOption<typeof c.row.original> = {
@@ -49,6 +53,15 @@ const columns = [
                         user: data
                     }),
                     disabled: shouldAllowDeleteAction
+                },
+                {
+                    label: "Manage Roles",
+                    data: c.row.original,
+                    onClick: (data) => onSelectUser({
+                        type: 'manage_roles',
+                        user: data
+                    }),
+                    disabled: canUpdateRoles
                 }
             ];
 

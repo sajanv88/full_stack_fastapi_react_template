@@ -58,10 +58,11 @@ const columns = [
 interface TenantTableProps {
     tenantResponse: IResponseData<TenantsType>;
     loading?: boolean;
+    errorMsg?: string;
 }
 
-export function TenantTable({ tenantResponse, loading }: TenantTableProps) {
+export function TenantTable({ tenantResponse, loading, errorMsg }: TenantTableProps) {
     return (
-        <AdvanceTable<TenantsType> data={tenantResponse} columns={columns} loading={loading} />
+        <AdvanceTable<TenantsType> data={tenantResponse} columns={columns} loading={loading} errorMsg={errorMsg} />
     );
 }

@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 export type UserResponse = UserListResponse["data"]
 export type UsersType = UserResponse["users"][0]
-type ActionType = 'edit' | 'delete' | 'resend_email'
+type ActionType = 'edit' | 'delete' | 'resend_email' | 'manage_roles';
 type Action = {
     type: ActionType;
     user: UsersType;
