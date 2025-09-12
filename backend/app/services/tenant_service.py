@@ -1,6 +1,7 @@
 from app.models.tenant import Tenant
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
+from app.core.db import client
 import logging
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,13 @@ class TenantService:
             return [await self.serialize(tenant) for tenant in tenants]
         except Exception as error:
             raise error
+        
+    async def drop_tenant_db(self, tenant_id: str):
+        logger.warning("Drop database request received")
+        drop_db = f'tenant_{tenant_id}'
+        await client.drop_database(drop_db)
+        logger.info(f"Database tenant_{tenant_id} has been deleted successfully.")
+
 
     async def serialize(self, tenant: Tenant):
         return {

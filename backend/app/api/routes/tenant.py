@@ -1,8 +1,8 @@
+import logging
 from typing import List
 from typing_extensions import Annotated
-from fastapi import BackgroundTasks, Depends, APIRouter, status, HTTPException
+from fastapi import BackgroundTasks, Depends, APIRouter, Response, status, HTTPException
 from pydantic import BaseModel
-
 from app.models.tenant import Tenant
 from app.api.routes.auth import get_current_user
 from app.core.permission import Permission
@@ -11,6 +11,8 @@ from app.core.db import get_db_reference
 from app.core.role_checker import create_permission_checker
 from app.services.auth_service import AuthService
 from app.models.user import NewUser, User
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/tenants")
 router.tags = ["Tenants"]
@@ -99,3 +101,22 @@ async def search_tenant_by_name(
     if not tenant:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
     return tenant
+
+
+
+@router.delete("/{tenant_id}", status_code=status.HTTP_202_ACCEPTED)
+async def delete_tenant(
+    current_user: Annotated[User, Depends(get_current_user)],
+    tenant_id: str,
+    background_tasks: BackgroundTasks,
+    db = Depends(get_db_reference),
+    _: bool = Depends(create_permission_checker([Permission.HOST_MANAGE_TENANTS]))
+):
+    try:
+        tenant_service = TenantService(db)
+        await tenant_service.delete_tenant(tenant_id)
+        logger.info("Tenant deleted... and initated rest of the deletion process....")
+        background_tasks.add_task(tenant_service.drop_tenant_db, tenant_id)
+        return Response(status_code=status.HTTP_202_ACCEPTED)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete tenant")

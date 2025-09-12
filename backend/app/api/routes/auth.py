@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from app.core.db import get_db_reference
 from app.models.user import NewUser, User, UserEmailUpdate
-from app.models.role import Role, RoleType
+from app.models.role import Role
 from bson import ObjectId
 from typing import Annotated, Optional, Union
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm

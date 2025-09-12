@@ -14,5 +14,6 @@ class Permission(str, Enum):
     ROLE_DELETE_ONLY = "role:delete_only"
     ROLE_PERMISSION_READ_AND_WRITE_ONLY = "role:permission_read_and_write_only"
     HOST_MANAGE_TENANTS = "host:manage_tenants"
+    MANAGE_STORAGE_SETTINGS = "manage:storage_settings"
 
 

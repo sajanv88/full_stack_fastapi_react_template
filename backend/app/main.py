@@ -9,7 +9,7 @@ from fastapi.security.api_key import APIKeyHeader
 from app.api.routes import  users
 from app.core.db import ensure_indexes
 from app.core.seeder import seed_default_data
-from app.api.routes import auth, role, dashboard, permissions, ai, tenant, configuration
+from app.api.routes import auth, role, dashboard, permissions, ai, tenant, configuration, storage_setting
 from app.core.subdomain_tenant_db_middleware import SubdomainTenantDBMiddleware
 from app.core.header_tenant_db_middleware import TenantDBMiddleware
 from app.core.utils import is_tenancy_enabled
@@ -96,6 +96,7 @@ router_v1.include_router(auth.router)
 router_v1.include_router(role.router)
 router_v1.include_router(dashboard.router)
 router_v1.include_router(permissions.router)
+router_v1.include_router(storage_setting.router)
 router_v1.include_router(ai.router)
 router_v1.include_router(configuration.router)
 

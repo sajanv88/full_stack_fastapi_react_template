@@ -5,7 +5,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class UserService():
+class UserService:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
         self.user_collection: AsyncIOMotorCollection = db.users
