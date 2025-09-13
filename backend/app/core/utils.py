@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 import os
 import logging
-
+from datetime import datetime
+from bson import ObjectId
 from fastapi.security import OAuth2PasswordBearer
 
 logger = logging.getLogger(__name__)
@@ -52,3 +53,18 @@ def save_file(file, upload_dir="app/ui/assets/user_profiles"):
         file_object.write(file.file.read())
     logger.debug(f"File saved at {file_location}")
     return file_location
+
+
+
+
+# Utility so Pydantic can handle ObjectId
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if isinstance(v, ObjectId):
+            return str(v)  # convert to string for API
+        return str(ObjectId(v))

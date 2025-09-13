@@ -2,9 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type AIRequest = {
-  question: string;
-  model_name?: (string | null);
-  session_id?: (string | null);
+export type NewSessionResponse = {
+  session_id: string;
 };
 

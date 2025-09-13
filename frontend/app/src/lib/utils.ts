@@ -1,6 +1,8 @@
 import { ApiClient, type Tenant, type TokenSet } from "@/api"
 import { clsx, type ClassValue } from "clsx"
+import { toast } from "sonner";
 import { twMerge } from "tailwind-merge"
+import { ca } from "zod/v4/locales";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -106,4 +108,17 @@ export function getApiClient() {
       ...tenant?.id && { "X-Tenant-ID": tenant.id }
     }
   });
+}
+
+
+export async function getAIChatNewSession() {
+  try {
+    const apiClient = getApiClient();
+    const response = await apiClient.ai.createNewSessionApiV1AiNewSessionGet();
+    return response.session_id;
+  } catch (error) {
+    console.error("Failed to create new AI session:", error);
+    toast.error("Failed to create new AI session", { richColors: true, position: "top-center" });
+    throw new Error("Failed to create new AI session");
+  }
 }

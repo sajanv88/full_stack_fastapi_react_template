@@ -1,4 +1,4 @@
-import { AIResponse } from "@/api"
+import { AIResponseSession } from "@/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { cn, getApiClient } from "@/lib/utils"
@@ -20,19 +20,23 @@ interface AIChatHistoryProps {
 }
 export function AIChatHistory({ mobile }: AIChatHistoryProps) {
     const [searchParams] = useSearchParams()
-    const [histories, setHistories] = useState<AIResponse[]>([])
+    const [history, setHistory] = useState<AIResponseSession[]>()
     const apiClient = getApiClient()
 
     async function fetchHistories() {
-        const histories = await apiClient.ai.getHistoryApiV1AiHistoryGet()
-        setHistories(histories)
+        const response = await apiClient.ai.getHistoryApiV1AiHistoryGet()
+        setHistory(response)
     }
     useEffect(() => {
         fetchHistories()
     }, [])
 
 
-
+    const histories = history || []
+    function getTitle(historyId: string) {
+        const historyItem = histories.find(h => h.sessions.find(s => s.id === historyId))?.sessions[0]
+        return historyItem ? historyItem.histories[0].query : "Untitled"
+    }
     if (mobile) {
 
         return (
@@ -49,9 +53,9 @@ export function AIChatHistory({ mobile }: AIChatHistoryProps) {
                             <SelectContent>
                                 <SelectGroup>
                                     {histories.map(history => (
-                                        <SelectItem key={history.id} value={history.id}>
-                                            {history.query || "Untitled"} <br />
-                                            {new Date(history.timestamp).toLocaleString()}
+                                        <SelectItem key={history.session_id} value={getTitle(history.history_id)}>
+                                            {getTitle(history.history_id)} <br />
+                                            {new Date(history.created_at).toLocaleString()}
                                         </SelectItem>
                                     ))}
                                 </SelectGroup>
@@ -74,13 +78,13 @@ export function AIChatHistory({ mobile }: AIChatHistoryProps) {
                     <CardContent className="p-4 overflow-auto">
                         <ul className=" text-sm font-medium">
                             {histories.map(history => (
-                                <li key={history.id} className={cn("p-2 hover:bg-primary/5 cursor-pointer flex justify-between", {
-                                    "bg-primary/5": history.id === searchParams.get("history_id")
+                                <li key={history.session_id} className={cn("p-2 hover:bg-primary/5 cursor-pointer flex justify-between", {
+                                    "bg-primary/5": history.session_id === searchParams.get("session_id")
                                 })}>
                                     <div>
-                                        <a href={`?history_id=${history.id}`} className="block w-full h-full">
-                                            <div className="font-semibold">{history.query || "Untitled"}</div>
-                                            <div className="text-xs text-muted-foreground">{new Date(history.timestamp).toLocaleString()}</div>
+                                        <a href={`?history_id=${history.session_id}`} className="block w-full h-full">
+                                            <div className="font-semibold">{getTitle(history.history_id)}</div>
+                                            <div className="text-xs text-muted-foreground">{new Date(history.created_at).toLocaleString()}</div>
                                         </a>
                                     </div>
                                     <DropdownMenu>

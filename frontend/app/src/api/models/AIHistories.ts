@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type AIRequest = {
-  question: string;
-  model_name?: (string | null);
-  session_id?: (string | null);
+import type { AIHistory } from './AIHistory';
+export type AIHistories = {
+  id: string;
+  histories: Array<AIHistory>;
 };
 

@@ -4,7 +4,8 @@
 /* eslint-disable */
 import type { AiModel } from '../models/AiModel';
 import type { AIRequest } from '../models/AIRequest';
-import type { AIResponse } from '../models/AIResponse';
+import type { AIResponseSession } from '../models/AIResponseSession';
+import type { NewSessionResponse } from '../models/NewSessionResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class AiService {
@@ -21,35 +22,25 @@ export class AiService {
     });
   }
   /**
-   * Get History
-   * @returns AIResponse Successful Response
+   * Create New Session
+   * @returns NewSessionResponse Successful Response
    * @throws ApiError
    */
-  public getHistoryApiV1AiHistoryGet(): CancelablePromise<Array<AIResponse>> {
+  public createNewSessionApiV1AiNewSessionGet(): CancelablePromise<NewSessionResponse> {
     return this.httpRequest.request({
       method: 'GET',
-      url: '/api/v1/ai/history',
+      url: '/api/v1/ai/new_session',
     });
   }
   /**
-   * Get History Item
-   * @returns AIResponse Successful Response
+   * Get History
+   * @returns AIResponseSession Successful Response
    * @throws ApiError
    */
-  public getHistoryItemApiV1AiHistoryHistoryIdGet({
-    historyId,
-  }: {
-    historyId: string,
-  }): CancelablePromise<AIResponse> {
+  public getHistoryApiV1AiHistoryGet(): CancelablePromise<Array<AIResponseSession>> {
     return this.httpRequest.request({
       method: 'GET',
-      url: '/api/v1/ai/history/{history_id}',
-      path: {
-        'history_id': historyId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
+      url: '/api/v1/ai/history',
     });
   }
   /**

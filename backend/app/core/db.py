@@ -29,6 +29,7 @@ tenant_collection = db.tenants
 settings_collection = db.settings
 user_preferences_collection = db.user_preferences
 chat_histories_collection = db.chat_histories_ai
+chat_unique_sessions_collection = db.chat_unique_sessions_ai
 
 async def ensure_indexes():
     try:
@@ -44,6 +45,8 @@ async def ensure_indexes():
     await user_preferences_collection.create_index("user_id", unique=True)
     await chat_histories_collection.create_index("query", unique=False)
     await chat_histories_collection.create_index("user_id")
+    await chat_unique_sessions_collection.create_index("session_id", unique=True)
+    await chat_unique_sessions_collection.create_index("history_id", unique=True)
 
 
 async def get_db_reference(request: Request):

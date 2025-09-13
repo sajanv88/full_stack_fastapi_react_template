@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Loading } from '@/components/shared/loading'
-import { cn, getAccessToken, getApiClient, getTenant } from '@/lib/utils'
+import { cn, getAccessToken, getAIChatNewSession, getApiClient, getTenant } from '@/lib/utils'
 import { Send, Bot, User, Sparkles, Copy, RefreshCw, Trash2, InfoIcon } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { ListLocalAIModels } from '@/components/shared/list-local-ai-models'
@@ -32,7 +32,7 @@ interface ChatState {
 }
 
 export function AIChat() {
-    const [searchParams] = useSearchParams()
+    const [searchParams, setSearchParams] = useSearchParams()
     const { user } = useAuthContext()
     const { user_preferences, available_ai_models } = useAppConfig()
     const [chatState, setChatState] = useState<ChatState>({
@@ -91,15 +91,16 @@ export function AIChat() {
     }, [user_preferences, available_ai_models])
 
     useEffect(() => {
-        async function fetchSelectedHistory() {
-            const apiClient = getApiClient()
-            const response = await apiClient.ai.getHistoryItemApiV1AiHistoryHistoryIdGet({
-                historyId: searchParams.get("history_id")!,
-            })
-            console.log("Fetched history:", response)
+        async function fetchSelectedSessionHistory() {
+            console.log("Fetching history for session:", searchParams.get("session_id"))
+            // const apiClient = getApiClient()
+            // const response = await apiClient.ai.getHistoryItemApiV1AiHistoryHistoryIdGet({
+            //     historyId: searchParams.get("history_id")!,
+            // })
+            // console.log("Fetched history:", response)
         }
-        if (searchParams.get("history_id")) {
-            fetchSelectedHistory()
+        if (searchParams.get("session_id")) {
+            fetchSelectedSessionHistory()
         }
     }, [searchParams])
 
@@ -107,7 +108,8 @@ export function AIChat() {
 
     const sendMessage = async () => {
         if (!input.trim() || chatState.isLoading) return
-
+        const sessionId = searchParams.get("session_id") || await getAIChatNewSession()
+        setSearchParams({ session_id: sessionId })
         const userMessage: Message = {
             id: generateId(),
             content: input.trim(),
@@ -143,7 +145,8 @@ export function AIChat() {
             const tenant = getTenant();
             const payload: AIRequest = {
                 question: userMessage.content,
-                model_name: selectedModel?.name
+                model_name: selectedModel?.name,
+                session_id: sessionId
             }
             const response = await fetch('/api/v1/ai/ask', {
                 method: 'POST',

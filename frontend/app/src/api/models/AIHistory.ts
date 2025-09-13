@@ -2,9 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type AIResponse = {
-  id: string;
-  user_id: string;
+export type AIHistory = {
   query: string;
   response: string;
   timestamp: string;

@@ -1,13 +1,15 @@
 import logging
 from typing import Annotated, List, Optional
-from fastapi import  APIRouter, HTTPException, Response, status
+from fastapi import  APIRouter, HTTPException,  Response, status
 from fastapi.params import Depends
 from fastapi.responses import StreamingResponse
 from app.core.db import get_db_reference
+from app.models.ai_history import AIHistories
 from app.models.ai_model import AiModel
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.core.ai import  OllamaChat, OllamaModels
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from bson import ObjectId
 
 from app.models.user import User
 from app.api.routes.auth import get_current_user
@@ -23,39 +25,41 @@ router.tags = ["AI"]
 class AIRequest(BaseModel):
     question: str
     model_name: Optional[str] = None
+    session_id: Optional[str] = None
 
-class AIResponse(BaseModel):
+
+class AIResponseSession(BaseModel):
     id: str
+    session_id: str
+    created_at: str
+    history_id: str
     user_id: str
-    query: str
-    response: str
-    timestamp: str 
+    sessions: List[AIHistories]
+
+
+class NewSessionResponse(BaseModel):
+    session_id: str
+
 
 @router.get("/models", response_model=List[AiModel])
 async def get_models(current_user: Annotated[User, Depends(get_current_user)]):
     return OllamaModels().list_models()
 
+@router.get("/new_session", response_model=NewSessionResponse)
+async def create_new_session(current_user: Annotated[User, Depends(get_current_user)],
+    db = Depends(get_db_reference)):
+    return NewSessionResponse(session_id=str(ObjectId()))
 
-@router.get("/history", response_model=List[AIResponse])
+@router.get("/history", response_model=List[AIResponseSession])
 async def get_history(
     current_user: Annotated[User, Depends(get_current_user)],
     db = Depends(get_db_reference)
 ):
     history_service = AIHistoryService(db)
-    user_history = await history_service.get_user_history(current_user["id"])
-    return [await history_service.serialize(item) for item in user_history]
+    response = await history_service.get_user_sessions(current_user["id"])
+    return [AIResponseSession(**s) for s in response]
+   
 
-@router.get("/history/{history_id}", response_model=AIResponse)
-async def get_history_item(
-    history_id: str,
-    current_user: Annotated[User, Depends(get_current_user)],
-    db = Depends(get_db_reference)
-):
-    history_service = AIHistoryService(db)
-    history_item = await history_service.get_single_history(user_id=current_user["id"], history_id=history_id)
-    if not history_item:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History item not found")
-    return history_item
 
 
 @router.put("/set_model_preference/{model_name}", status_code=status.HTTP_204_NO_CONTENT)
@@ -82,12 +86,13 @@ async def ask_ai(
     if query.model_name is None or query.model_name.strip() == "":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Model name is required")
     
-
+ 
     chat = OllamaChat(
         username=current_user["first_name"],
         user_id=current_user["id"],
         model_name=query.model_name,
-        db=db
+        db=db,
+        current_session=query.session_id
     )
     stream = await chat.generate_response(query.question)
     return StreamingResponse(stream(), media_type="text/plain")
