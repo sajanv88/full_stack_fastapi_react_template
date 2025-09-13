@@ -2,10 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type ModelsResponse = {
-  name: string;
-  digest: string;
-  size: string;
-  created: string;
+export type UserPreference = {
+  user_id: string;
+  preferences: Record<string, any>;
 };
 

@@ -1,5 +1,4 @@
-import { ApiClient, ModelsResponse } from "@/api";
-import { getAccessToken } from "@/lib/utils";
+import { AiModel } from "@/api";
 import { useEffect, useState } from "react";
 import {
     Select,
@@ -13,13 +12,15 @@ import {
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { InfoIcon, Brain, Cpu, Zap, Sparkles } from 'lucide-react'
+import { useAppConfig } from "@/components/providers/app-config-provider";
 
 interface ListLocalAIModelsProps {
-    onModelSelect: (model: ModelsResponse) => void;
-    selectedModel?: ModelsResponse;
+    onModelSelect: (model: AiModel) => void;
+    selectedModel?: AiModel;
 }
 export function ListLocalAIModels({ onModelSelect, selectedModel }: ListLocalAIModelsProps) {
-    const [models, setModels] = useState<ModelsResponse[]>([]);
+    const { available_ai_models } = useAppConfig()
+    const [models, setModels] = useState<AiModel[]>(available_ai_models || []);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
@@ -34,29 +35,16 @@ export function ListLocalAIModels({ onModelSelect, selectedModel }: ListLocalAIM
         if (!size) return null
         return size.replace(/(\d+)([A-Z])/, '$1$2').toUpperCase()
     }
+
     useEffect(() => {
-        const accessToken = getAccessToken()
-        const apiClient = new ApiClient({
-            HEADERS: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        })
-
-        async function fetchModels() {
-            try {
-                setLoading(true)
-                const models = await apiClient.ai.getModelsApiV1AiModelsGet()
-                setModels(models)
-            } catch (error) {
-                console.error("Error fetching models:", error)
-                setError("Failed to fetch local AI models")
-            } finally {
-                setLoading(false)
-            }
+        if (!available_ai_models) {
+            setError("No AI models available. Please ensure your AI backend is configured correctly.");
+            setLoading(false);
+            return;
         }
-
-        fetchModels()
-    }, [])
+        setModels(available_ai_models);
+        setLoading(false);
+    }, [available_ai_models])
 
     if (error) {
         return (

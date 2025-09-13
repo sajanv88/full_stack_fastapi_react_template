@@ -1,6 +1,4 @@
-from openai import BaseModel
-
-
+from pydantic import BaseModel
 class AiModel(BaseModel):
     name: str
     digest: str

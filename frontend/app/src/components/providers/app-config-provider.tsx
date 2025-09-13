@@ -5,7 +5,13 @@ import { createContext, useContext, useEffect, useState } from "react"
 const appConfigContext = createContext<AppConfigResponse>({
     is_multi_tenant_enabled: false,
     multi_tenancy_strategy: "none",
-    host_main_domain: ""
+    host_main_domain: "",
+    available_ai_models: [],
+    is_user_logged_in: false,
+    user_preferences: {
+        preferences: {},
+        user_id: ""
+    }
 });
 
 
@@ -17,7 +23,13 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
     const [appConfig, setAppConfig] = useState<AppConfigResponse>({
         is_multi_tenant_enabled: false,
         multi_tenancy_strategy: "none",
-        host_main_domain: ""
+        host_main_domain: "",
+        available_ai_models: [],
+        is_user_logged_in: false,
+        user_preferences: {
+            preferences: {},
+            user_id: ""
+        }
     });
 
     useEffect(() => {

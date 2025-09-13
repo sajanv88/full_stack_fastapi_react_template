@@ -29,12 +29,12 @@ async def get_app_config(
     user: Annotated[TokenData, Depends(get_token_decoded_payload)],
     db = Depends(get_db_reference)
 ):
-    logger.debug(f"Fetching app config. User logged in: {user}")
     user_preferences = None
     if user is not None:
         user_preferences_service = UserPreferenceService(db)
         user_preferences = await user_preferences_service.get_user_preference(user_id=user["sub"])
 
+    logger.debug(f"perferences: {user_preferences}")
     return AppConfigResponse(
         is_multi_tenant_enabled=is_tenancy_enabled(),
         multi_tenancy_strategy=get_tenancy_strategy(),

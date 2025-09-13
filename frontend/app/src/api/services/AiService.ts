@@ -2,21 +2,54 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AiModel } from '../models/AiModel';
 import type { AIRequest } from '../models/AIRequest';
-import type { ModelsResponse } from '../models/ModelsResponse';
+import type { AIResponse } from '../models/AIResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class AiService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
   /**
    * Get Models
-   * @returns ModelsResponse Successful Response
+   * @returns AiModel Successful Response
    * @throws ApiError
    */
-  public getModelsApiV1AiModelsGet(): CancelablePromise<Array<ModelsResponse>> {
+  public getModelsApiV1AiModelsGet(): CancelablePromise<Array<AiModel>> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/ai/models',
+    });
+  }
+  /**
+   * Get History
+   * @returns AIResponse Successful Response
+   * @throws ApiError
+   */
+  public getHistoryApiV1AiHistoryGet(): CancelablePromise<Array<AIResponse>> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/ai/history',
+    });
+  }
+  /**
+   * Set Preferred Model
+   * @returns void
+   * @throws ApiError
+   */
+  public setPreferredModelApiV1AiSetModelPreferenceModelNamePut({
+    modelName,
+  }: {
+    modelName: string,
+  }): CancelablePromise<void> {
+    return this.httpRequest.request({
+      method: 'PUT',
+      url: '/api/v1/ai/set_model_preference/{model_name}',
+      path: {
+        'model_name': modelName,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
   /**

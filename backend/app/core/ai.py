@@ -5,13 +5,15 @@ from typing import List
 from app.models.ai_model import AiModel as ModelsResponse
 import time
 import subprocess
-
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from app.services.ai_history_service import AIHistoryService
 
 
 class OllamaChat:
-    def __init__(self, username: str, model_name: str):
+    def __init__(self, user_id: str, username: str, model_name: str, db: AsyncIOMotorDatabase):
         self.MAX_HISTORY = 10
         self.history: List[BaseMessage] = []
+        self.user_id = user_id
         self.username = username
         self.model_name = model_name
         self.history.append(SystemMessage(content=f"The user’s name is {username}. Please refer to them by name."))
@@ -20,11 +22,20 @@ class OllamaChat:
             "You are a helpful assistant talking to {username}.\n\n{history}\nUser: {question}\nAssistant:"
         )
         self.chain = self.prompt | self.llm
+        self.db = db
+        
 
-    def generate_response(self, question: str):
+    async def generate_response(self, question: str):
+        history_service = AIHistoryService(self.db)
+        stored_history = await history_service.get_user_history(self.user_id, limit=self.MAX_HISTORY)
+
+        for item in stored_history:
+            self.history.append(HumanMessage(content=item["query"]))
+            self.history.append(AIMessage(content=item["response"]))
+
         self.history.append(HumanMessage(content=question))
         print(f"Generating response for question: {question}")
-        def event_stream():
+        async def event_stream():
             output = ""
             recent_history = self.history[-self.MAX_HISTORY:]
 
@@ -32,7 +43,9 @@ class OllamaChat:
                 output += chunk.content
                 yield chunk.content
                 time.sleep(0.01)
+
             self.history.append(AIMessage(content=output))
+            await history_service.save_user_query(self.user_id, question, output)
         return event_stream
 
 
