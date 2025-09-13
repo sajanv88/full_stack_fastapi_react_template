@@ -184,7 +184,7 @@ export function Profile() {
     }
 
     return (
-        <div className="px-4 py-6">
+        <div className="px-4 py-6 w-full xl:container xl:mx-auto xl:w-5xl">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
                 <div>

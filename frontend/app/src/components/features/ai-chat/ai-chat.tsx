@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useAppConfig } from '@/components/providers/app-config-provider'
 import { toast } from 'sonner'
 import { AIChatHistory } from './ai-chat-history'
+import { useSearchParams } from 'react-router'
 
 interface Message {
     id: string
@@ -31,6 +32,7 @@ interface ChatState {
 }
 
 export function AIChat() {
+    const [searchParams] = useSearchParams()
     const { user } = useAuthContext()
     const { user_preferences, available_ai_models } = useAppConfig()
     const [chatState, setChatState] = useState<ChatState>({
@@ -87,6 +89,19 @@ export function AIChat() {
             setSelectedModel(preferredModel)
         }
     }, [user_preferences, available_ai_models])
+
+    useEffect(() => {
+        async function fetchSelectedHistory() {
+            const apiClient = getApiClient()
+            const response = await apiClient.ai.getHistoryItemApiV1AiHistoryHistoryIdGet({
+                historyId: searchParams.get("history_id")!,
+            })
+            console.log("Fetched history:", response)
+        }
+        if (searchParams.get("history_id")) {
+            fetchSelectedHistory()
+        }
+    }, [searchParams])
 
     const generateId = () => Math.random().toString(36).substr(2, 9)
 
@@ -238,7 +253,7 @@ export function AIChat() {
             {/* Page Header */}
             <section className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <section className="px-3 sm:px-4 py-4 sm:py-6">
-                    <section className="flex items-center justify-between">
+                    <section className="flex items-center flex-wrap md:flex-nowrap justify-between">
                         <section className="flex items-center space-x-2 sm:space-x-3">
                             <section className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
                                 <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -260,7 +275,7 @@ export function AIChat() {
                             </section>
                         </section>
 
-                        <section className="flex items-center space-x-3 sm:space-x-4">
+                        <section className="flex items-center mt-5 space-x-3 sm:space-x-4">
                             <section className="hidden sm:block">
                                 <ListLocalAIModels
                                     onModelSelect={onSelectModelEvent}
@@ -327,7 +342,13 @@ export function AIChat() {
                     <AlertDescription>Please select a local AI model to start chatting with the assistant.</AlertDescription>
                 </Alert>
             )}
+
+
             {/* Chat Container */}
+
+            {/** Mobile view chat history */}
+            <AIChatHistory mobile />
+
             <section className="flex">
                 <AIChatHistory />
                 <section className="flex-1 py-3 sm:py-6">

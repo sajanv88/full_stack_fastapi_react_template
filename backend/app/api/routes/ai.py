@@ -45,6 +45,18 @@ async def get_history(
     user_history = await history_service.get_user_history(current_user["id"])
     return [await history_service.serialize(item) for item in user_history]
 
+@router.get("/history/{history_id}", response_model=AIResponse)
+async def get_history_item(
+    history_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db = Depends(get_db_reference)
+):
+    history_service = AIHistoryService(db)
+    history_item = await history_service.get_single_history(user_id=current_user["id"], history_id=history_id)
+    if not history_item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History item not found")
+    return history_item
+
 
 @router.put("/set_model_preference/{model_name}", status_code=status.HTTP_204_NO_CONTENT)
 async def set_preferred_model(

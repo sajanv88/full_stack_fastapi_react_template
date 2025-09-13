@@ -19,9 +19,9 @@ class AIHistoryService:
             "response": response,
             "timestamp": datetime.now(timezone.utc)
         })
-    
-    async def get_single_history(self, history_id: str):
-        history = await self.chat_histories_collection.find_one({"_id": ObjectId(history_id)})
+
+    async def get_single_history(self, user_id: str, history_id: str):
+        history = await self.chat_histories_collection.find_one({"_id": ObjectId(history_id), "user_id": ObjectId(user_id)})
         return await self.serialize(history) if history else None
 
     async def delete_history(self, history_id: str):

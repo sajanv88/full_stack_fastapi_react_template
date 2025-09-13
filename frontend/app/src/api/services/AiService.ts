@@ -32,6 +32,27 @@ export class AiService {
     });
   }
   /**
+   * Get History Item
+   * @returns AIResponse Successful Response
+   * @throws ApiError
+   */
+  public getHistoryItemApiV1AiHistoryHistoryIdGet({
+    historyId,
+  }: {
+    historyId: string,
+  }): CancelablePromise<AIResponse> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/ai/history/{history_id}',
+      path: {
+        'history_id': historyId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Set Preferred Model
    * @returns void
    * @throws ApiError

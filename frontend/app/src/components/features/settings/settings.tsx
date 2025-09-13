@@ -141,7 +141,7 @@ export function Settings() {
 
 
     return (
-        <div className="w-full md:max-w-4xl">
+        <div className="w-full xl:container xl:mx-auto xl:max-w-4xl">
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center space-x-2">

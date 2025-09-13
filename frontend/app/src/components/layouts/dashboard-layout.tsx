@@ -20,9 +20,13 @@ export function DashboardLayout() {
     const userImage = auth.user?.image_url ? auth.user?.image_url : "https://github.com/evilrabbit.png";
     return (
         <div className="">
-            <SidebarProvider>
+            <SidebarProvider style={
+                {
+                    "--sidebar-width-mobile": "20rem",
+                } as React.CSSProperties
+            }>
                 <DashboardSidebar />
-                <main className="flex min-h-screen bg-muted w-full">
+                <main className="flex min-h-screen bg-muted md:w-full">
                     <SidebarTrigger />
                     <section className="w-full h-full flex flex-col">
                         <div className="flex-1 flex-col p-4">
@@ -57,7 +61,6 @@ export function DashboardLayout() {
 
                         </div>
                         <SimpleFooter />
-
                     </section>
 
                 </main>
