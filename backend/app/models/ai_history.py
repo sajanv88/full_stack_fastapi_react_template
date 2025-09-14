@@ -5,6 +5,7 @@ from datetime import datetime
 
 
 class AIHistory(BaseModel):
+    uid: str
     query: str
     response: str
     timestamp: datetime

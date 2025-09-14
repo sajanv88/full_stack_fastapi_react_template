@@ -1,6 +1,6 @@
 import logging
 from typing import Annotated, List, Optional
-from fastapi import  APIRouter, HTTPException,  Response, status
+from fastapi import  APIRouter, BackgroundTasks, HTTPException,  Response, status
 from fastapi.params import Depends
 from fastapi.responses import StreamingResponse
 from app.core.db import get_db_reference
@@ -60,6 +60,31 @@ async def get_history(
     return [AIResponseSession(**s) for s in response]
    
 
+@router.get("/sessions/{session_id}", response_model=AIHistories)
+async def get_single_session(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session_id: str,
+    db = Depends(get_db_reference)
+):
+    try:
+        history_service = AIHistoryService(db)
+        response = await history_service.get_single_session(current_user["id"], session_id)
+        return AIHistories(**response)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+@router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_session(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session_id: str,
+    db = Depends(get_db_reference)
+):
+    try:
+        history_service = AIHistoryService(db)
+        await history_service.delete_session_history(session_id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.put("/set_model_preference/{model_name}", status_code=status.HTTP_204_NO_CONTENT)
@@ -80,6 +105,7 @@ async def set_preferred_model(
 async def ask_ai(
     current_user: Annotated[User, Depends(get_current_user)],
     query: AIRequest,
+    background_tasks: BackgroundTasks,
     db = Depends(get_db_reference)
 ):
     print(f"AI Chat Request by user: {current_user['first_name']}, model: {query.model_name}")
@@ -94,7 +120,7 @@ async def ask_ai(
         db=db,
         current_session=query.session_id
     )
-    stream = await chat.generate_response(query.question)
+    stream = await chat.generate_response(query.question, background_tasks)
     return StreamingResponse(stream(), media_type="text/plain")
 
 

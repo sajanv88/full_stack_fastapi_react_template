@@ -1,3 +1,4 @@
+from fastapi import BackgroundTasks
 from langchain_ollama import ChatOllama
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import HumanMessage, AIMessage, SystemMessage, BaseMessage
@@ -28,17 +29,26 @@ class OllamaChat:
         self.db = db
         
 
-    async def generate_response(self, question: str):
-        history_service = AIHistoryService(self.db)
+    async def feed_previous_conversations(self, history_service: AIHistoryService):
         is_session_valid = await history_service.is_session_exists(self.current_session)
-        if is_session_valid:
-            logger.info(f"Using existing session: {self.current_session} for user: {self.username}")
-            logger.debug(f"Current history before fetching from DB: {self.history}")
-            stored_history = await history_service.get_user_history(self.user_id, limit=self.MAX_HISTORY)
-            logger.debug(f"Memory fetched from DB: {stored_history.count()}")
-            for item in stored_history:
-                self.history.append(HumanMessage(content=item["query"]))
-                self.history.append(AIMessage(content=item["response"]))
+        if is_session_valid is False:
+            logger.debug("No previous chat history session found!")
+            return
+
+        logger.info(f"Using existing session: {self.current_session} for user: {self.username}")
+        logger.debug(f"Current history before fetching from DB: {self.history}")
+        stored_history = await history_service.get_single_session(self.user_id, self.current_session)
+        logger.debug(f"Stored history fetched from DB: {stored_history}")
+        previous_histories = stored_history["histories"]
+        logger.debug(f"Memory fetched from DB: {len(previous_histories)} items")
+        for item in previous_histories:
+            self.history.append(HumanMessage(content=item["query"]))
+            self.history.append(AIMessage(content=item["response"]))
+    
+
+    async def generate_response(self, question: str, background_tasks: BackgroundTasks):
+        history_service = AIHistoryService(self.db)
+        await self.feed_previous_conversations(history_service)
 
         self.history.append(HumanMessage(content=question))
         logger.debug(f"Generating response for question: {question}")
@@ -52,7 +62,7 @@ class OllamaChat:
                 time.sleep(0.01)
 
             self.history.append(AIMessage(content=output))
-            await history_service.save_user_query(
+            background_tasks.add_task(history_service.save_user_query,
                 user_id=self.user_id,
                 query=question,
                 response=output,

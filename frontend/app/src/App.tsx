@@ -15,6 +15,7 @@ import { Tenants } from "@/components/features/tenant/tenant";
 import { SettingsProvider } from "@/components/providers/settings-provider";
 import { Settings } from "@/components/features/settings/settings";
 import { useAuthContext } from "./components/providers/auth-provider";
+import { AIChatProvider } from "@/components/providers/ai-chat-provider";
 
 function App() {
   const { user } = useAuthContext();
@@ -57,7 +58,11 @@ function App() {
         />
 
         <Route path="profile" element={<Profile />} />
-        <Route path="ai" element={<AIChat />} />
+        <Route path="ai" element={
+          <AIChatProvider>
+            <AIChat />
+          </AIChatProvider>
+        } />
 
         <Route path="*" element={<Navigate to="/dashboard" />} />
       </Route>

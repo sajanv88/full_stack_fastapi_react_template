@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type AIHistory = {
+  uid: string;
   query: string;
   response: string;
   timestamp: string;

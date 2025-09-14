@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useTransition } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,6 +16,7 @@ import { useAppConfig } from '@/components/providers/app-config-provider'
 import { toast } from 'sonner'
 import { AIChatHistory } from './ai-chat-history'
 import { useSearchParams } from 'react-router'
+import { useAIChat } from '@/components/providers/ai-chat-provider'
 
 interface Message {
     id: string
@@ -34,6 +35,7 @@ interface ChatState {
 export function AIChat() {
     const [searchParams, setSearchParams] = useSearchParams()
     const { user } = useAuthContext()
+    const { sessions, fetchAllSessions } = useAIChat()
     const { user_preferences, available_ai_models } = useAppConfig()
     const [chatState, setChatState] = useState<ChatState>({
         messages: [],
@@ -45,7 +47,7 @@ export function AIChat() {
     const scrollAreaRef = useRef<HTMLDivElement>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
-
+    const [pending, startTransition] = useTransition()
     // Auto-resize textarea
     const adjustTextareaHeight = () => {
         const textarea = inputRef.current
@@ -63,6 +65,25 @@ export function AIChat() {
     // Auto-scroll to bottom when new messages arrive or content changes
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+
+
+    // fetch histories
+    async function fetchHistories(sessionId: string) {
+        const histories = sessions.find(s => s.session_id === sessionId)?.sessions
+        if (histories && histories.length > 0) {
+            return histories[0]
+        }
+        try {
+            const apiClient = getApiClient()
+            const response = await apiClient.ai.getSingleSessionApiV1AiSessionsSessionIdGet({
+                sessionId: sessionId!
+            });
+            return response
+        } catch (error) {
+            throw new Error("Failed to fetch chat history for the session." + (error instanceof Error ? ` ${error.message}` : ''))
+        }
+
     }
 
     useEffect(() => {
@@ -92,15 +113,58 @@ export function AIChat() {
 
     useEffect(() => {
         async function fetchSelectedSessionHistory() {
-            console.log("Fetching history for session:", searchParams.get("session_id"))
-            // const apiClient = getApiClient()
-            // const response = await apiClient.ai.getHistoryItemApiV1AiHistoryHistoryIdGet({
-            //     historyId: searchParams.get("history_id")!,
-            // })
-            // console.log("Fetched history:", response)
+            const sessionId = searchParams.get("session_id")
+            try {
+                const response = await fetchHistories(sessionId!);
+                setChatState({
+                    error: null,
+                    isLoading: true,
+                    messages: []
+                });
+
+                const messages: Message[] = response.histories.flatMap(h => [
+                    {
+                        id: h.uid,
+                        content: h.query,
+                        role: "user",
+                        timestamp: new Date(h.timestamp)
+                    },
+                    {
+                        id: h.uid,
+                        content: h.response,
+                        role: "assistant",
+                        timestamp: new Date(h.timestamp)
+                    }
+                ]);
+
+
+                setTimeout(() => {
+                    setChatState(prev => ({
+                        ...prev,
+                        messages: [...messages],
+                        isLoading: false,
+                        error: null
+                    }))
+                }, 1000)
+
+
+
+
+
+            } catch (e) {
+                console.error("Failed to load previous conversations...")
+                setChatState(prev => ({
+                    ...prev,
+                    messages: [],
+                    isLoading: false,
+                    error: e instanceof Error ? e.message : 'An error occurred'
+                }))
+            }
+
+
         }
-        if (searchParams.get("session_id")) {
-            fetchSelectedSessionHistory()
+        if (searchParams.get("session_id") && !searchParams.get("new_session")) {
+            startTransition(() => fetchSelectedSessionHistory())
         }
     }, [searchParams])
 
@@ -108,8 +172,12 @@ export function AIChat() {
 
     const sendMessage = async () => {
         if (!input.trim() || chatState.isLoading) return
-        const sessionId = searchParams.get("session_id") || await getAIChatNewSession()
-        setSearchParams({ session_id: sessionId })
+        let sessionId = searchParams.get("session_id")
+        if (!sessionId) {
+            sessionId = await getAIChatNewSession()
+            setSearchParams({ session_id: sessionId, new_session: 'true' })
+        }
+
         const userMessage: Message = {
             id: generateId(),
             content: input.trim(),
@@ -192,6 +260,13 @@ export function AIChat() {
                 isLoading: false
             }))
 
+            const shouldRefresh = new URLSearchParams(window.location.search).get("new_session") === 'true'
+            console.log(shouldRefresh, "------------")
+            if (shouldRefresh) {
+                await fetchAllSessions()
+
+            }
+
         } catch (error) {
             setChatState(prev => ({
                 ...prev,
@@ -203,6 +278,7 @@ export function AIChat() {
     }
 
     const clearChat = () => {
+        setSearchParams({})
         setChatState({
             messages: [],
             isLoading: false,
@@ -357,42 +433,49 @@ export function AIChat() {
                 <section className="flex-1 py-3 sm:py-6">
                     <section className="flex flex-col h-full space-y-3 sm:space-y-4">
                         {/* Chat Messages */}
-                        <Card className="flex-1 flex flex-col">
+                        <Card className={cn("flex-1 flex flex-col")}>
                             <CardContent className="flex-1 p-0">
                                 <ScrollArea className="h-[calc(100vh-280px)] sm:h-[600px] p-3 sm:p-6" ref={scrollAreaRef}>
                                     {chatState.messages.length === 0 ? (
-                                        <section className="flex flex-col items-center justify-center h-full text-center space-y-4 sm:space-y-6 px-4">
-                                            <section className="p-4 sm:p-6 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full">
-                                                <Bot className="w-8 h-8 sm:w-12 sm:h-12 text-blue-600" />
-                                            </section>
-                                            <section className="max-w-md">
-                                                <h3 className="text-lg sm:text-xl font-semibold mb-2">Welcome to AI Chat</h3>
-                                                <p className="text-muted-foreground text-sm sm:text-base">
-                                                    Start a conversation with our AI assistant. Ask questions, get help with coding, brainstorm ideas, or just have a friendly chat!
-                                                </p>
-                                            </section>
-                                            <section className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md w-full">
-                                                {[
-                                                    "What can you help me with?",
-                                                    "Explain quantum computing",
-                                                    "Write a Python function",
-                                                    "Help me brainstorm ideas"
-                                                ].map((suggestion, index) => (
-                                                    <Button
-                                                        key={index}
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => {
-                                                            setInput(suggestion)
-                                                            setTimeout(adjustTextareaHeight, 0)
-                                                        }}
-                                                        className="justify-start h-auto p-2 sm:p-3 text-left whitespace-normal text-xs sm:text-sm"
-                                                    >
-                                                        {suggestion}
-                                                    </Button>
-                                                ))}
-                                            </section>
-                                        </section>
+                                        <>
+                                            {(pending || chatState.isLoading) ? (
+                                                <Loading variant='dots' className='absolute inset-0 flex items-center justify-center' />
+                                            ) : (
+                                                <section className="flex flex-col items-center justify-center h-full text-center space-y-4 sm:space-y-6 px-4">
+                                                    <section className="p-4 sm:p-6 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full">
+                                                        <Bot className="w-8 h-8 sm:w-12 sm:h-12 text-blue-600" />
+                                                    </section>
+                                                    <section className="max-w-md">
+                                                        <h3 className="text-lg sm:text-xl font-semibold mb-2">Welcome to AI Chat</h3>
+                                                        <p className="text-muted-foreground text-sm sm:text-base">
+                                                            Start a conversation with our AI assistant. Ask questions, get help with coding, brainstorm ideas, or just have a friendly chat!
+                                                        </p>
+                                                    </section>
+                                                    <section className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md w-full">
+                                                        {[
+                                                            "What can you help me with?",
+                                                            "Explain quantum computing",
+                                                            "Write a Python function",
+                                                            "Help me brainstorm ideas"
+                                                        ].map((suggestion, index) => (
+                                                            <Button
+                                                                key={index}
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setInput(suggestion)
+                                                                    setTimeout(adjustTextareaHeight, 0)
+                                                                }}
+                                                                className="justify-start h-auto p-2 sm:p-3 text-left whitespace-normal text-xs sm:text-sm"
+                                                            >
+                                                                {suggestion}
+                                                            </Button>
+                                                        ))}
+                                                    </section>
+                                                </section>
+                                            )}
+
+                                        </>
                                     ) : (
                                         <section className="space-y-4 sm:space-y-6">
                                             {chatState.messages.map((message) => (

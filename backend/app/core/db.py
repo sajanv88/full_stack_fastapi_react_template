@@ -45,8 +45,8 @@ async def ensure_indexes():
     await user_preferences_collection.create_index("user_id", unique=True)
     await chat_histories_collection.create_index("query", unique=False)
     await chat_histories_collection.create_index("user_id")
-    await chat_unique_sessions_collection.create_index("session_id", unique=True)
-    await chat_unique_sessions_collection.create_index("history_id", unique=True)
+    await chat_unique_sessions_collection.create_index("session_id", unique=False)
+    await chat_unique_sessions_collection.create_index("history_id", unique=False)
 
 
 async def get_db_reference(request: Request):

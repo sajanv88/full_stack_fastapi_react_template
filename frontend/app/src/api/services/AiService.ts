@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AIHistories } from '../models/AIHistories';
 import type { AiModel } from '../models/AiModel';
 import type { AIRequest } from '../models/AIRequest';
 import type { AIResponseSession } from '../models/AIResponseSession';
@@ -41,6 +42,48 @@ export class AiService {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/ai/history',
+    });
+  }
+  /**
+   * Get Single Session
+   * @returns AIHistories Successful Response
+   * @throws ApiError
+   */
+  public getSingleSessionApiV1AiSessionsSessionIdGet({
+    sessionId,
+  }: {
+    sessionId: string,
+  }): CancelablePromise<AIHistories> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/ai/sessions/{session_id}',
+      path: {
+        'session_id': sessionId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Delete Session
+   * @returns void
+   * @throws ApiError
+   */
+  public deleteSessionApiV1AiSessionsSessionIdDelete({
+    sessionId,
+  }: {
+    sessionId: string,
+  }): CancelablePromise<void> {
+    return this.httpRequest.request({
+      method: 'DELETE',
+      url: '/api/v1/ai/sessions/{session_id}',
+      path: {
+        'session_id': sessionId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
   /**

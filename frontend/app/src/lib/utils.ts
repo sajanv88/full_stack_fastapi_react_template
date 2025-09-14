@@ -2,7 +2,6 @@ import { ApiClient, type Tenant, type TokenSet } from "@/api"
 import { clsx, type ClassValue } from "clsx"
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge"
-import { ca } from "zod/v4/locales";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
