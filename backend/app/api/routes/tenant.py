@@ -2,7 +2,7 @@ import logging
 from typing import List
 from typing_extensions import Annotated
 from fastapi import BackgroundTasks, Depends, APIRouter, Response, status, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from app.models.tenant import Tenant
 from app.api.routes.auth import get_current_user
 from app.core.permission import Permission
@@ -33,7 +33,7 @@ class TenantListResponse(BaseModel):
 
 class NewTenantCreateRequest(BaseModel):
     subdomain: str
-    admin_email: str
+    admin_email: EmailStr
     admin_password: str
     first_name: str
     last_name: str
@@ -78,7 +78,7 @@ async def create_tenant(
 ):
     try:
         auth_service = AuthService(db)
-        return await auth_service.register_user(NewUser(
+        response = await auth_service.register_user(NewUser(
             email=tenant.admin_email,
             password=tenant.admin_password,
             first_name=tenant.first_name,
@@ -86,6 +86,8 @@ async def create_tenant(
             gender=tenant.gender,
             sub_domain=tenant.subdomain
         ), background_tasks=background_tasks)
+
+        return Tenant(**response["tenant"].model_dump())
     except Exception as e:
         print(f"Error creating tenant: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create tenant")

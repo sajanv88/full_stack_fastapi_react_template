@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from enum import Enum
 from typing import Optional
 from datetime import datetime
@@ -26,7 +26,7 @@ class User(BaseModel):
 class NewUser(BaseModel):
     first_name: str
     last_name: str
-    email: str
+    email: EmailStr
     gender: Gender
     password: str
     sub_domain: Optional[str] = None

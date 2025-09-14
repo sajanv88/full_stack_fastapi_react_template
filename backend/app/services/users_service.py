@@ -19,7 +19,7 @@ class UserService:
    
         user = await self.user_collection.find_one({"email": email})
         if user is None:
-            raise Exception(f"User not found: {email}")
+            return None
         return await self.serialize(user)
   
 

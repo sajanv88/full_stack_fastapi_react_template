@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import BackgroundTasks
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -72,7 +72,7 @@ class AuthService:
         user_dict["is_active"] = False  # User starts as inactive until activation
         guest_role = await role_service.find_by_name(RoleType.GUEST)
         user_dict["role_id"] = ObjectId(guest_role["id"])
-        user_dict["created_at"] = datetime.utcnow()
+        user_dict["created_at"] = datetime.now(timezone.utc)
         tenant_id = None
 
         if is_tenancy_enabled():

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, List
 from bson import ObjectId
 from app.models.user import Gender
@@ -119,7 +119,7 @@ async def seed_default_data():
             "email": ADMIN_EMAIL,
             "password": hashed_password,
             "is_active": True,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc),
         }
         await user_collection.insert_one(admin_user)
     else:
@@ -193,7 +193,7 @@ class SeedDataForNewlyCreatedTenant:
         if await self.role_collection.count_documents({}) != len(roles):
             print("Roles collection is empty or outdated. Seeding roles...")
             for role in roles:
-                role["created_at"] = datetime.utcnow()
+                role["created_at"] = datetime.now(timezone.utc)
                 await self.role_collection.find_one_and_replace({"name": role["name"]}, role, upsert=True)
                 logger.info(f"Role upserted: {role['name']}")
 

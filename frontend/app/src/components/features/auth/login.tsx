@@ -7,7 +7,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,7 +36,7 @@ type LoginFormInputs = z.infer<typeof loginSchema>;
 export function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { login } = useAuth();
+    const { login, refreshToken } = useAuth();
     const appConfig = useAppConfig();
 
     const form = useForm<LoginFormInputs>({
@@ -46,6 +46,7 @@ export function Login() {
             password: "",
         },
     });
+
 
     const onSubmit = async (data: LoginFormInputs) => {
         setIsLoading(true);
@@ -65,10 +66,14 @@ export function Login() {
 
     };
 
+    useEffect(() => {
+        refreshToken();
+    }, [])
+
     return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
             {appConfig.is_multi_tenant_enabled && (
-                
+
                 <TenantSelection />
             )}
             <Card className="w-full max-w-md shadow-lg">

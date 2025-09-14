@@ -22,11 +22,12 @@ export function DashboardLayout() {
         <div className="">
             <SidebarProvider style={
                 {
+                    "--sidebar-width": "16rem",
                     "--sidebar-width-mobile": "20rem",
                 } as React.CSSProperties
             }>
                 <DashboardSidebar />
-                <main className="flex min-h-screen bg-muted md:w-full">
+                <main className="flex min-h-screen bg-muted w-full">
                     <SidebarTrigger />
                     <section className="w-full h-full flex flex-col">
                         <div className="flex-1 flex-col p-4">

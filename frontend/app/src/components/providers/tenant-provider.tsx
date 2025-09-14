@@ -1,4 +1,4 @@
-import { TenantListResponse } from '@/api';
+import { NewTenantCreateRequest, TenantListResponse } from '@/api';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { IResponseData } from '../shared/iresponse-data.inteface';
 import { getApiClient } from '@/lib/utils';
@@ -21,6 +21,7 @@ interface TenantsProviderState {
     isLoading: boolean;
     selectedTenant?: Action;
     onSelectTenant: (action?: Action) => void;
+    onCreateNewTenant: (newTenant: NewTenantCreateRequest) => Promise<void>;
 
 }
 
@@ -36,7 +37,8 @@ const initialState: TenantsProviderState = {
     refreshTenants: () => { },
     isLoading: true,
     selectedTenant: undefined,
-    onSelectTenant: () => { }
+    onSelectTenant: () => { },
+    onCreateNewTenant: async () => { }
 }
 
 const TenantsContext = createContext<TenantsProviderState>(initialState);
@@ -51,11 +53,11 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
     const [pending, setPending] = useState(true);
     const { can } = useAuthContext();
     const isHost = can("host:manage_tenants");
+    const apiClient = getApiClient();
 
     async function fetchTenants() {
         const skip = searchParams.get("skip");
         const limit = searchParams.get("limit");
-        const apiClient = getApiClient();
         try {
             const response = await apiClient.tenants.getTenantsApiV1TenantsGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
             setTenantResponse({
@@ -88,7 +90,24 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
         setSelectedTenant(action);
     }
 
-
+    const onCreateNewTenant = async (newTenant: NewTenantCreateRequest) => {
+        try {
+            await apiClient.tenants.createTenantApiV1TenantsPost({
+                requestBody: newTenant
+            });
+            toast.success("Tenant created successfully", {
+                richColors: true,
+                position: "top-center"
+            });
+            await fetchTenants();
+        } catch (error) {
+            console.error("Failed to create tenant", error);
+            toast.error("Failed to create tenant", {
+                richColors: true,
+                position: "top-center"
+            });
+        }
+    }
 
     useEffect(() => {
         fetchTenants();
@@ -100,7 +119,8 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
             refreshTenants,
             isLoading: pending,
             selectedTenant,
-            onSelectTenant
+            onSelectTenant,
+            onCreateNewTenant
         }}>
             {children}
         </TenantsContext.Provider>

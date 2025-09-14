@@ -4,7 +4,7 @@ import logging
 from jwt import InvalidTokenError
 
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from app.core.db import get_db_reference
 from app.models.user import NewUser, User, UserEmailUpdate
 from app.models.role import Role
@@ -38,7 +38,7 @@ class UserMeResponse(BaseModel):
     id: str
     first_name: str
     last_name: str
-    email: str
+    email: EmailStr
     gender: str
     role: Union[Role, None] = None
     is_active: bool = False

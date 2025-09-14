@@ -108,7 +108,7 @@ class AIHistoryService:
             "uid": str(item["uid"]),
             "query": item["query"],
             "response": item["response"],
-            "timestamp": str(item["timestamp"].isoformat()) if "timestamp" in item else None
+            "timestamp": str(item["timestamp"].isoformat())
         }
     
     async def serialize_history_doc(self, history: dict):
