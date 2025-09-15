@@ -3,7 +3,10 @@ import os
 import logging
 from datetime import datetime
 from bson import ObjectId
+from fastapi import Path, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+import re
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +48,27 @@ def get_default_db_name() -> str:
     return os.getenv("MONGO_DB_NAME", "full_stack_fastapi_react_template")
 
 
+SUBDOMAIN_REGEX = re.compile(r"^(?!-)[A-Za-z0-9-]{3,63}(?<!-)$")
+
+def validate_subdomain(subdomain: str = Path(..., description="The subdomain to validate")) -> str:
+    main_domain = get_host_main_domain_name()
+
+    if not subdomain.endswith(f".{main_domain}"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Subdomain must end with .{main_domain}"
+        )
+
+    label = subdomain.replace(f".{main_domain}", "")
+
+    if not SUBDOMAIN_REGEX.match(label):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid subdomain format (3–63 chars, letters/digits/hyphens, no leading/trailing hyphen)"
+        )
+    return subdomain
+
+
 # Simple utility function to store file. Later, will configure AWS S3, Azure storage etc..
 def save_file(file, upload_dir="app/ui/assets/user_profiles"):
     os.makedirs(upload_dir, exist_ok=True)
@@ -53,9 +77,6 @@ def save_file(file, upload_dir="app/ui/assets/user_profiles"):
         file_object.write(file.file.read())
     logger.debug(f"File saved at {file_location}")
     return file_location
-
-
-
 
 # Utility so Pydantic can handle ObjectId
 class PyObjectId(ObjectId):

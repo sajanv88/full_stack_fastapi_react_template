@@ -19,6 +19,7 @@ export type { AIResponseSession } from './models/AIResponseSession';
 export type { AppConfigResponse } from './models/AppConfigResponse';
 export type { Body_login_api_v1_auth_login_post } from './models/Body_login_api_v1_auth_login_post';
 export type { Body_update_profile_picture_api_v1_users__user_id__update_profile_picture_put } from './models/Body_update_profile_picture_api_v1_users__user_id__update_profile_picture_put';
+export type { CheckSubdomainResponse } from './models/CheckSubdomainResponse';
 export type { DashboardMetrics } from './models/DashboardMetrics';
 export type { Gender } from './models/Gender';
 export type { HTTPValidationError } from './models/HTTPValidationError';

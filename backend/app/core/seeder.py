@@ -191,7 +191,7 @@ class SeedDataForNewlyCreatedTenant:
             {"name": RoleType.GUEST, "description": "Guest user has read only access to resources.", "permissions": [Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY]}
         ]
         if await self.role_collection.count_documents({}) != len(roles):
-            print("Roles collection is empty or outdated. Seeding roles...")
+            print("Roles collection is empty or outdated. Seeding roles... for tenant")
             for role in roles:
                 role["created_at"] = datetime.now(timezone.utc)
                 await self.role_collection.find_one_and_replace({"name": role["name"]}, role, upsert=True)

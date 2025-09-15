@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CheckSubdomainResponse } from '../models/CheckSubdomainResponse';
 import type { NewTenantCreateRequest } from '../models/NewTenantCreateRequest';
 import type { Tenant } from '../models/Tenant';
 import type { TenantListResponse } from '../models/TenantListResponse';
@@ -68,6 +69,30 @@ export class TenantsService {
       url: '/api/v1/tenants/search_by_name',
       query: {
         'name': name,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Check Tenant By Subdomain
+   * @returns CheckSubdomainResponse Successful Response
+   * @throws ApiError
+   */
+  public checkTenantBySubdomainApiV1TenantsCheckSubdomainSubdomainGet({
+    subdomain,
+  }: {
+    /**
+     * The subdomain to validate
+     */
+    subdomain: string,
+  }): CancelablePromise<CheckSubdomainResponse> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/tenants/check_subdomain/{subdomain}',
+      path: {
+        'subdomain': subdomain,
       },
       errors: {
         422: `Validation Error`,

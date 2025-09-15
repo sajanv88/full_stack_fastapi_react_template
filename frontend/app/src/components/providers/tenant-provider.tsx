@@ -22,6 +22,7 @@ interface TenantsProviderState {
     selectedTenant?: Action;
     onSelectTenant: (action?: Action) => void;
     onCreateNewTenant: (newTenant: NewTenantCreateRequest) => Promise<void>;
+    onDeleteTenant: () => Promise<void>;
 
 }
 
@@ -38,7 +39,8 @@ const initialState: TenantsProviderState = {
     isLoading: true,
     selectedTenant: undefined,
     onSelectTenant: () => { },
-    onCreateNewTenant: async () => { }
+    onCreateNewTenant: async () => { },
+    onDeleteTenant: async () => { }
 }
 
 const TenantsContext = createContext<TenantsProviderState>(initialState);
@@ -109,6 +111,27 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
         }
     }
 
+    const onDeleteTenant = async () => {
+        if (!selectedTenant) return;
+        try {
+            await apiClient.tenants.deleteTenantApiV1TenantsTenantIdDelete({
+                tenantId: selectedTenant.tenant.id
+            });
+            toast.success("Tenant deleted successfully", {
+                richColors: true,
+                position: "top-center"
+            });
+            setSelectedTenant(undefined);
+            await fetchTenants();
+        } catch (error) {
+            console.error("Failed to delete tenant", error);
+            toast.error("Failed to delete tenant", {
+                richColors: true,
+                position: "top-center"
+            });
+        }
+    }
+
     useEffect(() => {
         fetchTenants();
     }, [searchParams]);
@@ -120,7 +143,8 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
             isLoading: pending,
             selectedTenant,
             onSelectTenant,
-            onCreateNewTenant
+            onCreateNewTenant,
+            onDeleteTenant
         }}>
             {children}
         </TenantsContext.Provider>

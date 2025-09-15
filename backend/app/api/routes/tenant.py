@@ -1,8 +1,10 @@
 import logging
 from typing import List
 from typing_extensions import Annotated
-from fastapi import BackgroundTasks, Depends, APIRouter, Response, status, HTTPException
-from pydantic import BaseModel, EmailStr
+from fastapi import BackgroundTasks, Depends, APIRouter, Response, status, HTTPException, Path
+from pydantic import BaseModel, EmailStr, field_validator, ValidationError
+
+from app.core.utils import get_host_main_domain_name, validate_subdomain
 from app.models.tenant import Tenant
 from app.api.routes.auth import get_current_user
 from app.core.permission import Permission
@@ -38,6 +40,17 @@ class NewTenantCreateRequest(BaseModel):
     first_name: str
     last_name: str
     gender: str
+
+    @field_validator("subdomain")
+    @classmethod
+    def validate_subdomain(cls, v):
+        return validate_subdomain(v)
+
+
+class CheckSubdomainResponse(BaseModel):
+    available: bool
+
+
 
 
 @router.get("/", response_model=TenantListResponse)
@@ -87,7 +100,7 @@ async def create_tenant(
             sub_domain=tenant.subdomain
         ), background_tasks=background_tasks)
 
-        return Tenant(**response["tenant"].model_dump())
+        return Tenant(**response["tenant"])
     except Exception as e:
         print(f"Error creating tenant: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create tenant")
@@ -104,6 +117,17 @@ async def search_tenant_by_name(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
     return tenant
 
+@router.get("/check_subdomain/{subdomain}", response_model=CheckSubdomainResponse)
+async def check_tenant_by_subdomain(
+    subdomain: str = Depends(validate_subdomain),
+    db = Depends(get_db_reference)
+):
+    tenant_service = TenantService(db)
+    tenant = await tenant_service.check_subdomain_conflict(subdomain)
+    logger.info(f"Subdomain '{subdomain}' conflict check: {'exists' if tenant else 'available'}")
+    if tenant:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Subdomain already in use")
+    return CheckSubdomainResponse(available=True)
 
 
 @router.delete("/{tenant_id}", status_code=status.HTTP_202_ACCEPTED)

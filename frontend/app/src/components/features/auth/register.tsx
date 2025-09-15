@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/shared/logo";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { Label } from "@/components/ui/label";
+import { useSubdomainCheck } from "@/hooks/use-subdomain-check";
 
 // Gender enum matching the backend
 export const Gender = {
@@ -60,7 +61,7 @@ export default function Register() {
     const [isLoading, setIsLoading] = useState(false);
     const { register } = useAuth();
     const appConfig = useAppConfig();
-
+    const { setSubdomain, isAvailable, isChecking, error } = useSubdomainCheck();
     const isMultiTenancyEnabled = appConfig.is_multi_tenant_enabled;
     const mainDomainName = appConfig.host_main_domain;
 
@@ -111,7 +112,18 @@ export default function Register() {
 
     };
 
+    useEffect(() => {
+        if (!isMultiTenancyEnabled) return;
 
+        if (isAvailable === false) {
+            form.setError("subdomain", { type: "manual", message: "This subdomain is already taken" });
+        } else if (isAvailable === true) {
+            form.clearErrors("subdomain");
+        }
+        if (error) {
+            form.setError("subdomain", { type: "manual", message: error });
+        }
+    }, [isAvailable, error, isMultiTenancyEnabled]);
 
     return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
@@ -178,7 +190,8 @@ export default function Register() {
                                                     <Input
                                                         type="text"
                                                         placeholder="subdomain name"
-                                                        disabled={isLoading}
+                                                        onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSubdomain(e.target.value)}
+                                                        disabled={isChecking || isLoading}
                                                         {...field}
                                                     />
                                                 </FormControl>

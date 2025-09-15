@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader } from "@/components/ui/dialog";
 import z from "zod";
 import { Gender } from "@/components/features/auth/register";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useAppConfig } from "@/components/providers/app-config-provider";
+import { useSubdomainCheck } from "@/hooks/use-subdomain-check";
 
 const tenantSchema = z.object({
     firstName: z.string()
@@ -53,6 +54,7 @@ interface CreateNewTenantDialogProps {
 export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialogProps) {
     const { onCreateNewTenant } = useTenants();
     const appConfig = useAppConfig();
+    const { setSubdomain, isAvailable, isChecking, error } = useSubdomainCheck();
 
     const mainDomainName = appConfig.host_main_domain;
     const [isLoading, setIsLoading] = useState(false);
@@ -70,17 +72,25 @@ export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialog
     });
 
     async function onSubmit(data: TenantFormInputs) {
-        setIsLoading(true);
-        await onCreateNewTenant({
-            first_name: data.firstName,
-            last_name: data.lastName,
-            admin_email: data.adminEmail,
-            admin_password: data.adminPassword,
-            gender: data.gender,
-            subdomain: `${data.subdomain}.${mainDomainName}`,
-        }).finally(() => {
+        try {
+            setIsLoading(true);
+            await onCreateNewTenant({
+                first_name: data.firstName,
+                last_name: data.lastName,
+                admin_email: data.adminEmail,
+                admin_password: data.adminPassword,
+                gender: data.gender,
+                subdomain: `${data.subdomain}.${mainDomainName}`,
+            })
+            form.reset();
+            onDismiss();
+
+        } catch (error) {
+            console.error("Error creating tenant:", error);
+        } finally {
             setIsLoading(false);
-        });
+        }
+
     }
     function onDismissDialog(flag: boolean) {
         console.log("onDismissDialog called with flag:", flag);
@@ -89,6 +99,17 @@ export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialog
             onDismiss();
         }
     }
+
+    useEffect(() => {
+        if (isAvailable === false) {
+            form.setError("subdomain", { type: "manual", message: "This subdomain is already taken" });
+        } else if (isAvailable === true) {
+            form.clearErrors("subdomain");
+        }
+        if (error) {
+            form.setError("subdomain", { type: "manual", message: error });
+        }
+    }, [isAvailable, error]);
     return (
         <Dialog open={open} onOpenChange={onDismissDialog}>
             <DialogContent className="sm:max-w-screen-sm">
@@ -151,8 +172,8 @@ export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialog
                                             <Input
                                                 type="text"
                                                 placeholder="subdomain name"
-
-                                                disabled={isLoading}
+                                                onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSubdomain(e.target.value)}
+                                                disabled={isChecking || isLoading}
                                                 {...field}
                                             />
                                         </FormControl>

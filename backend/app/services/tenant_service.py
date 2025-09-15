@@ -1,3 +1,4 @@
+from app.core.utils import validate_subdomain
 from app.models.tenant import Tenant
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
@@ -14,6 +15,11 @@ class TenantService:
         return await self.tenant_collection.count_documents({})
 
     async def create_tenant(self, tenant: dict):
+        validate_subdomain(tenant["sub_domain"])
+        sub_domain_conflict = await self.check_subdomain_conflict(tenant["sub_domain"])
+        if sub_domain_conflict:
+            raise Exception(f"Subdomain '{tenant['sub_domain']}' is already taken")
+        
         existing_tenant = await self.tenant_collection.find_one({"name": tenant["name"]})
         if existing_tenant:
             raise Exception(f"Tenant with this name '{tenant['name']}' already exists")
@@ -24,6 +30,10 @@ class TenantService:
         if tenant is None:
             raise Exception(f"Tenant not found: {tenant_id}")
         return await self.serialize(tenant)
+
+    async def check_subdomain_conflict(self, subdomain: str) -> bool:
+        tenant = await self.tenant_collection.find_one({"sub_domain": subdomain})
+        return tenant is not None
 
     async def find_by_name(self, name: str):
         tenant = await self.tenant_collection.find_one({"name": name})
