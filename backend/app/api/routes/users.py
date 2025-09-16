@@ -94,9 +94,9 @@ async def create_user(
             "email": user.email,
             "gender": user.gender.value,
             "password": hashed_password,
-            "role_id": ObjectId(role_guest["_id"]),
+            "role_id": ObjectId(role_guest["id"]),
             "created_at": datetime.utcnow(),
-            
+            "tenant_id": ObjectId(current_user.get("tenant_id", None)),
             "is_active": False  # User starts as inactive until activation
         }
         user_service = UserService(db)
@@ -115,7 +115,7 @@ async def create_user(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error creating user"
+            detail=f"Error creating user: {e}"
         )
 
 

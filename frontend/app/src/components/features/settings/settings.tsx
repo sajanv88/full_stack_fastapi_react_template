@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Cloud, Database, Settings as SettingsIcon, CheckCircle, AlertCircle } from "lucide-react";
 import { Loading } from "@/components/shared/loading";
+import { useAuthContext } from "@/components/providers/auth-provider";
 
 interface StorageFormData {
     provider: StorageProvider;
@@ -27,6 +28,9 @@ interface StorageFormData {
 
 export function Settings() {
     const { storages, onConfigureStorage, loading } = useSettings();
+    const { can } = useAuthContext();
+    const canManageSettings = can('manage:storage_settings');
+    console.log("User can manage settings:", canManageSettings);
     const [formData, setFormData] = useState<StorageFormData>({
         provider: 's3',
         is_enabled: false,
@@ -129,6 +133,16 @@ export function Settings() {
         }
     }, [storages]);
 
+    if (!canManageSettings) {
+        return (
+            <div className="grid place-items-center place-content-center h-40">
+                <p>
+                    You do not have permission to view this page.
+                </p>
+            </div>
+
+        )
+    }
 
     if (loading) {
         return (

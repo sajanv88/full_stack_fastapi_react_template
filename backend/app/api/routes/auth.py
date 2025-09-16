@@ -76,6 +76,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db = D
             activated_at=payload["activated_at"],
             tenant_id=payload["tenant_id"] 
         )
+        logger.debug(f"Token data: {token_data}")
     except InvalidTokenError:
         raise credentials_exception
     
@@ -97,10 +98,9 @@ async def login(
     try:
         return await auth_service.authenticate_user(login_request.username, login_request.password)
     except Exception as e:
-        print(f"Error during login: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Failed to authenticate"
+            detail=f"Failed to authenticate: {e}"
         )
 
 
@@ -114,10 +114,9 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser, db = De
             tenant=response.get("tenant", None)
         )
     except Exception as e:
-        print(f"Error during registration: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to register"
+            detail=f"Failed to register: {e}"
         )
 
 

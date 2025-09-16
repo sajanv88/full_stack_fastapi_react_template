@@ -38,6 +38,8 @@ class AuthService:
     async def authenticate_user(self, email: str, password: str):
         user_service =  UserService(self.db)
         user = await user_service.get_raw_find_by_email(email)
+        logger.debug(f"User found {user}")
+
         if not user:
             raise Exception(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -48,9 +50,12 @@ class AuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password"
             )
+        logger.debug(f"User {user['email']} authenticated successfully")
+
         role_service = RoleService(self.db)
         role = await role_service.get_role(user["role_id"])
         user_dump = await user_service.serialize(user)
+        logger.debug(f"User {user_dump['email']} authenticated successfully with role {role['name']}")
         token_data = await get_token_data(user_dump, role)
         return generate_token_set(token_data)
 

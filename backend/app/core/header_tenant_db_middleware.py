@@ -1,6 +1,6 @@
 import logging
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import  Request, HTTPException
+from fastapi import  Request
 from app.core.db import client
 
 

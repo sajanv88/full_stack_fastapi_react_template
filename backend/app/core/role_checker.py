@@ -3,7 +3,7 @@ from typing import Annotated, Any, List, Optional
 from fastapi import Depends, HTTPException, status
 from app.api.routes.auth import get_current_user
 from app.models.user import User
-from app.core.db import get_db_reference, client
+from app.core.db import client
 from app.core.permission import Permission
 from app.core.utils import get_default_db_name, is_tenancy_enabled
 from app.services.role_service import RoleService

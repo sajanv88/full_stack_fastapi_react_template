@@ -85,10 +85,14 @@ class UserService:
 
     async def serialize(self, user: User):
         image_url: str | None = user["image_url"] if "image_url" in user else None
-        storage_service = StorageService(self.db)
-        bucket_or_container_name = await storage_service.bucket_or_container_name()
-        if image_url is not None and image_url.startswith(bucket_or_container_name):
-            image_url = await storage_service.generate_read_url(image_url)
+        try:
+            storage_service = StorageService(self.db)
+            bucket_or_container_name = await storage_service.bucket_or_container_name()
+            if image_url is not None and image_url.startswith(bucket_or_container_name):
+                image_url = await storage_service.generate_read_url(image_url)
+        except Exception as e:
+            logger.warning(f"No storage provider configured or error generating image URL: {e}")
+            image_url = user["image_url"] if "image_url" in user else None
             
         return {
             "id": str(user["_id"]),
