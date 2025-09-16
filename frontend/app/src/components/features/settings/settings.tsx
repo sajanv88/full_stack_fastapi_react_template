@@ -30,7 +30,6 @@ export function Settings() {
     const { storages, onConfigureStorage, loading } = useSettings();
     const { can } = useAuthContext();
     const canManageSettings = can('manage:storage_settings');
-    console.log("User can manage settings:", canManageSettings);
     const [formData, setFormData] = useState<StorageFormData>({
         provider: 's3',
         is_enabled: false,
