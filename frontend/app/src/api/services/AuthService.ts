@@ -6,6 +6,9 @@ import type { ActivationRequest } from '../models/ActivationRequest';
 import type { Body_login_api_v1_auth_login_post } from '../models/Body_login_api_v1_auth_login_post';
 import type { NewRegistrationResponse } from '../models/NewRegistrationResponse';
 import type { NewUser } from '../models/NewUser';
+import type { PasswordResetConfirmRequest } from '../models/PasswordResetConfirmRequest';
+import type { PasswordResetRequest } from '../models/PasswordResetRequest';
+import type { PasswordResetResponse } from '../models/PasswordResetResponse';
 import type { RefreshRequest } from '../models/RefreshRequest';
 import type { ResendActivationEmailRequest } from '../models/ResendActivationEmailRequest';
 import type { TokenSet } from '../models/TokenSet';
@@ -48,6 +51,60 @@ export class AuthService {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/auth/register',
+      body: requestBody,
+      mediaType: 'application/json',
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Password Reset Request
+   * @returns PasswordResetResponse Successful Response
+   * @throws ApiError
+   */
+  public passwordResetRequestApiV1AuthPasswordResetRequestPost({
+    requestBody,
+  }: {
+    requestBody: PasswordResetRequest,
+  }): CancelablePromise<PasswordResetResponse> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/api/v1/auth/password-reset-request',
+      body: requestBody,
+      mediaType: 'application/json',
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Password Reset Confirm
+   * @returns PasswordResetResponse Successful Response
+   * @throws ApiError
+   */
+  public passwordResetConfirmApiV1AuthPasswordResetConfirmPost({
+    token,
+    userId,
+    requestBody,
+  }: {
+    /**
+     * The password reset token
+     */
+    token: string,
+    /**
+     * The user ID associated with the token
+     */
+    userId: string,
+    requestBody: PasswordResetConfirmRequest,
+  }): CancelablePromise<PasswordResetResponse> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/api/v1/auth/password-reset-confirm',
+      query: {
+        'token': token,
+        'user_id': userId,
+      },
       body: requestBody,
       mediaType: 'application/json',
       errors: {

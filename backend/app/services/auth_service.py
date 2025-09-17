@@ -14,7 +14,7 @@ from app.models.role import RoleType
 from app.core.utils import is_tenancy_enabled
 from app.core.db import client
 from app.core.seeder import SeedDataForNewlyCreatedTenant
-from app.core.smtp_email import ActivationEmailSchema, send_activation_email
+from app.core.smtp_email import ActivationEmailSchema, notify_password_change, send_activation_email, send_password_reset_email, verify_password_reset_token
 
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,7 @@ async def get_token_data(user, role):
 class AuthService:
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
+        self.user_password_reset_collection = db.user_password_resets
 
     async def authenticate_user(self, email: str, password: str):
         user_service =  UserService(self.db)
@@ -58,6 +59,7 @@ class AuthService:
         logger.debug(f"User {user_dump['email']} authenticated successfully with role {role['name']}")
         token_data = await get_token_data(user_dump, role)
         return generate_token_set(token_data)
+
 
     async def register_user(self, new_user: NewUser, background_tasks: BackgroundTasks) -> dict:
         user_service = UserService(self.db)
@@ -168,3 +170,93 @@ class AuthService:
         role = await role_service.get_role(user["role_id"])
         token_data = await get_token_data(user, role)
         return generate_token_set(token_data)
+    
+
+
+    async def initiate_password_reset(self, email: str, background_tasks: BackgroundTasks):
+        user_service = UserService(self.db)
+        user = await user_service.find_by_email(email)
+        if not user:
+            # To prevent email enumeration, we do not disclose whether the email exists
+            logger.info(f"Password reset requested for non-existent email: {email}")
+            return
+
+        token_secret = str(ObjectId())
+        password_reset = await self.user_password_reset_collection.update_one(
+            {"user_id": ObjectId(user["id"])},
+            {
+                "$set": {
+                    "user_id": ObjectId(user["id"]),
+                    "token_secret": token_secret,
+                    "created_at": datetime.now(timezone.utc),
+                    "reset_secret_updated_at": datetime.now(timezone.utc)
+                }
+            },
+            upsert=True
+        )
+
+
+        
+        if not (password_reset.upserted_id or password_reset.modified_count == 1):
+            raise Exception(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create password reset token"
+            )
+
+        user_id = str(user["id"])
+        reset_token_data = ActivationEmailSchema(
+            email=user["email"],
+            user_id=user_id,
+            first_name=user["first_name"],
+            tenant_id=user["tenant_id"],
+            jwt_secret=token_secret
+        )
+
+    
+        # Simulate sending email in background
+        background_tasks.add_task(send_password_reset_email, reset_token_data)
+        logger.info(f"Password reset email scheduled to be sent to {email}")
+
+
+    async def change_password(self, new_password: str, token: str, user_id: str, background_tasks: BackgroundTasks):
+        try:
+            user_service = UserService(self.db)
+            user = await user_service.get_user(user_id)
+            token_secret = await self.user_password_reset_collection.find_one({"user_id": ObjectId(user_id)})
+            if not user or not token_secret:
+                raise Exception(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User or token not found"
+                )
+            jwt_secret = token_secret["token_secret"]
+            payload = verify_password_reset_token(token=token, jwt_secret=jwt_secret)
+            user_id = payload.get("sub")
+            email = payload.get("email")
+            if user_id is None or email is None or email != user["email"]:
+                raise Exception(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token"
+                )
+        except Exception as e:
+            raise Exception(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token"
+            )
+
+        hashed_password = get_password_hash(new_password)
+        update_result = await user_service.update_user(user_id, {"password": hashed_password})
+        if update_result.modified_count != 1:
+            raise Exception(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update password"
+            )
+
+        # Invalidate the used password reset token
+        await self.user_password_reset_collection.delete_one({"user_id": ObjectId(user_id)})
+        logger.info(f"Password updated successfully for user {email}")
+        background_tasks.add_task(notify_password_change, ActivationEmailSchema(
+            email=email,
+            user_id=user_id,
+            first_name=user["first_name"],
+            tenant_id=user.get("tenant_id", None)
+        ))

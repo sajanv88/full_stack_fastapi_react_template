@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { useSubdomainCheck } from "@/hooks/use-subdomain-check";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const tenantSchema = z.object({
     firstName: z.string()
@@ -161,39 +162,44 @@ export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialog
                             )}
                         />
 
-                        <div className="flex space-x-2 items-center justify-between">
-                            <FormField
-                                control={form.control}
-                                name="subdomain"
-                                render={({ field }) => (
-                                    <FormItem className="flex-1">
-                                        <FormLabel>Subdomain</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="text"
-                                                placeholder="subdomain name"
-                                                onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSubdomain(e.target.value)}
-                                                disabled={isChecking || isLoading}
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-
-                            />
-                            <span>
-                                <Label htmlFor="base-domain" className="pb-3">Base Domain</Label>
-                                <Input
-                                    id="base-domain"
-                                    type="text"
-                                    value={`.${mainDomainName}`}
-                                    disabled={true}
+                        <section className="space-y-1">
+                            <div className="flex space-x-2 items-center justify-between">
+                                <FormField
+                                    control={form.control}
+                                    name="subdomain"
+                                    render={({ field }) => (
+                                        <FormItem className="w-full">
+                                            <FormLabel>Subdomain</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="text"
+                                                    placeholder="subdomain name"
+                                                    onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSubdomain(e.target.value)}
+                                                    disabled={isChecking || isLoading}
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
 
                                 />
-                            </span>
-                        </div>
+                                <span>
+                                    <Label htmlFor="base-domain" className="pb-3">Base Domain</Label>
+                                    <Input
+                                        id="base-domain"
+                                        type="text"
+                                        value={`.${mainDomainName}`}
+                                        disabled={true}
 
+                                    />
+                                </span>
+                            </div>
+                            {form.getFieldState("subdomain").error && (
+                                <Alert variant="destructive" className="mt-4">
+                                    <AlertDescription>{form.getFieldState("subdomain").error?.message}</AlertDescription>
+                                </Alert>
+                            )}
+                        </section>
 
 
                         {/* Email */}

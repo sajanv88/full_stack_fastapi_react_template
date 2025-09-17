@@ -1,4 +1,4 @@
-from fastapi import BackgroundTasks, Depends, APIRouter, status, HTTPException, Response
+from fastapi import BackgroundTasks, Depends, APIRouter, Query, status, HTTPException, Response
 import jwt
 import logging
 from jwt import InvalidTokenError
@@ -13,6 +13,7 @@ from typing import Annotated, Optional, Union
 from fastapi.security import  OAuth2PasswordRequestForm
 from app.core.token import TokenSet, verify_token, TokenData
 from app.core.smtp_email import ActivationEmailSchema, send_activation_email, verify_activation_token, send_email_change_activation
+from app.services.tenant_service import TenantService
 from app.services.users_service import UserService
 from app.core.db import  get_db_reference
 from app.services.auth_service import AuthService
@@ -55,6 +56,16 @@ class NewRegistrationResponse(BaseModel):
     new_tenant_created: bool
     tenant: Optional[Tenant] = None
 
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetConfirmRequest(BaseModel):
+    new_password: str
+
+class PasswordResetResponse(BaseModel):
+    message: str
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db = Depends(get_db_reference)) -> User:
@@ -120,6 +131,46 @@ async def register(background_tasks: BackgroundTasks, new_user: NewUser, db = De
         )
 
 
+@router.post("/password-reset-request", response_model=PasswordResetResponse)
+async def password_reset_request(
+    request: PasswordResetRequest,
+    background_tasks: BackgroundTasks,
+    db = Depends(get_db_reference)
+):
+    auth_service = AuthService(db)
+    try:
+        await auth_service.initiate_password_reset(request.email, background_tasks)
+        return PasswordResetResponse(message="If the email exists, a password reset link has been sent.")
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to initiate password reset: {e}"
+        )
+
+@router.post("/password-reset-confirm", response_model=PasswordResetResponse)
+async def password_reset_confirm(
+    request: PasswordResetConfirmRequest,
+    background_tasks: BackgroundTasks,
+    db = Depends(get_db_reference),
+    token: str = Query(..., description="The password reset token"),
+    user_id: str = Query(..., description="The user ID associated with the token")
+):
+    auth_service = AuthService(db)
+    try:
+        await auth_service.change_password(
+            new_password=request.new_password,
+            token=token,
+            user_id=user_id,
+            background_tasks=background_tasks
+        )
+        return PasswordResetResponse(message="Password has been reset successfully. A notification email has been sent!")
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to initiate password reset: {e}"
+        )
+    
 @router.post("/resend_activation_email", response_class=Response)
 async def resend_activation_email(
     current_user: Annotated[User, Depends(get_current_user)],
@@ -130,7 +181,8 @@ async def resend_activation_email(
     activation_email_data = ActivationEmailSchema(
         email=email_user["email"],
         user_id=str(email_user["id"]),
-        first_name=email_user["first_name"]
+        first_name=email_user["first_name"],
+        tenant_id=current_user.get("tenant_id", None)
     )
 
     background_tasks.add_task(send_activation_email, activation_email_data)
@@ -197,7 +249,8 @@ async def change_email(
         activation_email_data = ActivationEmailSchema(
                 email=email_update.new_email,
                 user_id=str(current_user["_id"]),
-                first_name=user["first_name"]
+                first_name=user["first_name"],
+                tenant_id=current_user.get("tenant_id", None)
             )
 
         background_tasks.add_task(send_email_change_activation, activation_email_data)
@@ -215,7 +268,18 @@ async def activate_account(request: ActivationRequest, db = Depends(get_db_refer
         # Verify the activation token
         token_data = verify_activation_token(request.token)
         user_id = token_data.get("user_id")
-        email = token_data.get("email")
+        email = token_data.get("email"),
+        tenant_id = token_data.get("tenant_id", None)
+        if tenant_id:
+            try:
+                tenant_service = TenantService(db)
+                await tenant_service.get_tenant(tenant_id)
+            except Exception as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid tenant information in token"
+                )
+
         
         # Find the user in the database
         user_service = UserService(db)

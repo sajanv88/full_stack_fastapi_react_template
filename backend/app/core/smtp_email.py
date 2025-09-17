@@ -35,6 +35,7 @@ class ActivationEmailSchema(BaseModel):
     user_id: str
     first_name: str
     tenant_id: Optional[str] = None
+    jwt_secret: Optional[str] = None  # Used for password reset tokens
 
 
 
@@ -52,7 +53,13 @@ conf = ConnectionConfig(
 )
 
 
-def generate_activation_token(user_id: str, email: str) -> str:
+def generate_activation_token(
+        user_id: str,
+        email: str,
+        type: str,
+        tenant_id: Optional[str] = None,
+        jwt_secret: Optional[str] = None
+) -> str:
     """
     Generate a JWT token for account activation.
     """
@@ -60,20 +67,21 @@ def generate_activation_token(user_id: str, email: str) -> str:
     payload = {
         "user_id": user_id,
         "email": email,
-        "type": "activation",
+        "type": type,
         "exp": expire,
-        "iat": datetime.now(timezone.utc)
+        "iat": datetime.now(timezone.utc),
+        "tenant_id": tenant_id
     }
-    token = jwt.encode(payload, JWT_SECRET, algorithm=ALGORITHM)
+    token = jwt.encode(payload, jwt_secret or JWT_SECRET, algorithm=ALGORITHM)
     return token
 
 
-def generate_activation_link(user_id: str, email: str) -> str:
+def generate_activation_link(user_id: str, email: str, type: str, tenant_id: Optional[str] = None, jwt_secret: Optional[str] = None) -> str:
     """
     Generate a complete activation link with token.
     """
-    token = generate_activation_token(user_id, email)
-    activation_link = f"{API_ENDPOINT_BASE}/v1/auth/activate?token={token}"
+    token = generate_activation_token(user_id, email, type, tenant_id, jwt_secret)
+    activation_link = f"{API_ENDPOINT_BASE}/v1/auth/{type}?user_id={user_id}&token={token}"
     return activation_link
 
 
@@ -98,14 +106,35 @@ def verify_activation_token(token: str) -> dict:
         raise jwt.InvalidTokenError("Invalid activation token")
 
 
+def verify_password_reset_token(token: str, jwt_secret: str) -> dict:
+    """
+    Verify and decode the password reset token.
+    Returns user_id and email if valid, raises exception if invalid.
+    """
+    try:
+        payload = jwt.decode(token, jwt_secret, algorithms=[ALGORITHM])
+        logger.debug(f"Decoded password reset token payload: {payload}")
+        if payload.get("type") != "password-reset-confirm":
+            logger.debug(f"Invalid token type: {payload.get('type')}")
+            raise jwt.InvalidTokenError("Invalid token type")
+        return {
+            "sub": payload.get("user_id"),
+            "email": payload.get("email")
+        }
+    except jwt.ExpiredSignatureError:
+        logger.error("Password reset token has expired")
+        raise jwt.ExpiredSignatureError("Password reset token has expired")
+    except jwt.InvalidTokenError:
+        logger.error("Invalid password reset token")
+        raise jwt.InvalidTokenError("Invalid password reset token")
 
 
 async def send_activation_email(user_data: ActivationEmailSchema) -> JSONResponse:
     """
     Send an account activation email with activation link.
     """
-    activation_link = generate_activation_link(user_data.user_id, user_data.email)
-    
+    activation_link = generate_activation_link(user_data.user_id, user_data.email, "activation", user_data.tenant_id)
+
     html = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Welcome to Full-Stack FastAPI React Template</h2>
@@ -150,8 +179,7 @@ async def send_email_change_activation(user_data: ActivationEmailSchema) -> JSON
     """
     Send an email change activation email with activation link.
     """
-    activation_link = generate_activation_link(user_data.user_id, user_data.email)
-    
+    activation_link = generate_activation_link(user_data.user_id, user_data.email, "email_change", user_data.tenant_id)
     html = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Notification!</h2>
@@ -189,5 +217,95 @@ async def send_email_change_activation(user_data: ActivationEmailSchema) -> JSON
     logger.info(f"Email change activation email sent to {user_data.email}")
     return JSONResponse(status_code=200, content={
         "message": "Email change activation email has been sent", 
+        "email": user_data.email
+    })
+
+
+async def send_password_reset_email(user_data: ActivationEmailSchema) -> JSONResponse:
+    """
+    Send a password reset email with reset link.
+    """
+    logger.info(f"Password reset token created for user {user_data.user_id}")
+
+    reset_link = generate_activation_link(
+        user_id=user_data.user_id, 
+        email=user_data.email, 
+        type="password-reset-confirm",
+        tenant_id=user_data.tenant_id, 
+        jwt_secret=user_data.jwt_secret
+    )
+    
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Password Reset Request</h2>
+        <p>Hello {user_data.first_name},</p>
+        <p>We received a request to reset your password. Click the button below to reset it:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{reset_link}" 
+               style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Reset Your Password
+            </a>
+        </div>
+        
+        <p>Or copy and paste this link in your browser:</p>
+        <p style="word-break: break-all; color: #007bff;">{reset_link}</p>
+        
+        <p><strong>Note:</strong> This password reset link will expire in 24 hours for security reasons.</p>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+        <p style="font-size: 12px; color: #666;">
+            If you didn't request a password reset, please ignore this email.
+        </p>
+    </div>
+    """
+
+    message = MessageSchema(
+        subject="Reset Your Password - Full-Stack FastAPI React Template",
+        recipients=[user_data.email],
+        body=html,
+        subtype=MessageType.html
+    )
+
+    fm = FastMail(conf)
+    await fm.send_message(message)
+    logger.info(f"Password reset email sent to {user_data.email}")
+    return JSONResponse(status_code=200, content={
+        "message": "Password reset email has been sent", 
+        "email": user_data.email
+    })
+
+
+async def notify_password_change(user_data: ActivationEmailSchema) -> JSONResponse:
+    """
+    Notify user that their password has been changed.
+    """
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Password Changed Successfully</h2>
+        <p>Hello {user_data.first_name},</p>
+        <p>This is a confirmation that your password has been successfully changed.</p>
+        
+        <p>If you did not make this change, please contact our support team immediately.</p>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+        <p style="font-size: 12px; color: #666;">
+            If you didn't request a password change, please contact support immediately.
+        </p>
+    </div>
+    """
+
+    message = MessageSchema(
+        subject="Your Password Has Been Changed - Full-Stack FastAPI React Template",
+        recipients=[user_data.email],
+        body=html,
+        subtype=MessageType.html
+    )
+
+    fm = FastMail(conf)
+    await fm.send_message(message)
+    logger.info(f"Password change notification email sent to {user_data.email}")
+    return JSONResponse(status_code=200, content={
+        "message": "Password change notification email has been sent", 
         "email": user_data.email
     })

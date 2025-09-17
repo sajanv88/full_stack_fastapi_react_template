@@ -21,6 +21,7 @@ import { Logo } from "@/components/shared/logo";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { Label } from "@/components/ui/label";
 import { useSubdomainCheck } from "@/hooks/use-subdomain-check";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Gender enum matching the backend
 export const Gender = {
@@ -78,6 +79,7 @@ export default function Register() {
         },
     });
 
+    console.log(form.formState.errors);
     const onSubmit = async (data: SignupFormInputs) => {
         setIsLoading(true);
         try {
@@ -127,7 +129,7 @@ export default function Register() {
 
     return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
-            <Card className="w-full max-w-md shadow-lg">
+            <Card className="w-full max-w-xl shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-2xl font-bold text-center">
                         <Logo className="justify-center pb-5" />
@@ -179,38 +181,44 @@ export default function Register() {
                                 )}
                             />
                             {isMultiTenancyEnabled && (
-                                <div className="flex space-x-2 items-center">
-                                    <FormField
-                                        control={form.control}
-                                        name="subdomain"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Subdomain</FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type="text"
-                                                        placeholder="subdomain name"
-                                                        onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSubdomain(e.target.value)}
-                                                        disabled={isChecking || isLoading}
-                                                        {...field}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-
-                                    />
-                                    <span>
-                                        <Label htmlFor="base-domain" className="pb-3">Base Domain</Label>
-                                        <Input
-                                            id="base-domain"
-                                            type="text"
-                                            value={`.${mainDomainName}`}
-                                            disabled={true}
+                                <section className="space-y-1">
+                                    <div className="flex space-x-2 items-center justify-between">
+                                        <FormField
+                                            control={form.control}
+                                            name="subdomain"
+                                            render={({ field }) => (
+                                                <FormItem className="w-full">
+                                                    <FormLabel>Subdomain</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            type="text"
+                                                            placeholder="subdomain name"
+                                                            onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSubdomain(e.target.value)}
+                                                            disabled={isChecking || isLoading}
+                                                            {...field}
+                                                        />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
 
                                         />
-                                    </span>
-                                </div>
+                                        <span>
+                                            <Label htmlFor="base-domain" className="pb-3">Base Domain</Label>
+                                            <Input
+                                                id="base-domain"
+                                                type="text"
+                                                value={`.${mainDomainName}`}
+                                                disabled={true}
+
+                                            />
+                                        </span>
+                                    </div>
+                                    {form.getFieldState("subdomain").error && (
+                                        <Alert variant="destructive" className="mt-4">
+                                            <AlertDescription>{form.getFieldState("subdomain").error?.message}</AlertDescription>
+                                        </Alert>
+                                    )}
+                                </section>
                             )}
 
 
