@@ -34,3 +34,6 @@ class BaseRepository(Generic[T]):
             return False
         await doc.delete()
         return True
+    
+    async def count(self) -> int:
+        return await self.model.count()

@@ -1,15 +1,18 @@
-from typing import List
-
 from beanie import PydanticObjectId
 from pydantic import EmailStr
+from api.common.utils import get_logger
 from api.core.exceptions import EmailAlreadyExistsException, UserNotFoundException
 from api.domain.entities.user import User
-from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto, UserDto, UserListDto
+from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto, UserListDto
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
+
+logger = get_logger(__name__)
 
 class UserService:
     def __init__(self, user_repository: UserRepository):
         self.user_repository = user_repository
+        logger.info("Initialized.")
+
 
     async def list_users(self, skip: int = 0, limit: int = 10) -> UserListDto:
         return await self.user_repository.list(skip=skip, limit=limit)

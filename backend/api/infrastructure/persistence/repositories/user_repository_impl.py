@@ -1,11 +1,12 @@
 from typing import Optional
 
 from beanie import PydanticObjectId
+from api.common.utils import get_logger
 from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto, UserListDto
 from api.domain.entities.user import User
 from api.common.base_repository import BaseRepository
-from api.interfaces.middlewares.tenant_middleware import get_tenant_id
 
+logger = get_logger(__name__)
 class UserRepository(BaseRepository[User]):
     def __init__(self):
         super().__init__(User)
@@ -39,10 +40,8 @@ class UserRepository(BaseRepository[User]):
         return result.id
 
     async def update(self, user_id: str, data: UpdateUserDto) -> Optional[User]:
-        print("Updating User ID:", user_id)
-        print("Update Data:", data) 
         updated_user = await super().update(id=user_id, data=data.model_dump(exclude_unset=True))
-        print("Updated User:", updated_user)
         if updated_user:
             return updated_user
+        logger.warning(f"No user found for the given user id: {user_id}")
         return None

@@ -10,13 +10,6 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
-@router.post("/", response_model=CreateUserResponseDto, status_code=status.HTTP_201_CREATED)
-async def create_user(
-    data: CreateUserDto,
-    service: UserService = Depends(get_user_service),
-):  
-    new_user_id = await service.create_user(data)
-    return CreateUserResponseDto(id=str(new_user_id))
 
 @router.get("/", response_model=UserListDto)
 async def list_users(
@@ -25,6 +18,15 @@ async def list_users(
 ):
     logger.info(f"Listing users with skip={skip}, limit={limit}")
     return await service.list_users(skip=skip, limit=limit)
+
+
+@router.post("/", response_model=CreateUserResponseDto, status_code=status.HTTP_201_CREATED)
+async def create_user(
+    data: CreateUserDto,
+    service: UserService = Depends(get_user_service),
+):  
+    new_user_id = await service.create_user(data)
+    return CreateUserResponseDto(id=str(new_user_id))
 
 
 @router.get("/{user_id}", response_model=UserDto)

@@ -19,3 +19,11 @@ class InvalidSubdomainException(InvalidOperationException):
 class TenantNotFoundException(NotFoundException):
     def __init__(self, tenant_id: str):
         super().__init__("Tenant", tenant_id)
+
+class RoleNotFoundException(NotFoundException):
+    def __init__(self, role_id: str):
+        super().__init__("Role", role_id)
+
+class RoleAlreadyExistsException(ConflictException):
+    def __init__(self, name: str):
+        super().__init__("Role", name)

@@ -4,6 +4,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 from beanie import Document, UnionDoc, View, init_beanie
 from api.common.utils import get_logger
 from api.core.config import settings
+from api.domain.entities.role import Role
 from api.domain.entities.tenant import Tenant
 from api.domain.entities.user import User
 logger = get_logger(__name__)
@@ -39,4 +40,4 @@ class Database:
         await self.client.drop_database(self.db)
         logger.warning("Database has been deleted")
 
-mongo_client = Database(uri=settings.mongo_uri, models=[User, Tenant])
+mongo_client = Database(uri=settings.mongo_uri, models=[User, Role, Tenant])
