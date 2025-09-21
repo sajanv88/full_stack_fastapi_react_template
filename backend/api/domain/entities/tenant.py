@@ -31,7 +31,7 @@ class Tenant(Document):
     subdomain: Subdomain | None = None
     created_at: datetime = get_utc_now()
     updated_at: datetime = get_utc_now()
-    is_active: bool
+    is_active: bool = False
     subdomain_status: Literal["active", "failed", "activation-progress"] = "failed"
     
     model_config = ConfigDict(
