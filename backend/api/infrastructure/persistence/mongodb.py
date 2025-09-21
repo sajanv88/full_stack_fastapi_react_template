@@ -7,6 +7,7 @@ from api.core.config import settings
 from api.domain.entities.role import Role
 from api.domain.entities.tenant import Tenant
 from api.domain.entities.user import User
+from api.domain.entities.user_password_reset import UserPasswordReset
 logger = get_logger(__name__)
 
 class Database:
@@ -40,4 +41,7 @@ class Database:
         await self.client.drop_database(self.db)
         logger.warning("Database has been deleted")
 
-mongo_client = Database(uri=settings.mongo_uri, models=[User, Role, Tenant])
+mongo_client = Database(
+    uri=settings.mongo_uri,
+    models=[User, Role, Tenant, UserPasswordReset]
+)

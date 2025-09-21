@@ -1,6 +1,7 @@
 import punq
 from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
+from api.infrastructure.persistence.repositories.user_password_reset_repository_impl import UserPasswordResetRepository
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
 from api.usecases.role_service import RoleService
 from api.usecases.user_service import UserService
@@ -22,6 +23,7 @@ container.register(TenantService)
 
 ## User
 container.register(UserRepository)
+container.register(UserPasswordResetRepository)
 container.register(UserService)
 
 ## Role

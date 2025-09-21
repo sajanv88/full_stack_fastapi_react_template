@@ -1,6 +1,6 @@
 
 from dotenv import load_dotenv
-from pydantic import EmailStr
+from pydantic import EmailStr, ConfigDict
 from pydantic_settings import BaseSettings
 
 load_dotenv()
@@ -23,10 +23,11 @@ class Settings(BaseSettings):
     
     host_main_domain: str = "fsrapp.com"
 
-    class Config:
-        env_file = ".env"   # Load variables from .env automatically
+    model_config = ConfigDict(
+        env_file = ".env",
         env_file_encoding = "utf-8"
-
+    )
+    
 # Instantiate settings once
 settings = Settings()
 

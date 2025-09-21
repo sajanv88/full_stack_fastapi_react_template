@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Optional
 from beanie import Document, PydanticObjectId
-from pydantic import ConfigDict
 
 from api.common.utils import get_utc_now
 
@@ -11,12 +10,7 @@ class ApiBaseModel(Document):
     updated_at: datetime = get_utc_now()
     tenant_id: Optional[PydanticObjectId] = None
 
-    model_config = ConfigDict(
-        json_encoders={
-            PydanticObjectId: str
-        }
-    )
-
+    
     async def to_serializable_dict(self):
         data = self.model_dump()
         data["id"] = str(self.id)
