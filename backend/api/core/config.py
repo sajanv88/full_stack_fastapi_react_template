@@ -8,7 +8,13 @@ load_dotenv()
 class Settings(BaseSettings):
     mongo_uri: str = "mongodb://localhost:27017"
     mongo_db_name: str = "myapp"
+
     jwt_secret: str
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
+
+    algorithm: str = "HS256"
+    refresh_algorithm: str = "HS512"
     refresh_token_secret: str
 
     admin_email: EmailStr = "admin@example.com"

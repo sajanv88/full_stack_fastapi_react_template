@@ -11,7 +11,12 @@ from api.infrastructure.persistence.repositories.user_repository_impl import Use
 logger = get_logger(__name__)
 
 class UserService:
-    def __init__(self, user_repository: UserRepository, user_password_reset_repository: UserPasswordResetRepository):
+    def __init__(
+            self,
+            user_repository: UserRepository,
+            user_password_reset_repository: UserPasswordResetRepository
+        ):
+
         self.user_repository = user_repository
         self.user_password_reset_repository = user_password_reset_repository
         logger.info("Initialized.")
@@ -21,6 +26,7 @@ class UserService:
         return await self.user_repository.list(skip=skip, limit=limit)
 
     async def find_by_email(self, email: EmailStr) -> User:
+        """Find user by email. Raises UserNotFoundException if not found."""
         existing = await self.user_repository.single_or_none(email=email)
         if existing is None:
             raise UserNotFoundException(email)

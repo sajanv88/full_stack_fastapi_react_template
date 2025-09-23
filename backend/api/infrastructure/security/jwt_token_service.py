@@ -1,0 +1,62 @@
+from datetime import timedelta
+from typing import Literal
+
+import jwt
+from api.common.dtos.token_dto import AccessTokenDto, RefreshTokenDto, RefreshTokenDto, RefreshTokenPayloadDto, TokenPayloadDto, TokenSetDto
+from api.common.utils import get_logger, get_utc_now
+from api.common.security import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, JWT_SECRET, REFRESH_ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS, REFRESH_TOKEN_SECRET
+
+logger  = get_logger(__name__)
+class JwtTokenService:
+    def __init__(self):
+        logger.info("Initialized.")
+
+    async def get_access_token(self, payload: TokenPayloadDto, expires_delta: timedelta | None = None) -> AccessTokenDto:
+        to_encode = payload.model_dump()
+        if expires_delta:
+            expire = get_utc_now() + expires_delta
+        else:
+            expire = get_utc_now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
+        return AccessTokenDto(access_token=encoded_jwt, token_type="bearer", expires_in=expire)
+
+    async def get_refresh_token(self, user_id: str, expires_delta: timedelta | None = None) -> RefreshTokenDto:
+        to_encode = {"sub": user_id}
+        if expires_delta:
+            expire = get_utc_now() + expires_delta
+        else:
+            expire = get_utc_now() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(to_encode, REFRESH_TOKEN_SECRET, algorithm=REFRESH_ALGORITHM)
+        return RefreshTokenDto(refresh_token=encoded_jwt, refresh_token_expires_in=expire)
+    
+
+    async def generate_tokens(self, payload: TokenPayloadDto) -> TokenSetDto:
+        access_token = await self.get_access_token(payload)
+        refresh_token = await self.get_refresh_token(str(payload.sub))
+        return TokenSetDto(
+            access_token=access_token.access_token,
+            token_type=access_token.token_type,
+            expires_in=int((access_token.expires_in - get_utc_now()).total_seconds()),
+            refresh_token=refresh_token.refresh_token,
+            refresh_token_expires_in=int((refresh_token.refresh_token_expires_in - get_utc_now()).total_seconds())
+        )
+    
+
+    async def decode_token(
+            self,
+            token: str, type: Literal["access_token", "refresh_token"] = "access_token") -> TokenPayloadDto | RefreshTokenPayloadDto | None :
+        try:
+            if type == "access_token":
+                payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+                return TokenPayloadDto(**payload)
+            elif type == "refresh_token":
+                payload = jwt.decode(token, REFRESH_TOKEN_SECRET, algorithms=[REFRESH_ALGORITHM])
+                return RefreshTokenPayloadDto(**payload)
+        except jwt.ExpiredSignatureError:
+            logger.error("Token has expired.")
+            return None
+        except jwt.InvalidTokenError:
+            logger.error("Invalid token.")
+            return None

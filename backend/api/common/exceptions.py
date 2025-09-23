@@ -27,3 +27,15 @@ class InvalidOperationException(ApiBaseException):
     """Invalid input or operation."""
     def __init__(self, message: str):
         super().__init__(message)
+
+
+class ForbiddenException(ApiBaseException):
+    """Forbidden action."""
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class AuthenticationFailedException(ApiBaseException):
+    """Authentication failed."""
+    def __init__(self, message: str = "Authentication failed."):
+        super().__init__(message)

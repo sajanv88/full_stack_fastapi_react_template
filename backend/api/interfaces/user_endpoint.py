@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from typing import List
 from api.common.utils import get_logger
 from api.domain.dtos.user_dto import CreateUserDto, CreateUserResponseDto, UpdateUserDto, UserDto, UserListDto
+from api.infrastructure.security.current_user import get_current_user
 from api.usecases.user_service import UserService
 from api.core.container import get_user_service
 
@@ -14,8 +15,10 @@ router = APIRouter(prefix="/users", tags=["Users"])
 @router.get("/", response_model=UserListDto)
 async def list_users(
     skip: int = 0, limit: int = 10,
+    current_user: UserDto = Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 ):
+    logger.info(f"Current user: {current_user.id}")
     logger.info(f"Listing users with skip={skip}, limit={limit}")
     return await service.list_users(skip=skip, limit=limit)
 

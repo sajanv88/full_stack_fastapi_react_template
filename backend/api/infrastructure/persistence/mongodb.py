@@ -8,6 +8,7 @@ from api.domain.entities.role import Role
 from api.domain.entities.tenant import Tenant
 from api.domain.entities.user import User
 from api.domain.entities.user_password_reset import UserPasswordReset
+from api.domain.entities.user_preference import UserPreference
 logger = get_logger(__name__)
 
 class Database:
@@ -43,5 +44,5 @@ class Database:
 
 mongo_client = Database(
     uri=settings.mongo_uri,
-    models=[User, Role, Tenant, UserPasswordReset]
+    models=[User, Role, Tenant, UserPasswordReset, UserPreference]
 )

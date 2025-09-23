@@ -49,3 +49,12 @@ class UserListDto(BaseModel):
 
 class CreateUserResponseDto(BaseModel):
     id: str
+
+
+class UserActivationRequestDto(BaseModel):
+    token: str
+
+class UserResendActivationEmailRequestDto(BaseModel):
+    email: EmailStr
+    id: str
+    first_name: str

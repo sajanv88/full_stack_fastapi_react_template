@@ -8,9 +8,11 @@ from api.core.container import container
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
 from api.infrastructure.persistence.mongodb import Database
 from api.interfaces.middlewares.tenant_middleware import TenantMiddleware, extract_tenant_id_from_headers
+from api.interfaces.account_endpoint import router as account_router
 from api.interfaces.user_endpoint import router as user_router
 from api.interfaces.tenant_endpoint import router as tenant_router
 from api.interfaces.role_endpoint import router as role_router
+from api.interfaces.app_configuration_endpoint import router as app_configuration_router
 from api.common.logging import configure_logging
 from api.core.config import settings
 db: Database = container.resolve(Database)
@@ -53,8 +55,11 @@ async def api_exception_handler(req: Request, ex: ApiBaseException) -> JSONRespo
 
 router = APIRouter(prefix="/api/v1")
 
+router.include_router(app_configuration_router, dependencies=[Depends(extract_tenant_id_from_headers)])
+router.include_router(account_router, dependencies=[Depends(extract_tenant_id_from_headers)])
 router.include_router(user_router, dependencies=[Depends(extract_tenant_id_from_headers)])
 router.include_router(role_router, dependencies=[Depends(extract_tenant_id_from_headers)])
+
 
 router.include_router(tenant_router)
 
