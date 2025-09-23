@@ -16,6 +16,7 @@ class RoleService:
         return await self.role_repository.list(skip=skip, limit=limit)
     
     async def find_by_name(self, name: str) -> Role:
+        """Find a role by its name. Raises RoleNotFoundException if not found."""
         existing = await self.role_repository.single_or_none(name=name)
         if existing is None:
             raise RoleNotFoundException(role_id=name)

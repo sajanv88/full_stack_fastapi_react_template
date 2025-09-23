@@ -9,6 +9,7 @@ from api.core.exceptions import InvalidSubdomainException
 SUBDOMAIN_REGEX = re.compile(r"^(?!-)[A-Za-z0-9-]{3,63}(?<!-)$")
 
 def validate_subdomain(subdomain: str | None) -> str | None:
+    """Validate subdomain format. Raises InvalidSubdomainException if invalid. Returns None if subdomain is None."""
     if subdomain is None:
         return None
     

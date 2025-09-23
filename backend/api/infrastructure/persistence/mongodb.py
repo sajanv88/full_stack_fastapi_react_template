@@ -16,11 +16,14 @@ class Database:
         self.client = AsyncMongoClient(uri)
         self.models = models
         logger.debug("Database initializing...")
+        self.is_tenant = False
+        
     
     async def init_db(self, db_name: str, is_tenant: bool | None) -> None:
         self.db: AsyncDatabase = self.client[db_name]
         if self.models:
             if is_tenant:
+                self.is_tenant = True
                 tenant_models = [model for model in self.models if model != Tenant]
                 await init_beanie(self.db, document_models=tenant_models)
                 logger.debug("Database models are initialized for new tenant.")
@@ -41,6 +44,9 @@ class Database:
     async def drop(self) -> None:
         await self.client.drop_database(self.db)
         logger.warning("Database has been deleted")
+
+    def is_tenant_active(self) -> bool:
+        return self.is_tenant
 
 mongo_client = Database(
     uri=settings.mongo_uri,

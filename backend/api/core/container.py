@@ -22,33 +22,35 @@ container.register(Database, instance=mongo_client)
 # Register security components
 
 ## JWT Token Service
-container.register(JwtTokenService)
+container.register(JwtTokenService, scope=punq.Scope.singleton)
 
 
 # Register repositories and services
 
 ## Tenant
 container.register(TenantRepository)
-container.register(TenantService)
+container.register(TenantService, scope=punq.Scope.singleton)
 
 
 ## User
 container.register(UserRepository)
 container.register(UserPasswordResetRepository)
-container.register(UserService)
+container.register(UserService, scope=punq.Scope.singleton)
 
 ## User Preference
 container.register(UserPreferenceRepository)
-container.register(UserPreferenceService)
+container.register(UserPreferenceService, scope=punq.Scope.singleton)
 
 ## Role
 container.register(RoleRepository)
-container.register(RoleService)
+container.register(RoleService, scope=punq.Scope.singleton)
 
 ## Auth service
-container.register(AuthService)
+container.register(AuthService, scope=punq.Scope.singleton)
 
 
+def get_database() -> Database:
+    return container.resolve(Database)
 
 def get_tenant_service() -> TenantService:
     return container.resolve(TenantService)

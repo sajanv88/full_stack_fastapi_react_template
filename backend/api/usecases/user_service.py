@@ -7,6 +7,7 @@ from api.domain.entities.user import User
 from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto, UserListDto
 from api.infrastructure.persistence.repositories.user_password_reset_repository_impl import UserPasswordResetRepository
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
+from api.common.security import hash_it
 
 logger = get_logger(__name__)
 
@@ -39,12 +40,15 @@ class UserService:
         return existing
 
     async def create_user(self, user_data: CreateUserDto) -> PydanticObjectId:
+        """Create a new user and returns its ID. Raises EmailAlreadyExistsException if email already exists."""
         existing = await self.user_repository.single_or_none(email=user_data.email)
         if existing is not None:
             raise EmailAlreadyExistsException(user_data.email)
+        user_data.password = hash_it(user_data.password)
         return await self.user_repository.create(user_data)
 
     async def update_user(self, user_id: str, user_data: UpdateUserDto) -> User | None:
+        """Update user by ID. Raises UserNotFoundException if user does not exist."""
         existing = await self.user_repository.get(id=user_id)
         if existing is None:
             raise UserNotFoundException(user_id)

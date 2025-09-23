@@ -23,6 +23,9 @@ def get_host_main_domain_name() -> str:
 
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]")
 def validate_password(password: str) -> str:
+    """Validate password strength. Raises InvalidOperationException if invalid."""
     if not PASSWORD_REGEX.match(password):
         raise InvalidOperationException("Password must be at least 8 characters long, include uppercase and lowercase letters, a number, and a special character.")
     return password
+
+

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from typing import List
 from api.common.utils import get_logger
 from api.domain.dtos.user_dto import CreateUserDto, CreateUserResponseDto, UpdateUserDto, UserDto, UserListDto
@@ -14,10 +14,12 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.get("/", response_model=UserListDto)
 async def list_users(
+    request: Request,
     skip: int = 0, limit: int = 10,
     current_user: UserDto = Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 ):
+    logger.info(f"Request state tenant_id: {request.state.tenant_id}")
     logger.info(f"Current user: {current_user.id}")
     logger.info(f"Listing users with skip={skip}, limit={limit}")
     return await service.list_users(skip=skip, limit=limit)
@@ -28,6 +30,7 @@ async def create_user(
     data: CreateUserDto,
     service: UserService = Depends(get_user_service),
 ):  
+    
     new_user_id = await service.create_user(data)
     return CreateUserResponseDto(id=str(new_user_id))
 

@@ -28,3 +28,7 @@ class RoleAlreadyExistsException(ConflictException):
     def __init__(self, name: str):
         super().__init__("Role", name)
 
+class TenantNotActiveException(InvalidOperationException):
+    def __init__(self, tenant_id: str):
+        message = f"Tenant with ID '{tenant_id}' is not active."
+        super().__init__(message)

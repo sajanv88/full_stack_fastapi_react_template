@@ -1,24 +1,24 @@
-from fastapi import Depends, FastAPI, APIRouter, Request, status
+from fastapi import  FastAPI, APIRouter, Request, status
 from contextlib import asynccontextmanager
 
 from fastapi.responses import JSONResponse
 from api.common.exceptions import ApiBaseException, ConflictException, InvalidOperationException, NotFoundException, UnauthorizedException
-from api.common.utils import get_logger
+from api.common.utils import get_logger, is_tenancy_enabled
 from api.core.container import container
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
 from api.infrastructure.persistence.mongodb import Database
 from api.interfaces.middlewares.tenant_middleware import TenantMiddleware, extract_tenant_id_from_headers
-from api.interfaces.account_endpoint import router as account_router
-from api.interfaces.user_endpoint import router as user_router
-from api.interfaces.tenant_endpoint import router as tenant_router
-from api.interfaces.role_endpoint import router as role_router
-from api.interfaces.app_configuration_endpoint import router as app_configuration_router
+from api.interfaces.api_controllers.account_endpoint import router as account_router
+from api.interfaces.api_controllers.user_endpoint import router as user_router
+from api.interfaces.api_controllers.tenant_endpoint import router as tenant_router
+from api.interfaces.api_controllers.role_endpoint import router as role_router
+from api.interfaces.api_controllers.app_configuration_endpoint import router as app_configuration_router
 from api.common.logging import configure_logging
 from api.core.config import settings
+
 db: Database = container.resolve(Database)
 
 logger = get_logger(__name__)
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
@@ -54,13 +54,19 @@ async def api_exception_handler(req: Request, ex: ApiBaseException) -> JSONRespo
     
 
 router = APIRouter(prefix="/api/v1")
+if is_tenancy_enabled():
+    logger.info("Multi-tenancy is enabled.")
+    router = APIRouter(prefix="/api/v1", dependencies=[extract_tenant_id_from_headers()])
+    router.include_router(tenant_router)
 
-router.include_router(app_configuration_router, dependencies=[Depends(extract_tenant_id_from_headers)])
-router.include_router(account_router, dependencies=[Depends(extract_tenant_id_from_headers)])
-router.include_router(user_router, dependencies=[Depends(extract_tenant_id_from_headers)])
-router.include_router(role_router, dependencies=[Depends(extract_tenant_id_from_headers)])
+
+router.include_router(app_configuration_router)
+router.include_router(account_router)
+router.include_router(user_router)
+router.include_router(role_router)
 
 
-router.include_router(tenant_router)
+
+
 
 app.include_router(router)
