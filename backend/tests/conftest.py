@@ -1,4 +1,5 @@
 # tests/conftest.py
+from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import AsyncClient, ASGITransport
 
@@ -9,6 +10,7 @@ from api.domain.entities.role import Role
 from api.domain.entities.tenant import Tenant
 from api.domain.entities.user_password_reset import UserPasswordReset
 from api.domain.entities.user_preference import UserPreference
+from api.infrastructure.background.post_tenant_creation_task_service import PostTenantCreationTaskService
 from api.infrastructure.persistence.mongodb import Database
 from api.domain.entities.user import User
 from api.infrastructure.security.current_user import get_current_user
@@ -48,3 +50,4 @@ async def client(test_app):
         base_url="http://test/api/v1"
     ) as client:
         yield client
+
