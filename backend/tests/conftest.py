@@ -24,7 +24,7 @@ async def test_app():
 
     # Override the get_current_user dependency to return a mocked test user
     async def override_get_current_user():
-        return UserDto(
+        return UserDto(     
             first_name="Admin",
             last_name="User",
             id="68c302ef6bf7a039b7e9b385",

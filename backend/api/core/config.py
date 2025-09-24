@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     
     host_main_domain: str = "fsrapp.com"
 
+    redis_uri: str = "redis://localhost:6372"
+    redis_host: str = "localhost"
+    redis_port: int = 6372
+
     model_config = ConfigDict(
         env_file = ".env",
         env_file_encoding = "utf-8"

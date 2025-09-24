@@ -11,6 +11,7 @@ from api.domain.entities.user_password_reset import UserPasswordReset
 from api.domain.entities.user_preference import UserPreference
 logger = get_logger(__name__)
 
+models = [User, Tenant, Role, UserPasswordReset, UserPreference]
 class Database:
     def __init__(self, uri: str, models: Sequence[type[Document] | type[UnionDoc] | type[View] | str] | None = None) -> None:
         self.client = AsyncMongoClient(uri)
@@ -50,5 +51,5 @@ class Database:
 
 mongo_client = Database(
     uri=settings.mongo_uri,
-    models=[User, Role, Tenant, UserPasswordReset, UserPreference]
+    models=models
 )

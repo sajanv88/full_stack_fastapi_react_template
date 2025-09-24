@@ -1,16 +1,13 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi import APIRouter, Depends, status
 
+from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_logger
-from api.core.container import  get_role_service, get_tenant_service, get_user_service
+from api.core.container import   get_tenant_service
 from api.domain.dtos.tenant_dto import CreateTenantResponseDto, TenantDto, TenantListDto, CreateTenantDto
 from api.domain.dtos.user_dto import CreateUserDto
 from api.domain.entities.tenant import Subdomain
-from api.infrastructure.background.post_tenant_creation_task_service import PostTenantCreationTaskService
-from api.infrastructure.persistence.mongodb import mongo_client
-from api.usecases.role_service import RoleService
 from api.usecases.tenant_service import TenantService
-from api.usecases.user_service import UserService
-
+from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation, handle_post_tenant_deletion
 
 logger = get_logger(__name__)
 
@@ -26,10 +23,7 @@ async def list_tenants(
 @router.post("/", response_model=CreateTenantResponseDto, status_code=status.HTTP_201_CREATED)
 async def create_tenant(
     data: CreateTenantDto,
-    background_tasks: BackgroundTasks,
-    service: TenantService = Depends(get_tenant_service),
-    user_service: UserService = Depends(get_user_service),
-    role_service: RoleService = Depends(get_role_service)
+    service: TenantService = Depends(get_tenant_service)
 ):
     tenant_id = await service.create_tenant(data)
     response = CreateTenantResponseDto(id=str(tenant_id))
@@ -38,22 +32,29 @@ async def create_tenant(
         password=data.admin_password,
         first_name=data.first_name,
         last_name=data.last_name,
-        gender=data.gender
+        gender=data.gender,
+        tenant_id=response.id
     )
-    post_tenant_creation_service = PostTenantCreationTaskService(
-        background_tasks=background_tasks,
-        user_service=user_service,
-        role_service=role_service,
-        database=mongo_client
+    payload=WorkerPayloadDto(
+        label="post-tenant-creation",
+        data=admin_user,
+        tenant_id=response.id
     )
-    await post_tenant_creation_service.enqueue(admin_user=admin_user, tenant_id=str(tenant_id))
+    handle_post_tenant_creation.delay(
+        payload=payload.model_dump_json()
+    )
     return response
-
 
 
 @router.delete("/{id}", status_code=status.HTTP_202_ACCEPTED)
 async def delete_tenant(id: str, service: TenantService = Depends(get_tenant_service)):
     await service.delete_tenant(tenant_id=id)
+    payload=WorkerPayloadDto(
+        label="post-tenant-deletion",
+        data=None,
+        tenant_id=id
+    )
+    handle_post_tenant_deletion.delay(payload=payload.model_dump_json())
     return status.HTTP_202_ACCEPTED
 
 

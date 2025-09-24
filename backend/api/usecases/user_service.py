@@ -27,13 +27,14 @@ class UserService:
         return await self.user_repository.list(skip=skip, limit=limit)
 
     async def find_by_email(self, email: EmailStr) -> User:
-        """Find user by email. Raises UserNotFoundException if not found."""
+        """Find user by email. Returns User model. Raises UserNotFoundException if not found."""
         existing = await self.user_repository.single_or_none(email=email)
         if existing is None:
             raise UserNotFoundException(email)
         return existing
     
     async def get_user_by_id(self, user_id: str) -> User:
+        """Get user by ID. Returns User model. Raises UserNotFoundException if not found."""
         existing = await self.user_repository.get(id=user_id)
         if existing is None:
             raise UserNotFoundException(user_id)
@@ -48,7 +49,7 @@ class UserService:
         return await self.user_repository.create(user_data)
 
     async def update_user(self, user_id: str, user_data: UpdateUserDto) -> User | None:
-        """Update user by ID. Raises UserNotFoundException if user does not exist."""
+        """Update user by ID. Returns updated User model. Raises UserNotFoundException if user does not exist."""
         existing = await self.user_repository.get(id=user_id)
         if existing is None:
             raise UserNotFoundException(user_id)
@@ -56,14 +57,17 @@ class UserService:
      
 
     async def delete_user(self, user_id: str) -> None:
+        """Delete user by ID. Returns None otherwise, Raises UserNotFoundException if user does not exist."""
         if await self.user_repository.delete(id=user_id) is False:
             raise UserNotFoundException(user_id)
         
 
     async def total_count(self) -> int:
+        """Get total user count."""
         return await self.user_repository.count()
     
     async def set_password_reset(self, user_id: str) -> None:
+        """Set password reset for user by ID. Returns None otherwise, Raises InvalidOperationException on failure."""
         try:
             await self.user_password_reset_repository.set_password_reset(user_id)
         except Exception as e:

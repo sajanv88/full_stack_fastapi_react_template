@@ -1,30 +1,24 @@
 from beanie import PydanticObjectId
-from fastapi import BackgroundTasks
 from api.common.seeder_utils import get_seed_roles
 from api.common.utils import get_logger
-from api.core.exceptions import RoleNotFoundException
+from api.core.exceptions import EmailAlreadyExistsException, RoleNotFoundException, UserNotFoundException
 from api.domain.dtos.role_dto import CreateRoleDto
 from api.domain.dtos.user_dto import CreateUserDto
 from api.domain.enum.role import RoleType
-from api.infrastructure.background.background_task_service import IBackgroundTaskService
-from api.infrastructure.persistence.mongodb import Database
+from api.domain.interfaces.background_task import IBackgroundTask
 from api.usecases.role_service import RoleService
 from api.usecases.user_service import UserService
 
 logger = get_logger(__name__)
 
-class PostTenantCreationTaskService(IBackgroundTaskService):
+class PostTenantCreationTaskService(IBackgroundTask):
     def __init__(
             self,
-            background_tasks: BackgroundTasks,
             user_service: UserService,
-            role_service: RoleService,
-            database: Database
+            role_service: RoleService
         ):
-        self.background_tasks = background_tasks
         self.user_service = user_service
         self.role_service = role_service
-        self.database = database
         logger.info("Initialized.")
 
 
@@ -47,9 +41,8 @@ class PostTenantCreationTaskService(IBackgroundTaskService):
                 logger.info(f"Seeded role: {role['name']}")
 
 
-    async def _init_and_run(self, db_name: str, admin_user: CreateUserDto) -> None:
+    async def _init_and_run(self, admin_user: CreateUserDto) -> None:
 
-        await self.database.init_db(db_name=db_name, is_tenant=True)
         try:
             await self._seed_roles(tenant_id=admin_user.tenant_id)
             response  = await self.user_service.create_user(admin_user)
@@ -60,11 +53,20 @@ class PostTenantCreationTaskService(IBackgroundTaskService):
             user.role_id = role.id
             await user.save()
             logger.info(f"Assigned 'Admin' role to user {user.email} successfully.")
+        # except EmailAlreadyExistsException as eae:
+        #     logger.error(f"Email already exists: {eae} - Admin user creation skipped.")
+        # except UserNotFoundException as uex:
+        #     logger.error(f"User not found: {uex} - Some issue in admin user creation.")
+            
+        # except RoleNotFoundException as rex:
+        #     logger.error(f"Role not found: {rex}")
+        # except Exception as ex:
+        #     logger.error(f"An unexpected error occurred: {ex}")
         finally:
             logger.info("Post-tenant-creation tasks completed.")
 
 
-    async def enqueue(self, admin_user: CreateUserDto, tenant_id: str) -> None:
+    async def enqueue(self, admin_user: CreateUserDto) -> None:
         logger.info("Enqueuing post-tenant-creation tasks. Creating  admin user. And seeding roles if not present.")
-        db_name = f"tenant_{tenant_id}"
-        self.background_tasks.add_task(self._init_and_run, db_name=db_name, admin_user=admin_user)
+        # self.background_tasks.add_task(self._init_and_run, db_name=db_name, admin_user=admin_user)
+        await self._init_and_run(admin_user=admin_user)

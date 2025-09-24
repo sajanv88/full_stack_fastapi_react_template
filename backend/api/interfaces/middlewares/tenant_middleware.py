@@ -1,16 +1,19 @@
 from typing import Any
-from fastapi.security import APIKeyHeader
+from fastapi import  Header
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi import  Request, Security
 from beanie import PydanticObjectId
+from api.common.utils import get_logger
 from api.core.config import settings
 
 from api.infrastructure.persistence.mongodb import mongo_client as db
 
+logger = get_logger(__name__)
 
 class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         tenant_id = request.headers.get("X-Tenant-ID") or None
+        logger.debug(f"Tenant ID from headers assigned: {tenant_id}")
         if tenant_id is not None:
             request.state.tenant_id = PydanticObjectId(tenant_id)
             # Initialize the database for the tenant and initialize Beanie with tenant-specific models
@@ -28,5 +31,5 @@ async def get_tenant_id(request: Request) -> PydanticObjectId | None:
     return getattr(request.state, "tenant_id", None)
 
 
-def extract_tenant_id_from_headers() -> Any:
-  return Security(APIKeyHeader(name="x-tenant-id", auto_error=False))
+def extract_tenant_id_from_headers(x_tenant_id: str = Header(default=None, alias="X-Tenant-ID", description="Tenant ID for multi-tenancy support")) -> str:
+  return x_tenant_id
