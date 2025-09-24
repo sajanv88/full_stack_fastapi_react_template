@@ -1,4 +1,5 @@
 from beanie import PydanticObjectId
+
 from api.common.utils import get_logger, validate_password
 from api.core.exceptions import TenantNotFoundException
 from api.domain.dtos.tenant_dto import CreateTenantDto, TenantListDto
@@ -41,9 +42,10 @@ class TenantService:
     async def create_tenant(self, tenant_data: CreateTenantDto) -> PydanticObjectId | None:
         """Create a new tenant. Raises InvalidOperationException if admin password is weak."""
         validate_password(tenant_data.admin_password)
-        return await self.tenant_repository.create(tenant_data)
-    
-    
+        response = await self.tenant_repository.create(tenant_data)
+        return response
+
+
     async def delete_tenant(self, tenant_id: str) -> None:
         """Delete tenant by ID. Raises TenantNotFoundException if not found."""
         if await self.tenant_repository.delete(id=tenant_id) is None:

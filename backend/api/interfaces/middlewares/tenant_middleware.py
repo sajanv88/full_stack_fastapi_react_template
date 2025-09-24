@@ -31,5 +31,5 @@ async def get_tenant_id(request: Request) -> PydanticObjectId | None:
     return getattr(request.state, "tenant_id", None)
 
 
-def extract_tenant_id_from_headers(x_tenant_id: str = Header(default=None, alias="X-Tenant-ID", description="Tenant ID for multi-tenancy support")) -> str:
-  return x_tenant_id
+# def extract_tenant_id_from_headers(x_tenant_id: str = Header(default=None, alias="X-Tenant-ID", description="Tenant ID for multi-tenancy support")) -> str:
+#   return x_tenant_id
