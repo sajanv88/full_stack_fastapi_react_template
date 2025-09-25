@@ -19,6 +19,14 @@ def get_tenancy_strategy() -> str:
 def get_host_main_domain_name() -> str:
     return settings.host_main_domain.lower()
 
+def get_app_environment() -> str:
+    return settings.fastapi_env.lower()
+
+def is_production_environment() -> bool:
+    return get_app_environment() == "production"
+
+def is_development_environment() -> bool:
+    return get_app_environment() == "development"
 
 
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]")
