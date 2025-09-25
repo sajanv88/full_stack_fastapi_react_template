@@ -1,6 +1,6 @@
 # Keep only domain-specific exceptions here
 
-from api.common.exceptions import InvalidOperationException, NotFoundException, ConflictException
+from api.common.exceptions import AwsException, AzureException, InvalidOperationException, NotFoundException, ConflictException
 
 class UserNotFoundException(NotFoundException):
     def __init__(self, user_id: str):
@@ -32,3 +32,14 @@ class TenantNotActiveException(InvalidOperationException):
     def __init__(self, tenant_id: str):
         message = f"Tenant with ID '{tenant_id}' is not active."
         super().__init__(message)
+
+
+class S3StorageException(AwsException):
+    def __init__(self, message: str):
+        local_message = f"S3 Storage Error: {message}"
+        super().__init__(local_message)
+
+class AzureBlobStorageException(AzureException):
+    def __init__(self, message: str):
+        local_message = f"Azure Blob Storage Error: {message}"
+        super().__init__(local_message)
