@@ -14,6 +14,7 @@ from api.interfaces.api_controllers.user_endpoint import router as user_router
 from api.interfaces.api_controllers.tenant_endpoint import router as tenant_router
 from api.interfaces.api_controllers.role_endpoint import router as role_router
 from api.interfaces.api_controllers.app_configuration_endpoint import router as app_configuration_router
+from api.interfaces.api_controllers.storage_endpoint import router as storage_router
 from api.common.logging import configure_logging
 from api.core.config import settings
 
@@ -68,6 +69,7 @@ router.include_router(app_configuration_router)
 router.include_router(account_router)
 router.include_router(user_router)
 router.include_router(role_router)
+router.include_router(storage_router)
 
 
 

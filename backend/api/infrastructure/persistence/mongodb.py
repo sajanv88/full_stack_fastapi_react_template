@@ -5,13 +5,14 @@ from beanie import Document, UnionDoc, View, init_beanie
 from api.common.utils import get_logger
 from api.core.config import settings
 from api.domain.entities.role import Role
+from api.domain.entities.storage_settings import StorageSettings
 from api.domain.entities.tenant import Tenant
 from api.domain.entities.user import User
 from api.domain.entities.user_password_reset import UserPasswordReset
 from api.domain.entities.user_preference import UserPreference
 logger = get_logger(__name__)
 
-models = [User, Tenant, Role, UserPasswordReset, UserPreference]
+models = [User, Tenant, Role, UserPasswordReset, UserPreference, StorageSettings]
 class Database:
     def __init__(self, uri: str, models: Sequence[type[Document] | type[UnionDoc] | type[View] | str] | None = None) -> None:
         self.client = AsyncMongoClient(uri)

@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends, status
-from typing import List
 from api.common.utils import get_logger
 from api.domain.dtos.user_dto import CreateUserDto, CreateUserResponseDto, UpdateUserDto, UserDto, UserListDto
 from api.domain.enum.permission import Permission
-from api.infrastructure.security.current_user import get_current_user
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.user_service import UserService
 from api.core.container import get_user_service
@@ -17,7 +15,6 @@ router = APIRouter(prefix="/users", tags=["Users"])
 @router.get("/", response_model=UserListDto)
 async def list_users(
     skip: int = 0, limit: int = 10,
-    current_user: UserDto = Depends(get_current_user),
     service: UserService = Depends(get_user_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.USER_VIEW_ONLY]))
 ):
