@@ -1,4 +1,6 @@
 import punq
+from api.domain.interfaces.email_service import IEmailService
+from api.infrastructure.externals.smtp_email import SmtpEmail
 from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
 from api.infrastructure.persistence.repositories.storage_settings_repository_impl import StorageSettingsRepository
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
@@ -7,6 +9,7 @@ from api.infrastructure.persistence.repositories.user_preference_repository_impl
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
 from api.infrastructure.security.jwt_token_service import JwtTokenService
 from api.usecases.auth_service import AuthService
+from api.usecases.file_service import FileService
 from api.usecases.role_service import RoleService
 from api.usecases.storage_settings_service import StorageSettingsService
 from api.usecases.user_preference_service import UserPreferenceService
@@ -51,6 +54,12 @@ container.register(AuthService, scope=punq.Scope.singleton)
 container.register(StorageSettingsRepository)
 container.register(StorageSettingsService, scope=punq.Scope.singleton)
 
+## File Service
+container.register(FileService, scope=punq.Scope.singleton)
+
+## Smtp email Service
+container.register(IEmailService, SmtpEmail, scope=punq.Scope.singleton)
+
 
 def get_database() -> Database:
     return container.resolve(Database)
@@ -75,3 +84,13 @@ def get_auth_service() -> AuthService:
 
 def get_storage_settings_service() -> StorageSettingsService:
     return container.resolve(StorageSettingsService)
+
+def get_storage_settings_repository() -> StorageSettingsRepository:
+    return container.resolve(StorageSettingsRepository)
+
+def get_file_service() -> FileService:
+    return container.resolve(FileService)
+
+
+def get_email_service() -> IEmailService:
+    return container.resolve(IEmailService)

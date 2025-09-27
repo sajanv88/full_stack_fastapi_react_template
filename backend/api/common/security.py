@@ -14,6 +14,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days
 
+ACTIVATION_TOKEN_EXPIRE_HOURS = 24  # Token expires in 24 hours
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/account/login", auto_error=False)
 tenant_header = APIKeyHeader(name="x-tenant-id", auto_error=False)
 

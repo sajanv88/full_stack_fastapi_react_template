@@ -2,13 +2,14 @@ from typing import Annotated
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
-from api.common.dtos.token_dto import TokenSetDto
+from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_logger
 from api.core.container import get_auth_service
 from api.domain.dtos.login_dto import LoginRequestDto
-from api.domain.dtos.user_dto import CreateUserDto
+from api.domain.dtos.user_dto import CreateUserDto, UserDto
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation
+from api.infrastructure.security.current_user import get_current_user
 from api.interfaces.middlewares.tenant_middleware import get_tenant_id
 from api.usecases.auth_service import AuthService
 
@@ -57,4 +58,16 @@ async def register(
     return status.HTTP_201_CREATED
         
 
-    
+@router.get("/me", response_model=UserDto, status_code=status.HTTP_200_OK)
+async def read_users_me(
+    current_user: Annotated[UserDto, Depends(get_current_user)]
+):
+    return current_user
+
+
+@router.post("/refresh", response_model=TokenSetDto, status_code=status.HTTP_200_OK)
+async def refresh_token(
+    token: TokenRefreshRequestDto,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    return await auth_service.refresh_token(token)

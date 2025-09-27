@@ -1,4 +1,4 @@
-from api.common.dtos.token_dto import TokenPayloadDto, TokenSetDto
+from api.common.dtos.token_dto import RefreshTokenPayloadDto, TokenPayloadDto, TokenRefreshRequestDto, TokenSetDto
 from api.common.exceptions import InvalidOperationException, UnauthorizedException
 from api.common.security import verify_password
 from api.common.utils import get_logger, is_tenancy_enabled
@@ -80,6 +80,29 @@ class AuthService:
                 cb(newly_created_tenant_id)
 
     
+    async def refresh_token(self, token: TokenRefreshRequestDto) -> TokenSetDto:
+        """
+            Refresh the access token using the provided refresh token.
+            On success, returns a new TokenSetDto containing the new access and refresh tokens.
+            Raises UnauthorizedException if the refresh token is invalid or expired.
+        """
+        refresh_token_payload: RefreshTokenPayloadDto = await self.jwt_token_service.decode_token(token=token.refresh_token, type="refresh_token")
+
+        if refresh_token_payload is None:
+            raise UnauthorizedException("Invalid refresh token")
+        
+        user = await self.user_service.get_user_by_id(user_id=str(refresh_token_payload.sub))
+        role = await self.role_service.get_role_by_id(role_id=user.role_id)
+        role_doc = await role.to_serializable_dict()    
+        payload = TokenPayloadDto(
+            sub=user.id,
+            email=user.email,
+            is_active=user.is_active,
+            activated_at=user.activated_at,
+            role=RoleDto(**role_doc) if role_doc is not None else None,
+            tenant_id=user.tenant_id
+        )
+        return await self.jwt_token_service.generate_tokens(payload)
 
 
             

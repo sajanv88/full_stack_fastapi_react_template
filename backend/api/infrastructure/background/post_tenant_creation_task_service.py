@@ -53,20 +53,19 @@ class PostTenantCreationTaskService(IBackgroundTask):
             user.role_id = role.id
             await user.save()
             logger.info(f"Assigned 'Admin' role to user {user.email} successfully.")
-        # except EmailAlreadyExistsException as eae:
-        #     logger.error(f"Email already exists: {eae} - Admin user creation skipped.")
-        # except UserNotFoundException as uex:
-        #     logger.error(f"User not found: {uex} - Some issue in admin user creation.")
+        except EmailAlreadyExistsException as eae:
+            logger.error(f"Email already exists: {eae} - Admin user creation skipped.")
+        except UserNotFoundException as uex:
+            logger.error(f"User not found: {uex} - Some issue in admin user creation.")
             
-        # except RoleNotFoundException as rex:
-        #     logger.error(f"Role not found: {rex}")
-        # except Exception as ex:
-        #     logger.error(f"An unexpected error occurred: {ex}")
+        except RoleNotFoundException as rex:
+            logger.error(f"Role not found: {rex}")
+        except Exception as ex:
+            logger.error(f"An unexpected error occurred: {ex}")
         finally:
             logger.info("Post-tenant-creation tasks completed.")
 
 
     async def enqueue(self, admin_user: CreateUserDto) -> None:
         logger.info("Enqueuing post-tenant-creation tasks. Creating  admin user. And seeding roles if not present.")
-        # self.background_tasks.add_task(self._init_and_run, db_name=db_name, admin_user=admin_user)
         await self._init_and_run(admin_user=admin_user)

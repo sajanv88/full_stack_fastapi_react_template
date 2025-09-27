@@ -20,6 +20,19 @@ celery_app = Celery(
 )
 
 
+
+
+
+
+
+
+
+
+
+
+
+## Tenant related tasks
+
 @celery_app.task(default_retry_delay=60, max_retries=5)
 def handle_post_tenant_creation(payload: str):
     asyncio.run(_handle_post_tenant_creation_async(payload))

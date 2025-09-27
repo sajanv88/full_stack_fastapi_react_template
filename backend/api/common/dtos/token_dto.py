@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 from beanie import PydanticObjectId
 from pydantic import BaseModel, EmailStr, ConfigDict, field_serializer
 
@@ -46,3 +47,12 @@ class TokenSetDto(AccessTokenDto, RefreshTokenDto):
 
 class TokenRefreshRequestDto(BaseModel):
     refresh_token: str
+
+
+class ActivationTokenPayloadDto(BaseModel):
+    user_id: str
+    email: EmailStr
+    tenant_id: str | None = None
+    type: Literal["activation", "password-reset-confirmation", "email_change"] = "activation",
+    jwt_secret: str | None = None
+

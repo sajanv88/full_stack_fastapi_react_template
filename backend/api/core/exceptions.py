@@ -43,3 +43,9 @@ class AzureBlobStorageException(AzureException):
     def __init__(self, message: str):
         local_message = f"Azure Blob Storage Error: {message}"
         super().__init__(local_message)
+
+
+class StorageNotEnabledException(InvalidOperationException):
+    def __init__(self):
+        message = "No storage provider is enabled. Please enable a storage provider in the settings."
+        super().__init__(message)

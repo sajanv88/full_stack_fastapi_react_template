@@ -35,6 +35,15 @@ class Settings(BaseSettings):
 
     fastapi_env: str = "development"  # Options: "development", "production"
 
+    smtp_user: str
+    smtp_password: str
+    smtp_host: str
+    smtp_port: int
+    smtp_mail_from_name: str = "FSR App"
+    smtp_mail_from: EmailStr
+    smtp_start_tls: bool = False
+    smtp_ssl_tls: bool = False
+
     model_config = ConfigDict(
         env_file = ".env",
         env_file_encoding = "utf-8"

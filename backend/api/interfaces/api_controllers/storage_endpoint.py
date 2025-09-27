@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from api.common.utils import get_logger
 from api.core.container import get_storage_settings_service
 from api.domain.dtos.storage_settings_dto import AvailableStorageProviderDTO
+from api.domain.entities.storage_settings import StorageProvider
 from api.domain.enum.permission import Permission
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.storage_settings_service import StorageSettingsService
@@ -21,11 +22,10 @@ async def get_storage_settings(
 ):
     return await setting_service.get_storages()
 
-# @router.get("/available", response_model=List[dict[str, str]])
-# async def get_available_providers(
-#     current_user: Annotated[User, Depends(get_current_user)],
-#     db = Depends(get_db_reference),
-#     _: bool = Depends(create_permission_checker([Permission.MANAGE_STORAGE_SETTINGS]))
-# ):
-#     providers = [{"name": p.value} for p in StorageProvider]
-#     return providers
+@router.get("/available", response_model=List[dict[str, str]])
+async def get_available_providers(
+    setting_service: StorageSettingsService = Depends(get_storage_settings_service),
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.MANAGE_STORAGE_SETTINGS]))
+):
+    providers = [{"name": p.value} for p in StorageProvider]
+    return providers

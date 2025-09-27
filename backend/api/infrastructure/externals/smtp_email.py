@@ -1,0 +1,43 @@
+from typing import Literal
+from api.common.utils import get_logger
+from api.domain.interfaces.email_service import IEmailService
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType, errors
+from api.core.config import settings
+
+logger = get_logger(__name__)
+
+class SmtpEmail(IEmailService):
+    def __init__(self):
+        self.mail_config = FastMail(
+            ConnectionConfig(
+                MAIL_USERNAME=settings.smtp_user,
+                MAIL_PASSWORD=settings.smtp_password,
+                MAIL_FROM=settings.smtp_mail_from,
+                MAIL_PORT=settings.smtp_port,
+                MAIL_SERVER=settings.smtp_host,
+                MAIL_STARTTLS=settings.smtp_start_tls,
+                MAIL_SSL_TLS=settings.smtp_ssl_tls,
+            )
+        )
+
+    async def send_email(self, to: str, subject: str, body: str, type: Literal[MessageType.html, MessageType.plain]) -> None:
+        try:
+            logger.info(f"Sending email to {to} with subject '{subject}' and body '{body}'")
+            message = MessageSchema(
+                subject=subject,
+                recipients=[to],
+                body=body,
+                subtype=type
+            )
+
+            fm = FastMail(self.mail_config)
+            
+            await fm.send_message(message)
+
+            logger.info(f"Activation email sent to {to}")
+        except errors.ApiError as e:
+            logger.error(f"Failed to send email to {to}: {str(e)}")
+        except errors.ConnectionErrors as e:
+            logger.error(f"Connection error while sending email to {to}: {str(e)}")
+        except Exception as e:
+            logger.error(f"An unexpected error occurred while sending email to {to}: {str(e)}")

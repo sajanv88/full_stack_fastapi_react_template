@@ -22,6 +22,9 @@ class UpdateUserDto(BaseModel):
     last_name: Optional[str] = None
     email: Optional[EmailStr] = None
     gender: Optional[Gender] = None
+    image_url: Optional[str] = None
+    role_id: Optional[str] = None
+    is_active: Optional[bool] = None
 
 class UserDto(BaseModel):
     id: str
@@ -58,3 +61,10 @@ class UserResendActivationEmailRequestDto(BaseModel):
     email: EmailStr
     id: str
     first_name: str
+
+class UserProfileImageUpdateDto(BaseModel):
+    image_url: str
+
+
+class UserRoleUpdateRequestDto(BaseModel):
+    role_id: str

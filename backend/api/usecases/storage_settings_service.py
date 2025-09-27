@@ -1,7 +1,10 @@
 from beanie import PydanticObjectId
+from api.common.utils import get_logger
 from api.infrastructure.persistence.repositories.storage_settings_repository_impl import StorageSettingsRepository
 from api.domain.dtos.storage_settings_dto import AvailableStorageProviderDTO, StorageSettingsDTO
 from api.domain.entities.storage_settings import StorageSettings
+
+logger = get_logger(__name__)
 
 class StorageSettingsService:
     def __init__(self, storage_settings_repository: StorageSettingsRepository):
@@ -24,8 +27,13 @@ class StorageSettingsService:
 
     async def get_storages(self) -> list[AvailableStorageProviderDTO]:
         settings = await self.storage_settings_repository.get_storages()
-        result: list[AvailableStorageProviderDTO] = []
+        result = []
         for setting in settings:
             serializable = await setting.to_serializable_dict()
+            serializable.model_dump(exclude_none=True)
+            logger.info(f"Serialized storage setting: {serializable}")
             result.append(serializable)
         return result
+    
+
+    
