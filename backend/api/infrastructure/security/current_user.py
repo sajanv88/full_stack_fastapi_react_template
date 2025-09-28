@@ -29,3 +29,5 @@ async def get_current_user(
     user_doc = await user.to_serializable_dict()
     return UserDto(**user_doc)
 
+
+CurrentUser = Annotated[UserDto, Depends(get_current_user)]

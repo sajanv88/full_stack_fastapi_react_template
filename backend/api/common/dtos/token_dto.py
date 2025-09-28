@@ -53,7 +53,7 @@ class ActivationTokenPayloadDto(BaseModel):
     user_id: str
     email: EmailStr
     tenant_id: str | None = None
-    type: Literal["activation", "password-reset-confirmation", "email_change"] = "activation",
+    type: Literal["activation", "password_reset_confirmation", "email_change"] = "activation",
     jwt_secret: str | None = None
 
 

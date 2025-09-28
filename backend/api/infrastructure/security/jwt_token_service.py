@@ -92,7 +92,7 @@ class JwtTokenService:
         try:
             payload = jwt.decode(token, jwt_secret, algorithms=[ALGORITHM])
             logger.debug(f"Decoded password reset token payload: {payload}")
-            if payload.get("type") != "password-reset-confirm":
+            if payload.get("type") != "password_reset_confirmation":
                 logger.debug(f"Invalid token type: {payload.get('type')}")
                 raise jwt.InvalidTokenError("Invalid token type")
             return VerifyEmailTokenPayloadDto(

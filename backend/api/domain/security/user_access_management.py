@@ -1,11 +1,10 @@
-from typing import Annotated, List
-from fastapi import Depends
+from typing import List
 from api.common.exceptions import ForbiddenException
 from api.common.utils import get_logger, is_tenancy_enabled
 from api.core.container import get_role_service
 from api.domain.dtos.user_dto import UserDto
 from api.domain.enum.permission import Permission
-from api.infrastructure.security.current_user import get_current_user
+from api.infrastructure.security.current_user import CurrentUser
 
 logger = get_logger(__name__)
 
@@ -49,8 +48,8 @@ class UserAccessManagement:
             return all(perm in user_permissions for perm in required_permissions)
     
     def __call__(self):
-       
-        async def check_permission(current_user: Annotated[UserDto, Depends(get_current_user)]) -> bool:
+
+        async def check_permission(current_user: CurrentUser) -> bool:
 
             resource_id = current_user.id
             logger.info(f"Resource ID for self-access checking: {resource_id}")

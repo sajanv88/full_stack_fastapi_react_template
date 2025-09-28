@@ -63,6 +63,16 @@ class UserService:
             raise UserNotFoundException(user_id)
         
 
+    async def update_user_password(self, user_id: str, new_password: str) -> User | None:
+        """Update user password by ID. Returns updated User model. Raises UserNotFoundException if user does not exist."""
+        existing = await self.user_repository.get(id=user_id)
+        if existing is None:
+            raise UserNotFoundException(user_id)
+        hashed_password = hash_it(new_password)
+        existing.password = hashed_password
+        await existing.save()
+        return existing
+
     async def total_count(self) -> int:
         """Get total user count."""
         return await self.user_repository.count()
@@ -76,3 +86,10 @@ class UserService:
             logger.error(f"Error setting password reset for user with an email: {email} wasn't successful: {e}")
             raise InvalidOperationException(message="Failed to set password reset.")
 
+    async def retrieve_password_reset_data_by_user_id(self, user_id: str) -> UserPasswordReset | None:
+        """Get password reset entry by token. Returns UserPasswordReset model or None if not found."""
+        return await self.user_password_reset_repository.single_or_none(user_id=PydanticObjectId(user_id))
+
+    async def clear_password_reset_data_by_user_id(self, user_id: str) -> bool:
+        """Clear password reset entry by user ID. Returns boolean."""
+        return await self.user_password_reset_repository.delete(user_id=PydanticObjectId(user_id))

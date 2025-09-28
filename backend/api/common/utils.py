@@ -41,5 +41,5 @@ def get_email_sharing_link(user_id: str, type: str, token: str) -> str:
     """
     Generate a complete email sharing link with token.
     """
-    sharing_link = f"{settings.api_endpoint_base}/v1/auth/{type}?user_id={user_id}&token={token}"
+    sharing_link = f"{settings.api_endpoint_base}/v1/account/{type}?user_id={user_id}&token={token}"
     return sharing_link

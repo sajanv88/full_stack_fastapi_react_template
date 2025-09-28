@@ -11,3 +11,5 @@ class PasswordResetConfirmRequestDto(BaseModel):
 class PasswordResetResponseDto(BaseModel):
     message: str
 
+class ChangeEmailRequestDto(BaseModel):
+    new_email: EmailStr

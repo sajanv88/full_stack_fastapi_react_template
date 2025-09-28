@@ -1,17 +1,20 @@
 from typing import Annotated
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, status
+from fastapi.params import Query
 from fastapi.security import OAuth2PasswordRequestForm
 from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_logger
 from api.core.container import get_auth_service
-from api.domain.dtos.auth_dto import PasswordResetRequestDto, PasswordResetResponseDto
+from api.domain.dtos.auth_dto import ChangeEmailRequestDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
 from api.domain.dtos.login_dto import LoginRequestDto
-from api.domain.dtos.user_dto import CreateUserDto, UserDto
+from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserDto, UserResendActivationEmailRequestDto
+from api.domain.enum.permission import Permission
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation
-from api.infrastructure.security.current_user import get_current_user
+from api.infrastructure.security.current_user import CurrentUser
 from api.interfaces.middlewares.tenant_middleware import get_tenant_id
+from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.auth_service import AuthService
 
 logger = get_logger(__name__)
@@ -61,7 +64,7 @@ async def register(
 
 @router.get("/me", response_model=UserDto, status_code=status.HTTP_200_OK)
 async def read_users_me(
-    current_user: Annotated[UserDto, Depends(get_current_user)]
+    current_user: CurrentUser
 ):
     return current_user
 
@@ -85,4 +88,57 @@ async def password_reset_request(
         logger.error(f"Password reset request for email: {request.email} wasn't successful: {e}")
     finally:
         return PasswordResetResponseDto(message="If the email exists, a password reset link has been sent.")
-   
+
+
+@router.post("/password_reset_confirmation", response_model=PasswordResetResponseDto)
+async def password_reset_confirm(
+    request: PasswordResetConfirmRequestDto,
+    token: str = Query(..., description="The password reset token"),
+    user_id: str = Query(..., description="The user ID associated with the token"),
+    auth_service: AuthService = Depends(get_auth_service)
+
+):
+    await auth_service.change_password(
+        new_password=request.new_password,
+        token=token,
+        user_id=user_id
+    )
+    return PasswordResetResponseDto(message="Password has been reset successfully. A notification email has been sent!")
+
+@router.post("/resend_activation_email", status_code=status.HTTP_202_ACCEPTED)
+async def resend_activation_email(
+    req: UserResendActivationEmailRequestDto,
+    auth_service: AuthService = Depends(get_auth_service),
+    _bool: bool = Depends(check_permissions_for_current_role(
+        required_permissions=[Permission.USER_READ_AND_WRITE_ONLY, Permission.FULL_ACCESS]
+    ))
+):
+    await auth_service.send_activation_email(req)
+    return status.HTTP_202_ACCEPTED
+
+
+@router.post("/activate", status_code=status.HTTP_200_OK)
+async def activate_account(
+    req: UserActivationRequestDto,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    await auth_service.activate_account(req)
+    return status.HTTP_200_OK
+
+
+@router.patch("/change_email", response_model=UserDto, status_code=status.HTTP_200_OK)
+async def change_email(
+    request: ChangeEmailRequestDto,
+    current_user: CurrentUser,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    
+    # To be implemented properly with email verification in future releases.
+    # await auth_service.change_email(
+    #     current_email=current_user.email,
+    #     new_email=request.new_email
+    # )
+    # return current_user
+
+    return status.HTTP_200_OK
+    
