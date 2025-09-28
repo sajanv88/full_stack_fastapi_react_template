@@ -73,3 +73,4 @@ class UserService:
         except Exception as e:
             logger.error(f"Error setting password reset for user {user_id}: {e}")
             raise InvalidOperationException(message="Failed to set password reset.")
+

@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import Literal
 
 import jwt
-from api.common.dtos.token_dto import AccessTokenDto, ActivationTokenPayloadDto, RefreshTokenDto, RefreshTokenDto, RefreshTokenPayloadDto, TokenPayloadDto, TokenSetDto
+from api.common.dtos.token_dto import AccessTokenDto, ActivationTokenPayloadDto, RefreshTokenDto, RefreshTokenDto, RefreshTokenPayloadDto, TokenPayloadDto, TokenSetDto, VerifyEmailTokenPayloadDto
 from api.common.utils import get_logger, get_utc_now
 from api.common.security import ACCESS_TOKEN_EXPIRE_MINUTES, ACTIVATION_TOKEN_EXPIRE_HOURS, ALGORITHM, JWT_SECRET, REFRESH_ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS, REFRESH_TOKEN_SECRET
 
@@ -62,6 +62,53 @@ class JwtTokenService:
             return None
         
 
+    async def verify_activation_token(token: str) -> VerifyEmailTokenPayloadDto:
+        """
+        Verify and decode the activation token.
+        Returns user_id and email if valid, raises exception if invalid.
+        """
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+            if payload.get("type") != "activation":
+                raise jwt.InvalidTokenError("Invalid token type")
+            
+            return VerifyEmailTokenPayloadDto(
+                user_id=payload.get("user_id"),
+                email=payload.get("email")
+            )
+        except jwt.ExpiredSignatureError:
+            logger.error("Activation token has expired")
+            raise jwt.ExpiredSignatureError("Activation token has expired")
+        except jwt.InvalidTokenError:
+            logger.error("Invalid activation token")
+            raise jwt.InvalidTokenError("Invalid activation token")
+
+
+    async def verify_password_reset_token(token: str, jwt_secret: str) -> VerifyEmailTokenPayloadDto:
+        """
+            Verify and decode the password reset token.
+            Returns user_id and email if valid, raises exception if invalid.
+        """
+        try:
+            payload = jwt.decode(token, jwt_secret, algorithms=[ALGORITHM])
+            logger.debug(f"Decoded password reset token payload: {payload}")
+            if payload.get("type") != "password-reset-confirm":
+                logger.debug(f"Invalid token type: {payload.get('type')}")
+                raise jwt.InvalidTokenError("Invalid token type")
+            return VerifyEmailTokenPayloadDto(
+                user_id=payload.get("user_id"),
+                email=payload.get("email")
+            )
+        except jwt.ExpiredSignatureError:
+            logger.error("Password reset token has expired")
+            raise jwt.ExpiredSignatureError("Password reset token has expired")
+        except jwt.InvalidTokenError:
+            logger.error("Invalid password reset token")
+            raise jwt.InvalidTokenError("Invalid password reset token")
+    
+    
+    
+    
     def generate_activation_token(payload: ActivationTokenPayloadDto) -> str:
         """
         Generate a JWT token for account activation.
@@ -76,3 +123,5 @@ class JwtTokenService:
             "tenant_id": payload.tenant_id
         }
         return jwt.encode(payload, payload.jwt_secret or JWT_SECRET, algorithm=ALGORITHM)
+
+
