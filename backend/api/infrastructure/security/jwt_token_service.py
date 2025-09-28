@@ -31,8 +31,10 @@ class JwtTokenService:
         encoded_jwt = jwt.encode(to_encode, REFRESH_TOKEN_SECRET, algorithm=REFRESH_ALGORITHM)
         return RefreshTokenDto(refresh_token=encoded_jwt, refresh_token_expires_in=expire)
     
-
     async def generate_tokens(self, payload: TokenPayloadDto) -> TokenSetDto:
+        """
+            Generate access and refresh tokens.
+        """
         access_token = await self.get_access_token(payload)
         refresh_token = await self.get_refresh_token(str(payload.sub))
         return TokenSetDto(
@@ -43,7 +45,6 @@ class JwtTokenService:
             refresh_token_expires_in=int((refresh_token.refresh_token_expires_in - get_utc_now()).total_seconds())
         )
     
-
     async def decode_token(
             self,
             token: str, type: Literal["access_token", "refresh_token"] = "access_token") -> TokenPayloadDto | RefreshTokenPayloadDto | None :
@@ -60,9 +61,8 @@ class JwtTokenService:
         except jwt.InvalidTokenError:
             logger.error("Invalid token.")
             return None
-        
 
-    async def verify_activation_token(token: str) -> VerifyEmailTokenPayloadDto:
+    async def verify_activation_token(self, token: str) -> VerifyEmailTokenPayloadDto:
         """
         Verify and decode the activation token.
         Returns user_id and email if valid, raises exception if invalid.
@@ -84,7 +84,7 @@ class JwtTokenService:
             raise jwt.InvalidTokenError("Invalid activation token")
 
 
-    async def verify_password_reset_token(token: str, jwt_secret: str) -> VerifyEmailTokenPayloadDto:
+    async def verify_password_reset_token(self, token: str, jwt_secret: str) -> VerifyEmailTokenPayloadDto:
         """
             Verify and decode the password reset token.
             Returns user_id and email if valid, raises exception if invalid.
@@ -107,14 +107,14 @@ class JwtTokenService:
             raise jwt.InvalidTokenError("Invalid password reset token")
     
     
-    
-    
-    def generate_activation_token(payload: ActivationTokenPayloadDto) -> str:
+    async def encode_activation_token(self, payload: ActivationTokenPayloadDto) -> str:
         """
-        Generate a JWT token for account activation.
+            Generate a JWT token for account activation.
         """
+
         expire = get_utc_now() + timedelta(hours=ACTIVATION_TOKEN_EXPIRE_HOURS)
-        payload = {
+
+        data = {
             "user_id": payload.user_id,
             "email": payload.email,
             "type": payload.type,
@@ -122,6 +122,7 @@ class JwtTokenService:
             "iat": get_utc_now(),
             "tenant_id": payload.tenant_id
         }
-        return jwt.encode(payload, payload.jwt_secret or JWT_SECRET, algorithm=ALGORITHM)
+
+        return jwt.encode(data, payload.jwt_secret or JWT_SECRET, algorithm=ALGORITHM)
 
 

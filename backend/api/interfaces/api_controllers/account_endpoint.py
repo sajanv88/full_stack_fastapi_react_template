@@ -6,6 +6,7 @@ from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_logger
 from api.core.container import get_auth_service
+from api.domain.dtos.auth_dto import PasswordResetRequestDto, PasswordResetResponseDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.user_dto import CreateUserDto, UserDto
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation
@@ -71,3 +72,17 @@ async def refresh_token(
     auth_service: AuthService = Depends(get_auth_service)
 ):
     return await auth_service.refresh_token(token)
+
+
+@router.post("/password_reset_request", response_model=PasswordResetResponseDto, status_code=status.HTTP_200_OK)
+async def password_reset_request(
+    request: PasswordResetRequestDto,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    try:
+        await auth_service.initate_password_reset(request.email)
+    except Exception as e:
+        logger.error(f"Password reset request for email: {request.email} wasn't successful: {e}")
+    finally:
+        return PasswordResetResponseDto(message="If the email exists, a password reset link has been sent.")
+   

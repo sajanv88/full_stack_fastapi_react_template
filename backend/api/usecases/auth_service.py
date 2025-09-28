@@ -1,14 +1,18 @@
-from api.common.dtos.token_dto import RefreshTokenPayloadDto, TokenPayloadDto, TokenRefreshRequestDto, TokenSetDto
+from fastapi_mail import MessageType
+from pydantic import EmailStr
+from api.common.dtos.token_dto import ActivationTokenPayloadDto, RefreshTokenPayloadDto, TokenPayloadDto, TokenRefreshRequestDto, TokenSetDto
 from api.common.exceptions import InvalidOperationException, UnauthorizedException
 from api.common.security import verify_password
-from api.common.utils import get_logger, is_tenancy_enabled
+from api.common.utils import get_logger, is_tenancy_enabled, get_email_sharing_link
 from api.core.exceptions import TenantNotFoundException
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.role_dto import RoleDto
 from api.domain.dtos.tenant_dto import CreateTenantDto
 from api.domain.dtos.user_dto import CreateUserDto
 from api.domain.entities.tenant import validate_subdomain
+from api.domain.interfaces.email_service import IEmailService
 from api.infrastructure.security.jwt_token_service import JwtTokenService
+from api.interfaces.email_templates.password_reset_email_template_html import password_reset_email_template_html
 from api.usecases.role_service import RoleService
 from api.usecases.tenant_service import TenantService
 from api.usecases.user_service import UserService
@@ -21,13 +25,16 @@ class AuthService:
             user_service: UserService,
             tenant_service: TenantService,
             role_service: RoleService,
-            jwt_token_service: JwtTokenService
+            jwt_token_service: JwtTokenService,
+            email_service: IEmailService
         ):
         self.user_service: UserService = user_service
         self.tenant_service: TenantService = tenant_service
         self.role_service: RoleService = role_service
         self.jwt_token_service: JwtTokenService = jwt_token_service
+        self.email_service: IEmailService = email_service
         logger.info("Initialized.")
+        print(self.email_service, "email service in auth service")
 
     async def login(self, req: LoginRequestDto) -> TokenSetDto:
         user = await self.user_service.find_by_email(email=req.email)
@@ -106,7 +113,23 @@ class AuthService:
 
 
             
-
-            
-
+    async def initate_password_reset(self, email: EmailStr) -> None:
+        reset_data = await self.user_service.request_password_reset(email)
+        data = ActivationTokenPayloadDto(
+            user_id=str(reset_data.user_id),
+            email=email,
+            type="password-reset-confirmation",
+            jwt_secret=reset_data.token_secret,
+            tenant_id=str(reset_data.tenant_id)
+        )
+        token = await self.jwt_token_service.encode_activation_token(data)
+        link = get_email_sharing_link(token=token, user_id=str(reset_data.user_id), type=data.type)
+        html = password_reset_email_template_html(user_first_name=reset_data.first_name, password_reset_link=link)
+        await self.email_service.send_email(
+            to=email,
+            subject="Password Reset Request",
+            body=html,
+            type=MessageType.html
+        )
+        logger.info(f"Password reset initiated for user {reset_data.user_id} ({email})")
             

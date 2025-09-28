@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     smtp_mail_from: EmailStr
     smtp_start_tls: bool = False
     smtp_ssl_tls: bool = False
+    smtp_use_credentials: bool = False # Changed to True when running production env
+    smtp_validate_certs: bool = False
 
     model_config = ConfigDict(
         env_file = ".env",

@@ -8,7 +8,7 @@ logger = get_logger(__name__)
 
 class SmtpEmail(IEmailService):
     def __init__(self):
-        self.mail_config = FastMail(
+        self.fm = FastMail(
             ConnectionConfig(
                 MAIL_USERNAME=settings.smtp_user,
                 MAIL_PASSWORD=settings.smtp_password,
@@ -17,22 +17,21 @@ class SmtpEmail(IEmailService):
                 MAIL_SERVER=settings.smtp_host,
                 MAIL_STARTTLS=settings.smtp_start_tls,
                 MAIL_SSL_TLS=settings.smtp_ssl_tls,
+                USE_CREDENTIALS=settings.smtp_use_credentials,
+                VALIDATE_CERTS=settings.smtp_validate_certs,
             )
         )
 
     async def send_email(self, to: str, subject: str, body: str, type: Literal[MessageType.html, MessageType.plain]) -> None:
         try:
-            logger.info(f"Sending email to {to} with subject '{subject}' and body '{body}'")
+            logger.info(f"Sending email to {to} with subject '{subject}'")
             message = MessageSchema(
                 subject=subject,
                 recipients=[to],
                 body=body,
                 subtype=type
             )
-
-            fm = FastMail(self.mail_config)
-            
-            await fm.send_message(message)
+            await self.fm.send_message(message)
 
             logger.info(f"Activation email sent to {to}")
         except errors.ApiError as e:

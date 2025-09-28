@@ -1,3 +1,5 @@
+
+
 def password_reset_email_template_html(user_first_name: str, password_reset_link: str) -> str:
     """
     HTML email template for password reset.

@@ -25,6 +25,9 @@ container.register(Database, instance=mongo_client)
 
 # Register security components
 
+## Smtp email Service
+container.register(IEmailService, SmtpEmail, scope=punq.Scope.singleton)
+
 ## JWT Token Service
 container.register(JwtTokenService, scope=punq.Scope.singleton)
 
@@ -57,8 +60,7 @@ container.register(StorageSettingsService, scope=punq.Scope.singleton)
 ## File Service
 container.register(FileService, scope=punq.Scope.singleton)
 
-## Smtp email Service
-container.register(IEmailService, SmtpEmail, scope=punq.Scope.singleton)
+
 
 
 def get_database() -> Database:
@@ -94,3 +96,7 @@ def get_file_service() -> FileService:
 
 def get_email_service() -> IEmailService:
     return container.resolve(IEmailService)
+
+
+print("Dependency injection container configured.")
+print(SmtpEmail, "-----------------------")

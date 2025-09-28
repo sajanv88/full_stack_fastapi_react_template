@@ -5,6 +5,7 @@ from api.common.utils import get_logger
 from api.core.exceptions import EmailAlreadyExistsException, UserNotFoundException
 from api.domain.entities.user import User
 from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto, UserListDto
+from api.domain.entities.user_password_reset import UserPasswordReset
 from api.infrastructure.persistence.repositories.user_password_reset_repository_impl import UserPasswordResetRepository
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
 from api.common.security import hash_it
@@ -66,11 +67,12 @@ class UserService:
         """Get total user count."""
         return await self.user_repository.count()
     
-    async def set_password_reset(self, user_id: str) -> None:
+    async def request_password_reset(self, email: EmailStr) -> UserPasswordReset:
         """Set password reset for user by ID. Returns None otherwise, Raises InvalidOperationException on failure."""
         try:
-            await self.user_password_reset_repository.set_password_reset(user_id)
+            user = await self.find_by_email(email=email)
+            return await self.user_password_reset_repository.set_password_reset(user_id=str(user.id), first_name=user.first_name, tenant_id=user.tenant_id)
         except Exception as e:
-            logger.error(f"Error setting password reset for user {user_id}: {e}")
+            logger.error(f"Error setting password reset for user with an email: {email} wasn't successful: {e}")
             raise InvalidOperationException(message="Failed to set password reset.")
 
