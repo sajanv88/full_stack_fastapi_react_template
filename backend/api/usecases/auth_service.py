@@ -15,6 +15,8 @@ from api.infrastructure.security.jwt_token_service import JwtTokenService
 from api.interfaces.email_templates.password_reset_email_template_html import password_reset_email_template_html
 from api.interfaces.email_templates.notify_password_changes_template_html import notify_password_change_template_html
 from api.interfaces.email_templates.activation_template_html import activation_template_html
+from api.interfaces.email_templates.email_changes_confirmation_template_html import email_changes_confirmation_template_html
+from api.interfaces.email_templates.notify_email_changes_template_html import notify_email_change_template_html
 from api.usecases.role_service import RoleService
 from api.usecases.tenant_service import TenantService
 from api.usecases.user_service import UserService
@@ -58,6 +60,13 @@ class AuthService:
     
 
     async def register(self, new_user: CreateUserDto, cb: Callable) -> None:
+        """
+            Register a new user. In multi-tenant mode, if the subdomain is unique, a new tenant will be created.
+            The callback function `cb` will be called with the newly created tenant ID after tenant creation.
+            In single-tenant mode, the user will be created without a tenant.
+            Raises InvalidOperationException if the subdomain is already taken in multi-tenant mode.
+            The user will be created with the provided details.
+        """
 
         if is_tenancy_enabled() is False:
             new_user.tenant_id = None
@@ -116,6 +125,11 @@ class AuthService:
 
             
     async def initate_password_reset(self, email: EmailStr) -> None:
+        """
+            Initiate the password reset process by sending a password reset email to the user.
+            Raises InvalidOperationException if the user with the provided email does not exist.
+            Sends a password reset email with a link to reset the password.
+        """
         reset_data = await self.user_service.request_password_reset(email)
         data = ActivationTokenPayloadDto(
             user_id=str(reset_data.user_id),
@@ -137,6 +151,11 @@ class AuthService:
             
 
     async def change_password(self, new_password: str, token: str, user_id: str) -> None:
+        """
+            Change the user's password using the provided password reset token.
+            Raises InvalidOperationException if the token is invalid or expired.
+            On success, updates the user's password and clears the password reset data.
+        """
         reset_data = await self.user_service.retrieve_password_reset_data_by_user_id(user_id=user_id)
         if reset_data is None:
             raise InvalidOperationException("Invalid or expired password reset token.")
@@ -157,6 +176,11 @@ class AuthService:
         
 
     async def send_activation_email(self, payload: UserResendActivationEmailRequestDto) -> None:
+        """
+            Resend the activation email to the user.
+            Raises InvalidOperationException if the user is already active.
+            Sends an activation email with a link to activate the account.
+        """
         user = await self.user_service.find_by_email(email=payload.email)
         if user.is_active:
             raise InvalidOperationException("User is already active.")
@@ -178,6 +202,10 @@ class AuthService:
 
 
     async def activate_account(self, req: UserActivationRequestDto) -> None:
+        """
+            Activate a user account using the provided activation token.
+            Raises InvalidOperationException if the user is already active or if the token is invalid.
+        """
         payload = await self.jwt_token_service.verify_activation_token(token=req.token)
         user = await self.user_service.get_user_by_id(user_id=payload.user_id)
       
@@ -194,8 +222,56 @@ class AuthService:
         logger.info(f"User {user.id} ({user.email}) has been activated.")
         
 
-    async def change_email(self, current_email: EmailStr, new_email: EmailStr) -> None:
+    async def change_email_request(self, current_email: EmailStr, new_email: EmailStr) -> None:
+        """
+            Initiate the email change process by sending a confirmation email to the new email address.
+            Raises InvalidOperationException if the new email is the same as the current email or if the new email is already in use.
+            Sends a confirmation email to the new email address with a link to confirm the email change.
+            The actual email change is completed in the `change_email_confirmation` method.
+        """
+        if current_email == new_email:
+            raise InvalidOperationException("The new email address must be different from the current email address.")
+        
+        does_exist = await self.user_service.check_email_exists(email=new_email)
+        if does_exist is True:
+            raise InvalidOperationException(f"The email '{new_email}' is already in use by another account.")
+        
         user = await self.user_service.find_by_email(email=current_email)
-        user.email = new_email
+        activation_token = await self.jwt_token_service.encode_activation_token(payload=ActivationTokenPayloadDto(
+            user_id=str(user.id),
+            email=new_email,
+            type="change_email_confirmation",
+            tenant_id=user.tenant_id
+        ))
+        link = get_email_sharing_link(token=activation_token, user_id=str(user.id), type="change_email_confirmation")
+        html = email_changes_confirmation_template_html(user_first_name=user.first_name, email_change_link=link)
+        await self.email_service.send_email(
+            to=user.email,
+            subject="Confirm Your Email Change",
+            body=html,
+            type=MessageType.html
+        )
+
+    async def change_email_confirmation(self, token: str) -> None:
+        """
+            Confirm and complete the email change process.
+            Raises InvalidOperationException if the new email is already in use.
+            Updates the user's email to the new email address after confirmation.
+            Sends a notification email to the user about the email change.
+        """
+        payload = await self.jwt_token_service.verify_change_email_token(token=token)
+        user = await self.user_service.get_user_by_id(user_id=payload.user_id)
+        does_exist = await self.user_service.check_email_exists(email=payload.email)
+        if does_exist is True:
+            raise InvalidOperationException(f"The email '{payload.email}' is already in use by another account. Cannot change email.")
+        
+        user.email = payload.email
+        logger.info(f"User {user.id} changed email to {payload.email}.")
         await user.save()
-        logger.info(f"User {user.id} changed email from {current_email} to {new_email}.")
+        html = notify_email_change_template_html(user_first_name=user.first_name)
+        await self.email_service.send_email(
+            to=user.email,
+            subject="Your Email Has Been Changed Successfully",
+            body=html,
+            type=MessageType.html
+        )

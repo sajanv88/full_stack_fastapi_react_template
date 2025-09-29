@@ -13,3 +13,9 @@ class PasswordResetResponseDto(BaseModel):
 
 class ChangeEmailRequestDto(BaseModel):
     new_email: EmailStr
+
+class ChangeEmailConfirmRequestDto(BaseModel):
+    token: str
+
+class ChangeEmailResponseDto(BaseModel):
+    message: str

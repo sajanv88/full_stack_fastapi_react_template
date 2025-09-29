@@ -106,7 +106,29 @@ class JwtTokenService:
             logger.error("Invalid password reset token")
             raise jwt.InvalidTokenError("Invalid password reset token")
     
-    
+    async def verify_change_email_token(self, token: str) -> VerifyEmailTokenPayloadDto:
+        """
+            Verify and decode the change email token.
+            Returns user_id and email if valid, raises exception if invalid.
+        """
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+            logger.debug(f"Decoded change email token payload: {payload}")
+            if payload.get("type") != "change_email_confirmation":
+                logger.debug(f"Invalid token type: {payload.get('type')}")
+                raise jwt.InvalidTokenError("Invalid token type")
+            return VerifyEmailTokenPayloadDto(
+                user_id=payload.get("user_id"),
+                email=payload.get("email")
+            )
+        except jwt.ExpiredSignatureError:
+            logger.error("Change email token has expired")
+            raise jwt.ExpiredSignatureError("Change email token has expired")
+        except jwt.InvalidTokenError:
+            logger.error("Invalid change email token")
+            raise jwt.InvalidTokenError("Invalid change email token")
+
+
     async def encode_activation_token(self, payload: ActivationTokenPayloadDto) -> str:
         """
             Generate a JWT token for account activation.

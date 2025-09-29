@@ -1,13 +1,14 @@
 from typing import Annotated
 from beanie import PydanticObjectId
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Query
 from fastapi.security import OAuth2PasswordRequestForm
 from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
+from api.common.exceptions import InvalidOperationException
 from api.common.utils import get_logger
 from api.core.container import get_auth_service
-from api.domain.dtos.auth_dto import ChangeEmailRequestDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
+from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserDto, UserResendActivationEmailRequestDto
 from api.domain.enum.permission import Permission
@@ -126,19 +127,33 @@ async def activate_account(
     return status.HTTP_200_OK
 
 
-@router.patch("/change_email", response_model=UserDto, status_code=status.HTTP_200_OK)
+@router.patch("/change_email_request",  status_code=status.HTTP_202_ACCEPTED)
 async def change_email(
     request: ChangeEmailRequestDto,
     current_user: CurrentUser,
     auth_service: AuthService = Depends(get_auth_service)
 ):
     
-    # To be implemented properly with email verification in future releases.
-    # await auth_service.change_email(
-    #     current_email=current_user.email,
-    #     new_email=request.new_email
-    # )
-    # return current_user
+    try:
+        await auth_service.change_email_request(
+            current_email=current_user.email,
+            new_email=request.new_email
+        )
+    finally:
+        return status.HTTP_202_ACCEPTED
 
-    return status.HTTP_200_OK
     
+@router.patch("/change_email_confirmation",  status_code=status.HTTP_200_OK, response_model=ChangeEmailResponseDto)
+async def change_email_confirmation(
+    request: ChangeEmailConfirmRequestDto,
+    current_user: CurrentUser,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    try:
+        await auth_service.change_email_confirmation(
+            token=request.token
+        )
+    except InvalidOperationException as e:
+        raise HTTPException(status_code=400, detail="Email change confirmation failed.")
+    
+    return ChangeEmailResponseDto(message="Email changed successfully.")
