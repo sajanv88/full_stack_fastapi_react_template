@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import re
 from api.common.exceptions import InvalidOperationException
 from api.core.config import settings
@@ -43,3 +43,22 @@ def get_email_sharing_link(user_id: str, type: str, token: str) -> str:
     """
     sharing_link = f"{settings.api_endpoint_base}/v1/account/{type}?user_id={user_id}&token={token}"
     return sharing_link
+
+
+def get_date_range(filter_type: str):
+    """Return (start, end, group_format) based on filter type"""
+    now = get_utc_now()
+    if filter_type == "today":
+        start = datetime(now.year, now.month, now.day)
+        group_format = "%H:00"  # group by hour
+    elif filter_type == "this_week":
+        start = now - timedelta(days=now.weekday())  # Monday start
+        start = datetime(start.year, start.month, start.day)
+        group_format = "%Y-%m-%d"  # group by day
+    elif filter_type == "last_3_months":
+        start = now - timedelta(days=90)
+        group_format = "%Y-%m"  # group by month
+    else:
+        start = None
+        group_format = "%Y-%m-%d"
+    return start, now, group_format

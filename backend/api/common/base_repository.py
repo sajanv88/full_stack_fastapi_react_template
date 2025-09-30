@@ -1,6 +1,7 @@
-from typing import List, Optional, TypeVar, Generic
+from typing import Any, List, Optional, TypeVar, Generic
 from beanie import Document, PydanticObjectId
 from beanie.operators import Set
+from beanie.odm.interfaces.aggregate import DocumentProjectionType
 
 T = TypeVar("T", bound=Document)
 
@@ -35,5 +36,12 @@ class BaseRepository(Generic[T]):
         await doc.delete()
         return True
     
-    async def count(self) -> int:
+    async def count(self, params: Optional[Any] | None = None) -> int:
+        if params:
+            return await self.model.find(params).count()
         return await self.model.count()
+
+    async def aggregate(self, pipeline: List[dict], projection_model: type[DocumentProjectionType]) -> type[DocumentProjectionType]:
+        data = self.model.aggregate(pipeline, projection_model=projection_model)
+        result = await data.to_list()
+        return result
