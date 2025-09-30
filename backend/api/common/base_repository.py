@@ -1,7 +1,7 @@
-from typing import Any, List, Optional, TypeVar, Generic
+from typing import Any, Dict, List, Optional, TypeVar, Generic
 from beanie import Document, PydanticObjectId
 from beanie.operators import Set
-from beanie.odm.interfaces.aggregate import DocumentProjectionType
+from beanie.odm.interfaces.aggregate import DocumentProjectionType, AggregationQuery
 
 T = TypeVar("T", bound=Document)
 
@@ -41,7 +41,13 @@ class BaseRepository(Generic[T]):
             return await self.model.find(params).count()
         return await self.model.count()
 
-    async def aggregate(self, pipeline: List[dict], projection_model: type[DocumentProjectionType]) -> type[DocumentProjectionType]:
-        data = self.model.aggregate(pipeline, projection_model=projection_model)
-        result = await data.to_list()
-        return result
+    async def aggregate(self, pipeline: List[dict], projection_model: type[DocumentProjectionType] | None = None) -> type[DocumentProjectionType] | AggregationQuery[Dict[str, Any]]:
+        if not projection_model:
+            return self.model.aggregate(pipeline)
+        else:
+            return await self.model.aggregate(pipeline, projection_model=projection_model).to_list()
+        
+    async def collection_name(self) -> str:
+        return self.model.get_collection_name()
+
+    

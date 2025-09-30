@@ -1,6 +1,8 @@
 import punq
 from api.domain.interfaces.email_service import IEmailService
 from api.infrastructure.externals.smtp_email import SmtpEmail
+from api.infrastructure.persistence.repositories.chat_history_ai_repository_impl import ChatHistoryAIRepository
+from api.infrastructure.persistence.repositories.chat_session_ai_repository_impl import ChatSessionAIRepository
 from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
 from api.infrastructure.persistence.repositories.storage_settings_repository_impl import StorageSettingsRepository
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
@@ -8,6 +10,7 @@ from api.infrastructure.persistence.repositories.user_password_reset_repository_
 from api.infrastructure.persistence.repositories.user_preference_repository_impl import UserPreferenceRepository
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
 from api.infrastructure.security.jwt_token_service import JwtTokenService
+from api.usecases.local_ai_service import LocalAIService
 from api.usecases.auth_service import AuthService
 from api.usecases.file_service import FileService
 from api.usecases.role_service import RoleService
@@ -60,8 +63,10 @@ container.register(StorageSettingsService, scope=punq.Scope.singleton)
 ## File Service
 container.register(FileService, scope=punq.Scope.singleton)
 
-
-
+## AI Components
+container.register(ChatSessionAIRepository)
+container.register(ChatHistoryAIRepository)
+container.register(LocalAIService, scope=punq.Scope.singleton)
 
 def get_database() -> Database:
     return container.resolve(Database)
@@ -98,5 +103,9 @@ def get_email_service() -> IEmailService:
     return container.resolve(IEmailService)
 
 
+def get_local_ai_service() -> LocalAIService:
+    return container.resolve(LocalAIService)
+
+
 print("Dependency injection container configured.")
-print(SmtpEmail, "-----------------------")
+print(LocalAIService, "-----------------")
