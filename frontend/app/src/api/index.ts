@@ -41,6 +41,7 @@ export type { PermissionDto } from './models/PermissionDto';
 export type { PydanticObjectId } from './models/PydanticObjectId';
 export type { RoleDto } from './models/RoleDto';
 export type { RoleListDto } from './models/RoleListDto';
+export type { SubdomainAvailabilityDto } from './models/SubdomainAvailabilityDto';
 export type { TenantDto } from './models/TenantDto';
 export type { TenantListDto } from './models/TenantListDto';
 export type { TimeSeriesDto } from './models/TimeSeriesDto';

@@ -7,8 +7,9 @@ import { toast } from "sonner";
 
 export function useAuth() {
     const navigate = useNavigate()
-    const auth = getApiClient().account
     async function login(data: { email: string; password: string }) {
+        const auth = getApiClient().account
+
         try {
             const result = await auth.loginApiV1AccountLoginPost({
                 formData: {
@@ -31,6 +32,8 @@ export function useAuth() {
     }
 
     async function register(data: CreateUserDto) {
+        const auth = getApiClient().account
+
         try {
             const response = await auth.registerApiV1AccountRegisterPost({
                 requestBody: data
@@ -53,6 +56,7 @@ export function useAuth() {
     }
 
     async function refreshToken() {
+        const auth = getApiClient().account
 
         const refreshToken = getRefreshToken()
         if (!refreshToken) {

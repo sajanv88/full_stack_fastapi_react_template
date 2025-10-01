@@ -14,6 +14,7 @@ import {
     ExternalLink,
     Coffee
 } from 'lucide-react'
+import { Logo } from './logo'
 
 export function Footer() {
     const currentYear = new Date().getFullYear()
@@ -67,13 +68,7 @@ export function Footer() {
                     {/* Brand Section */}
                     <div className="lg:col-span-2 space-y-4">
                         <div className="flex items-center space-x-2">
-                            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                                <Zap className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold">FullStack Template</h3>
-                                <p className="text-sm text-muted-foreground">FastAPI + React</p>
-                            </div>
+                            <Logo size='sm' />
                         </div>
 
                         <p className="text-muted-foreground text-sm leading-relaxed max-w-md">

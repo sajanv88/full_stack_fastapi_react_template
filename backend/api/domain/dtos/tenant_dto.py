@@ -33,3 +33,7 @@ class TenantListDto(BaseModel):
 
 class CreateTenantResponseDto(BaseModel):
     id: str
+
+
+class SubdomainAvailabilityDto(BaseModel):
+    is_available: bool

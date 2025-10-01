@@ -74,13 +74,13 @@ class LocalAIService:
         session = await self.chat_session_repository.single_or_none(session_id=PydanticObjectId(session_id), user_id=PydanticObjectId(user_id))
         if not session:
             return
-        await self.chat_session_repository.delete(session)
         logger.debug(f"Deleted session for user_id: {user_id}, session_id: {session_id}")
-        history = await self.chat_history_repository.single_or_none(_id=session.history_id)
+        history = await self.chat_history_repository.single_or_none(id=session.history_id)
         if history:
             logger.debug(f"Deleting history for session_id: {session_id}, user_id: {user_id} and history_id: {session.history_id}")
-            await self.chat_history_repository.delete(history)
-        return
+            await history.delete()
+        await session.delete()
+        
     
 
     async def save_user_query(self, user_id: str, query: str, response: str, session_id: str | None = None, tenant_id: str | None = None) -> None:

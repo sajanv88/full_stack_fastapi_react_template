@@ -5,6 +5,7 @@ import {
     Heart,
     Zap
 } from 'lucide-react'
+import { Logo } from './logo'
 
 export function SimpleFooter() {
     const currentYear = new Date().getFullYear()
@@ -17,10 +18,7 @@ export function SimpleFooter() {
                 <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
                     {/* Brand */}
                     <div className="flex items-center space-x-2">
-                        <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-md">
-                            <Zap className="w-4 h-4 text-white" />
-                        </div>
-                        <span className="font-semibold text-sm">FullStack Template</span>
+                        <Logo size='sm' />
                         <Badge variant="outline" className="text-xs">v1.0.0</Badge>
                     </div>
 

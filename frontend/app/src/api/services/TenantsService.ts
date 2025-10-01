@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { CreateTenantDto } from '../models/CreateTenantDto';
 import type { CreateTenantResponseDto } from '../models/CreateTenantResponseDto';
+import type { SubdomainAvailabilityDto } from '../models/SubdomainAvailabilityDto';
 import type { TenantDto } from '../models/TenantDto';
 import type { TenantListDto } from '../models/TenantListDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -109,6 +110,27 @@ export class TenantsService {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/tenants/search_by_subdomain/{subdomain}',
+      path: {
+        'subdomain': subdomain,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Check Subdomain Availability
+   * @returns SubdomainAvailabilityDto Successful Response
+   * @throws ApiError
+   */
+  public checkSubdomainAvailabilityApiV1TenantsCheckSubdomainSubdomainGet({
+    subdomain,
+  }: {
+    subdomain: string,
+  }): CancelablePromise<SubdomainAvailabilityDto> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/tenants/check_subdomain/{subdomain}',
       path: {
         'subdomain': subdomain,
       },

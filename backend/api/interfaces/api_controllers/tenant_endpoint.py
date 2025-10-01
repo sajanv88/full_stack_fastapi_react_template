@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, status
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_logger
 from api.core.container import   get_tenant_service
-from api.domain.dtos.tenant_dto import CreateTenantResponseDto, TenantDto, TenantListDto, CreateTenantDto
+from api.core.exceptions import TenantNotFoundException
+from api.domain.dtos.tenant_dto import CreateTenantResponseDto, SubdomainAvailabilityDto, TenantDto, TenantListDto, CreateTenantDto
 from api.domain.dtos.user_dto import CreateUserDto
 from api.domain.entities.tenant import Subdomain
 from api.domain.enum.permission import Permission
@@ -71,6 +72,7 @@ async def search_by_name(
     name: str,
     service: TenantService = Depends(get_tenant_service)
 ):
+
     tenant = await service.find_by_name(name)
     tenant_doc = await tenant.to_serializable_dict()
     return TenantDto(**tenant_doc)
@@ -84,3 +86,17 @@ async def search_by_subdomain(
     tenant = await service.find_by_subdomain(subdomain)
     tenant_doc = await tenant.to_serializable_dict()
     return TenantDto(**tenant_doc)
+
+
+@router.get("/check_subdomain/{subdomain}", response_model=SubdomainAvailabilityDto, status_code=status.HTTP_200_OK)
+async def check_subdomain_availability(
+    subdomain: Subdomain,
+    service: TenantService = Depends(get_tenant_service)
+):
+    try: 
+        await service.find_by_subdomain(subdomain)
+        is_available = False
+    except TenantNotFoundException as e:
+        is_available = True
+
+    return SubdomainAvailabilityDto(is_available=is_available)

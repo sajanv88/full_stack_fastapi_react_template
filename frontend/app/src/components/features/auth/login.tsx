@@ -79,7 +79,7 @@ export function Login() {
             <Card className="w-full max-w-md shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-2xl font-bold text-center">
-                        <Logo className="justify-center" />
+                        <Logo className="justify-center" showText={false} size="sm" />
                     </CardTitle>
 
                 </CardHeader>
