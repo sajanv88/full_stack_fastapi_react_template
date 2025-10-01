@@ -17,7 +17,7 @@ class FileRetrieval:
             raise StorageNotEnabledException if no provider is enabled
             or raise InvalidOperationException if the provider is unsupported.
         """
-        active_provider: StorageSettings = await self.storage_repository.single_or_none({"is_enabled": True})
+        active_provider: StorageSettings = await self.storage_repository.single_or_none(is_enabled=True)
         if active_provider is None:
             raise StorageNotEnabledException()
 

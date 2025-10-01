@@ -1,3 +1,4 @@
+import { getApiClient } from "./utils";
 
 export const validateImageFile = (file: File): { isValid: boolean; error?: string } => {
     if (!file.type.startsWith('image/')) {
@@ -80,4 +81,13 @@ export const formatFileSize = (bytes: number): string => {
     const i = Math.floor(Math.log(bytes) / Math.log(k))
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+
+export const getUserImageUrl = async (key: string): Promise<string> => {
+    const apiClient = getApiClient().users;
+    const response = await apiClient.getProfileImageApiV1UsersProfileImageKeyGet({
+        imageKey: key
+    });
+    return response.image_url
 }

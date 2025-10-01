@@ -1,4 +1,4 @@
-import { AiModel } from "@/api";
+import { AIModelInfoDto } from "@/api";
 import { useEffect, useState } from "react";
 import {
     Select,
@@ -15,12 +15,12 @@ import { InfoIcon, Brain, Cpu, Zap, Sparkles } from 'lucide-react'
 import { useAppConfig } from "@/components/providers/app-config-provider";
 
 interface ListLocalAIModelsProps {
-    onModelSelect: (model: AiModel) => void;
-    selectedModel?: AiModel;
+    onModelSelect: (model: AIModelInfoDto) => void;
+    selectedModel?: AIModelInfoDto;
 }
 export function ListLocalAIModels({ onModelSelect, selectedModel }: ListLocalAIModelsProps) {
     const { available_ai_models } = useAppConfig()
-    const [models, setModels] = useState<AiModel[]>(available_ai_models || []);
+    const [models, setModels] = useState<AIModelInfoDto[]>(available_ai_models || []);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 

@@ -3,7 +3,7 @@ from uuid import uuid4
 from beanie import PydanticObjectId
 from api.common.utils import get_logger, get_utc_now
 from api.domain.dtos.ai_dto import  AIHistoriesDto, AISessionByUserIdDto
-from api.domain.entities.ai import AISessions, ChatSessionAI
+from api.domain.entities.ai import AISessions, ChatHistoryAI, ChatSessionAI
 from api.infrastructure.persistence.repositories.chat_history_ai_repository_impl import ChatHistoryAIRepository
 from api.infrastructure.persistence.repositories.chat_session_ai_repository_impl import ChatSessionAIRepository
 
@@ -44,7 +44,7 @@ class LocalAIService:
               "as": "sessions"
           }}
         ]
-        sessions: List[AISessions] = await self.chat_session_repository.aggregate(pipeline, projection_model=AISessions)
+        sessions = await self.chat_session_repository.aggregate(pipeline, projection_model=AISessions)
         results: List[AISessionByUserIdDto] = []
         for s in sessions:
             serializable_dict = await s.to_serializable_dict()
@@ -94,9 +94,16 @@ class LocalAIService:
                 "timestamp": get_utc_now()
             }
         }
+        data = ChatHistoryAI(
+            histories=[histories["histories"]],
+            tenant_id=PydanticObjectId(tenant_id) if tenant_id else None,
+            id=PydanticObjectId(),
+            created_at=get_utc_now(),
+            updated_at=get_utc_now()
+        )
         # If session does not exist, then there is no history, so create a new history
         if session is None:
-            new_history = await self.chat_history_repository.create(data=histories)
+            new_history = await self.chat_history_repository.create(data=data.model_dump())
             session = ChatSessionAI(
                 session_id=PydanticObjectId(session_id) if session_id else PydanticObjectId(),
                 user_id=PydanticObjectId(user_id),
@@ -104,8 +111,14 @@ class LocalAIService:
                 created_at=get_utc_now(),
                 tenant_id=PydanticObjectId(tenant_id) if tenant_id else None
             )
-            new_session = await self.chat_session_repository.create(data=session)
+            new_session = await self.chat_session_repository.create(data=session.model_dump())
             logger.debug(f"New chat history saved for user: {user_id}, session: {new_session.id} and history: {new_history.id}")
         else:
-            await self.chat_history_repository.update(_id = session.history_id, data = histories)
+            exisiting_history = await self.chat_history_repository.single_or_none(_id=session.history_id)
+            if not exisiting_history:
+                logger.error(f"Chat history not found for user: {user_id}, session: {session.id} and history: {session.history_id}")
+                return
+            exisiting_history.histories.append(histories["histories"])
+            exisiting_history.updated_at = get_utc_now()
+            await exisiting_history.save()
             logger.debug(f"Chat history updated for user: {user_id}, session: {session.id} and history: {session.history_id}")

@@ -15,7 +15,7 @@ class FileUpload:
         self.storage_repository = get_storage_settings_repository()
 
     async def upload_file(self, file: UploadFile) -> str:
-        active_provider: StorageSettings = await self.storage_repository.single_or_none({"is_enabled": True})
+        active_provider: StorageSettings = await self.storage_repository.single_or_none(is_enabled=True)
         if active_provider is None:
             raise StorageNotEnabledException()
 

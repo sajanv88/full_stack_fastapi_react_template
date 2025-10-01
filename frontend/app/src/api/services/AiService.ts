@@ -2,58 +2,58 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AIHistories } from '../models/AIHistories';
-import type { AiModel } from '../models/AiModel';
-import type { AIRequest } from '../models/AIRequest';
-import type { AIResponseSession } from '../models/AIResponseSession';
-import type { NewSessionResponse } from '../models/NewSessionResponse';
+import type { AIAskRequestDto } from '../models/AIAskRequestDto';
+import type { AIHistoriesDto } from '../models/AIHistoriesDto';
+import type { AIModelInfoDto } from '../models/AIModelInfoDto';
+import type { AISessionByUserIdDto } from '../models/AISessionByUserIdDto';
+import type { NewSessionResponseDto } from '../models/NewSessionResponseDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class AiService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
   /**
    * Get Models
-   * @returns AiModel Successful Response
+   * @returns AIModelInfoDto Successful Response
    * @throws ApiError
    */
-  public getModelsApiV1AiModelsGet(): CancelablePromise<Array<AiModel>> {
+  public getModelsApiV1AiModelsGet(): CancelablePromise<Array<AIModelInfoDto>> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/ai/models',
     });
   }
   /**
-   * Create New Session
-   * @returns NewSessionResponse Successful Response
-   * @throws ApiError
-   */
-  public createNewSessionApiV1AiNewSessionGet(): CancelablePromise<NewSessionResponse> {
-    return this.httpRequest.request({
-      method: 'GET',
-      url: '/api/v1/ai/new_session',
-    });
-  }
-  /**
    * Get History
-   * @returns AIResponseSession Successful Response
+   * @returns AISessionByUserIdDto Successful Response
    * @throws ApiError
    */
-  public getHistoryApiV1AiHistoryGet(): CancelablePromise<Array<AIResponseSession>> {
+  public getHistoryApiV1AiHistoryGet(): CancelablePromise<Array<AISessionByUserIdDto>> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/ai/history',
     });
   }
   /**
+   * Create New Session
+   * @returns NewSessionResponseDto Successful Response
+   * @throws ApiError
+   */
+  public createNewSessionApiV1AiNewSessionGet(): CancelablePromise<NewSessionResponseDto> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/ai/new_session',
+    });
+  }
+  /**
    * Get Single Session
-   * @returns AIHistories Successful Response
+   * @returns AIHistoriesDto Successful Response
    * @throws ApiError
    */
   public getSingleSessionApiV1AiSessionsSessionIdGet({
     sessionId,
   }: {
     sessionId: string,
-  }): CancelablePromise<AIHistories> {
+  }): CancelablePromise<Array<AIHistoriesDto>> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/ai/sessions/{session_id}',
@@ -67,14 +67,14 @@ export class AiService {
   }
   /**
    * Delete Session
-   * @returns void
+   * @returns any Successful Response
    * @throws ApiError
    */
   public deleteSessionApiV1AiSessionsSessionIdDelete({
     sessionId,
   }: {
     sessionId: string,
-  }): CancelablePromise<void> {
+  }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'DELETE',
       url: '/api/v1/ai/sessions/{session_id}',
@@ -115,7 +115,7 @@ export class AiService {
   public askAiApiV1AiAskPost({
     requestBody,
   }: {
-    requestBody: AIRequest,
+    requestBody: AIAskRequestDto,
   }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'POST',

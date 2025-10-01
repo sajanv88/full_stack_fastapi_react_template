@@ -1,4 +1,4 @@
-import { type NewUser } from "@/api";
+import { type CreateUserDto } from "@/api";
 import { clearAllTokens, getApiClient, getRefreshToken, setTenant, storeTokenSet } from "@/lib/utils";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -7,10 +7,10 @@ import { toast } from "sonner";
 
 export function useAuth() {
     const navigate = useNavigate()
-    const auth = getApiClient().auth
+    const auth = getApiClient().account
     async function login(data: { email: string; password: string }) {
         try {
-            const result = await auth.loginApiV1AuthLoginPost({
+            const result = await auth.loginApiV1AccountLoginPost({
                 formData: {
                     username: data.email,
                     password: data.password
@@ -30,9 +30,9 @@ export function useAuth() {
         }
     }
 
-    async function register(data: NewUser) {
+    async function register(data: CreateUserDto) {
         try {
-            const response = await auth.registerApiV1AuthRegisterPost({
+            const response = await auth.registerApiV1AccountRegisterPost({
                 requestBody: data
             });
 
@@ -54,7 +54,6 @@ export function useAuth() {
 
     async function refreshToken() {
 
-        const auth = getApiClient().auth;
         const refreshToken = getRefreshToken()
         if (!refreshToken) {
             console.error("No refresh token available");
@@ -63,7 +62,7 @@ export function useAuth() {
         }
 
         try {
-            const authWithRefresh = await auth.refreshTokenApiV1AuthRefreshPost({
+            const authWithRefresh = await auth.refreshTokenApiV1AccountRefreshPost({
                 requestBody: {
                     refresh_token: refreshToken
                 }

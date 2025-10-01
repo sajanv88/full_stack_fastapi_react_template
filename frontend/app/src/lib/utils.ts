@@ -1,4 +1,4 @@
-import { ApiClient, type Tenant, type TokenSet } from "@/api"
+import { ApiClient, type TenantDto, type TokenSetDto } from "@/api"
 import { clsx, type ClassValue } from "clsx"
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge"
@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 
-export function storeTokenSet(tokenSet: TokenSet) {
+export function storeTokenSet(tokenSet: TokenSetDto) {
   sessionStorage.setItem("access_token", tokenSet.access_token);
   localStorage.setItem("refresh_token", tokenSet.refresh_token);
   localStorage.setItem("refresh_token_expires_at", tokenSet.refresh_token_expires_in?.toString() || "");
@@ -39,7 +39,7 @@ export function clearAllTokens() {
 }
 
 
-export function setTenant(tenant: Tenant | null) {
+export function setTenant(tenant: TenantDto | null) {
   if (!tenant) {
     localStorage.removeItem("_tenant");
     return;
@@ -47,7 +47,7 @@ export function setTenant(tenant: Tenant | null) {
   localStorage.setItem("_tenant", JSON.stringify(tenant));
 }
 
-export function getTenant(): Tenant | null {
+export function getTenant(): TenantDto | null {
   const tenant = localStorage.getItem("_tenant");
   return tenant ? JSON.parse(tenant) : null;
 }
@@ -95,7 +95,7 @@ export function getApiClient() {
     if (tenant) {
       return new ApiClient({
         HEADERS: {
-          "X-Tenant-ID": tenant.id
+          "X-Tenant-ID": tenant.id!
         }
       })
     }

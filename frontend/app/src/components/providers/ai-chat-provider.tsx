@@ -1,10 +1,10 @@
-import { AIResponseSession } from "@/api";
+import { AISessionByUserIdDto } from "@/api";
 import { getApiClient } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
 
 type AIChatProviderState = {
     fetchAllSessions: () => Promise<void>;
-    sessions: AIResponseSession[];
+    sessions: AISessionByUserIdDto[];
     onDeleteSession: (sessionId: string) => Promise<void>;
 }
 
@@ -19,7 +19,7 @@ interface AIChatProviderProps {
 }
 
 export function AIChatProvider({ children }: AIChatProviderProps) {
-    const [sessions, setSessions] = useState<AIResponseSession[]>([]);
+    const [sessions, setSessions] = useState<AISessionByUserIdDto[]>([]);
     const apiClient = getApiClient()
 
     async function fetchAllSessions() {

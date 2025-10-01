@@ -63,6 +63,13 @@ async def update_user(
     serialized_user = await user_doc.to_serializable_dict()
     return UserDto(**serialized_user)
 
+@router.get("/profile/{image_key:path}", response_model=UserProfileImageUpdateDto)
+async def get_profile_image(
+    image_key: str,
+    file_service: FileService = Depends(get_file_service)
+):
+    image_url = await file_service.get_file_url(image_key)
+    return UserProfileImageUpdateDto(image_url=image_url)
 
 @router.delete("/{user_id}", status_code=status.HTTP_202_ACCEPTED)
 async def delete_user(
@@ -73,7 +80,7 @@ async def delete_user(
     await service.delete_user(user_id)
     return status.HTTP_202_ACCEPTED
 
-   
+
 
 
 @router.put("/{user_id}/update_profile_picture", response_model=UserProfileImageUpdateDto, status_code=status.HTTP_202_ACCEPTED)

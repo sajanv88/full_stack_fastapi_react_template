@@ -10,7 +10,7 @@ class StorageSettingsRepository(BaseRepository[StorageSettings]):
         super().__init__(StorageSettings)
 
     async def configure_storage(self, setting: StorageSettings) -> PydanticObjectId:
-        existing: StorageSettings | None = await self.single_or_none({"provider": setting.provider.value})
+        existing: StorageSettings | None = await self.single_or_none(provider=setting.provider.value)
         logger.info(f"Existing setting found: {existing}")
         if existing is None:
             result = await self.create(data=setting.model_dump())
@@ -27,7 +27,7 @@ class StorageSettingsRepository(BaseRepository[StorageSettings]):
         return settings
 
     async def get_storage_by_provider(self, provider: StorageProvider) -> StorageSettings | None:
-        setting: StorageSettings | None = await self.single_or_none({"provider": provider.value})
+        setting: StorageSettings | None = await self.single_or_none(provider=provider.value)
         if setting is None:
             logger.warning(f"No storage setting found for provider: {provider.value}")
         return setting

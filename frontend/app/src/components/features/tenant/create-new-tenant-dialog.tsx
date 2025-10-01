@@ -55,7 +55,7 @@ interface CreateNewTenantDialogProps {
 export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialogProps) {
     const { onCreateNewTenant } = useTenants();
     const appConfig = useAppConfig();
-    const { setSubdomain, isAvailable, isChecking, error } = useSubdomainCheck();
+    const { setSubdomain, tenantDetails, isChecking, error } = useSubdomainCheck();
 
     const mainDomainName = appConfig.host_main_domain;
     const [isLoading, setIsLoading] = useState(false);
@@ -76,6 +76,7 @@ export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialog
         try {
             setIsLoading(true);
             await onCreateNewTenant({
+                name: data.subdomain,
                 first_name: data.firstName,
                 last_name: data.lastName,
                 admin_email: data.adminEmail,
@@ -102,15 +103,15 @@ export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialog
     }
 
     useEffect(() => {
-        if (isAvailable === false) {
+        if (tenantDetails) {
             form.setError("subdomain", { type: "manual", message: "This subdomain is already taken" });
-        } else if (isAvailable === true) {
+        } else if (!tenantDetails) {
             form.clearErrors("subdomain");
         }
         if (error) {
             form.setError("subdomain", { type: "manual", message: error });
         }
-    }, [isAvailable, error]);
+    }, [tenantDetails, error]);
     return (
         <Dialog open={open} onOpenChange={onDismissDialog}>
             <DialogContent className="sm:max-w-screen-sm">

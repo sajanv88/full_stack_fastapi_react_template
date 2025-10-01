@@ -1,11 +1,11 @@
-import { NewUser, UserListResponse, UserUpdate } from '@/api';
+import { CreateUserDto, UserListDto, UpdateUserDto } from '@/api';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { IResponseData } from '../shared/iresponse-data.inteface';
 import { getApiClient } from '@/lib/utils';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 
-export type UserResponse = UserListResponse["data"]
+export type UserResponse = UserListDto
 export type UsersType = UserResponse["users"][0]
 type ActionType = 'edit' | 'delete' | 'resend_email' | 'manage_roles';
 type Action = {
@@ -16,11 +16,11 @@ type Action = {
 interface UsersProviderState {
     userResponse: IResponseData<UsersType>;
     refreshUsers: () => void;
-    onCreateNewUser: (params: NewUser) => Promise<void>;
+    onCreateNewUser: (params: CreateUserDto) => Promise<void>;
     loading: boolean;
     selectedUser?: Action;
     onSelectUser: (action?: Action) => void;
-    onUpdateUser: (userId: string, params: UserUpdate) => Promise<void>;
+    onUpdateUser: (userId: string, params: UpdateUserDto) => Promise<void>;
     onDeleteUser: () => Promise<void>;
     userError: string | null;
 }
@@ -40,7 +40,7 @@ const initialState: UsersProviderState = {
     userError: null,
     selectedUser: undefined,
     onDeleteUser: () => Promise.resolve(),
-    onUpdateUser: (userId: string, params: UserUpdate) => {
+    onUpdateUser: (userId: string, params: UpdateUserDto) => {
         console.debug("Updating user:", userId, params);
         return Promise.resolve();
     },
@@ -61,21 +61,21 @@ export function UsersProvider({ children }: UsersProviderProps) {
     const [selectedUser, setSelectedUser] = useState<Action | undefined>(initialState.selectedUser);
     const apiClient = getApiClient();
     const user = apiClient.users;
-    const auth = apiClient.auth;
+    const auth = apiClient.account;
 
     async function fetchUsers() {
 
         const skip = searchParams.get("skip");
         const limit = searchParams.get("limit");
         try {
-            const users = await user.getUsersApiV1UsersGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
+            const res = await user.listUsersApiV1UsersGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
             setUserResponse({
-                items: users.data.users,
-                hasNext: users.data.hasNext,
-                total: users.data.total,
-                hasPrevious: users.data.hasPrevious,
-                limit: users.data.limit,
-                skip: users.data.skip,
+                items: res.users,
+                hasNext: res.hasNext,
+                total: res.total,
+                hasPrevious: res.hasPrevious,
+                limit: res.limit,
+                skip: res.skip,
             });
         } catch (error) {
             console.error("Failed to fetch users:", error);
@@ -94,13 +94,13 @@ export function UsersProvider({ children }: UsersProviderProps) {
         setPending(false);
     }
 
-    async function onCreateNewUser(params: NewUser) {
+    async function onCreateNewUser(params: CreateUserDto) {
         await user.createUserApiV1UsersPost({
             requestBody: params
         });
     }
 
-    async function onUpdateUser(user_id: string, params: UserUpdate) {
+    async function onUpdateUser(user_id: string, params: UpdateUserDto) {
         await user.updateUserApiV1UsersUserIdPut({
             userId: user_id,
             requestBody: {
@@ -114,7 +114,7 @@ export function UsersProvider({ children }: UsersProviderProps) {
     async function onSelectUser(action?: Action) {
         if (action?.type === 'resend_email') {
             try {
-                await auth.resendActivationEmailApiV1AuthResendActivationEmailPost({
+                await auth.resendActivationEmailApiV1AccountResendActivationEmailPost({
                     requestBody: {
                         email: action.user.email,
                         id: action.user.id,

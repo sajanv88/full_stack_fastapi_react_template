@@ -1,8 +1,8 @@
-import { AppConfigResponse } from "@/api";
+import { AppConfigurationDto } from "@/api";
 import { getApiClient, setTenant } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
 
-const appConfigContext = createContext<AppConfigResponse>({
+const appConfigContext = createContext<AppConfigurationDto>({
     is_multi_tenant_enabled: false,
     multi_tenancy_strategy: "none",
     host_main_domain: "",
@@ -20,7 +20,7 @@ interface AppConfigProviderProps {
 }
 
 export function AppConfigProvider({ children }: AppConfigProviderProps) {
-    const [appConfig, setAppConfig] = useState<AppConfigResponse>({
+    const [appConfig, setAppConfig] = useState<AppConfigurationDto>({
         is_multi_tenant_enabled: false,
         multi_tenancy_strategy: "none",
         host_main_domain: "",
@@ -34,9 +34,9 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
 
     useEffect(() => {
         const fetchConfig = async () => {
-            const config = await getApiClient().appConfig.getAppConfigApiV1ConfigGet();
+            const config = await getApiClient().appConfiguration.getAppConfigurationApiV1AppConfigurationGet();
             setAppConfig(config)
-
+            console.log("App Configuration:", config);
             if (config.is_multi_tenant_enabled === false) {
                 setTenant(null);
             }

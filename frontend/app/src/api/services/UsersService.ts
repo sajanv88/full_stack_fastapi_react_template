@@ -3,28 +3,29 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_update_profile_picture_api_v1_users__user_id__update_profile_picture_put } from '../models/Body_update_profile_picture_api_v1_users__user_id__update_profile_picture_put';
-import type { NewUser } from '../models/NewUser';
-import type { ProfileImageUpdateResponse } from '../models/ProfileImageUpdateResponse';
-import type { User } from '../models/User';
-import type { UserListResponse } from '../models/UserListResponse';
-import type { UserRoleUpdateRequest } from '../models/UserRoleUpdateRequest';
-import type { UserUpdate } from '../models/UserUpdate';
+import type { CreateUserDto } from '../models/CreateUserDto';
+import type { CreateUserResponseDto } from '../models/CreateUserResponseDto';
+import type { UpdateUserDto } from '../models/UpdateUserDto';
+import type { UserDto } from '../models/UserDto';
+import type { UserListDto } from '../models/UserListDto';
+import type { UserProfileImageUpdateDto } from '../models/UserProfileImageUpdateDto';
+import type { UserRoleUpdateRequestDto } from '../models/UserRoleUpdateRequestDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class UsersService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
   /**
-   * Get Users
-   * @returns UserListResponse Successful Response
+   * List Users
+   * @returns UserListDto Successful Response
    * @throws ApiError
    */
-  public getUsersApiV1UsersGet({
+  public listUsersApiV1UsersGet({
     skip,
     limit = 10,
   }: {
     skip?: number,
     limit?: number,
-  }): CancelablePromise<UserListResponse> {
+  }): CancelablePromise<UserListDto> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/users/',
@@ -39,14 +40,14 @@ export class UsersService {
   }
   /**
    * Create User
-   * @returns any Successful Response
+   * @returns CreateUserResponseDto Successful Response
    * @throws ApiError
    */
   public createUserApiV1UsersPost({
     requestBody,
   }: {
-    requestBody: NewUser,
-  }): CancelablePromise<any> {
+    requestBody: CreateUserDto,
+  }): CancelablePromise<CreateUserResponseDto> {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/users/',
@@ -59,20 +60,45 @@ export class UsersService {
   }
   /**
    * Get User
-   * @returns User Successful Response
+   * @returns UserDto Successful Response
    * @throws ApiError
    */
   public getUserApiV1UsersUserIdGet({
     userId,
   }: {
     userId: string,
-  }): CancelablePromise<User> {
+  }): CancelablePromise<UserDto> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/users/{user_id}',
       path: {
         'user_id': userId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Update User
+   * @returns UserDto Successful Response
+   * @throws ApiError
+   */
+  public updateUserApiV1UsersUserIdPut({
+    userId,
+    requestBody,
+  }: {
+    userId: string,
+    requestBody: UpdateUserDto,
+  }): CancelablePromise<UserDto> {
+    return this.httpRequest.request({
+      method: 'PUT',
+      url: '/api/v1/users/{user_id}',
+      path: {
+        'user_id': userId,
+      },
+      body: requestBody,
+      mediaType: 'application/json',
       errors: {
         422: `Validation Error`,
       },
@@ -100,25 +126,21 @@ export class UsersService {
     });
   }
   /**
-   * Update User
-   * @returns User Successful Response
+   * Get Profile Image
+   * @returns UserProfileImageUpdateDto Successful Response
    * @throws ApiError
    */
-  public updateUserApiV1UsersUserIdPut({
-    userId,
-    requestBody,
+  public getProfileImageApiV1UsersProfileImageKeyGet({
+    imageKey,
   }: {
-    userId: string,
-    requestBody: UserUpdate,
-  }): CancelablePromise<User> {
+    imageKey: string,
+  }): CancelablePromise<UserProfileImageUpdateDto> {
     return this.httpRequest.request({
-      method: 'PUT',
-      url: '/api/v1/users/{user_id}',
+      method: 'GET',
+      url: '/api/v1/users/profile/{image_key}',
       path: {
-        'user_id': userId,
+        'image_key': imageKey,
       },
-      body: requestBody,
-      mediaType: 'application/json',
       errors: {
         422: `Validation Error`,
       },
@@ -126,7 +148,7 @@ export class UsersService {
   }
   /**
    * Update Profile Picture
-   * @returns ProfileImageUpdateResponse Successful Response
+   * @returns UserProfileImageUpdateDto Successful Response
    * @throws ApiError
    */
   public updateProfilePictureApiV1UsersUserIdUpdateProfilePicturePut({
@@ -135,7 +157,7 @@ export class UsersService {
   }: {
     userId: string,
     formData: Body_update_profile_picture_api_v1_users__user_id__update_profile_picture_put,
-  }): CancelablePromise<ProfileImageUpdateResponse> {
+  }): CancelablePromise<UserProfileImageUpdateDto> {
     return this.httpRequest.request({
       method: 'PUT',
       url: '/api/v1/users/{user_id}/update_profile_picture',
@@ -151,7 +173,7 @@ export class UsersService {
   }
   /**
    * Patch User
-   * @returns User Successful Response
+   * @returns UserDto Successful Response
    * @throws ApiError
    */
   public patchUserApiV1UsersUserIdAssignRolePatch({
@@ -159,8 +181,8 @@ export class UsersService {
     requestBody,
   }: {
     userId: string,
-    requestBody: UserRoleUpdateRequest,
-  }): CancelablePromise<User> {
+    requestBody: UserRoleUpdateRequestDto,
+  }): CancelablePromise<UserDto> {
     return this.httpRequest.request({
       method: 'PATCH',
       url: '/api/v1/users/{user_id}/assign_role',
@@ -176,7 +198,7 @@ export class UsersService {
   }
   /**
    * Remove User Role
-   * @returns User Successful Response
+   * @returns UserDto Successful Response
    * @throws ApiError
    */
   public removeUserRoleApiV1UsersUserIdRemoveRolePatch({
@@ -184,8 +206,8 @@ export class UsersService {
     requestBody,
   }: {
     userId: string,
-    requestBody: UserRoleUpdateRequest,
-  }): CancelablePromise<User> {
+    requestBody: UserRoleUpdateRequestDto,
+  }): CancelablePromise<UserDto> {
     return this.httpRequest.request({
       method: 'PATCH',
       url: '/api/v1/users/{user_id}/remove_role',

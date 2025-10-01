@@ -8,7 +8,7 @@ from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.exceptions import InvalidOperationException
 from api.common.utils import get_logger
 from api.core.container import get_auth_service
-from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
+from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, MeResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserDto, UserResendActivationEmailRequestDto
 from api.domain.enum.permission import Permission
@@ -63,7 +63,7 @@ async def register(
     return status.HTTP_201_CREATED
         
 
-@router.get("/me", response_model=UserDto, status_code=status.HTTP_200_OK)
+@router.get("/me", response_model=MeResponseDto, status_code=status.HTTP_200_OK)
 async def read_users_me(
     current_user: CurrentUser
 ):

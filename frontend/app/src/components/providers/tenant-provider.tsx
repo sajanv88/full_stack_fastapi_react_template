@@ -1,4 +1,4 @@
-import { NewTenantCreateRequest, TenantListResponse } from '@/api';
+import { CreateTenantDto, TenantListDto } from '@/api';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { IResponseData } from '../shared/iresponse-data.inteface';
 import { getApiClient } from '@/lib/utils';
@@ -6,7 +6,7 @@ import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { useAuthContext } from './auth-provider';
 
-export type TenantResponse = TenantListResponse["data"]
+export type TenantResponse = TenantListDto
 export type TenantsType = TenantResponse["tenants"][0]
 type ActionType = 'edit' | 'delete'
 type Action = {
@@ -21,7 +21,7 @@ interface TenantsProviderState {
     isLoading: boolean;
     selectedTenant?: Action;
     onSelectTenant: (action?: Action) => void;
-    onCreateNewTenant: (newTenant: NewTenantCreateRequest) => Promise<void>;
+    onCreateNewTenant: (newTenant: CreateTenantDto) => Promise<void>;
     onDeleteTenant: () => Promise<void>;
 
 }
@@ -61,14 +61,14 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
         const skip = searchParams.get("skip");
         const limit = searchParams.get("limit");
         try {
-            const response = await apiClient.tenants.getTenantsApiV1TenantsGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
+            const response = await apiClient.tenants.listTenantsApiV1TenantsGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
             setTenantResponse({
-                items: response.data.tenants,
-                total: response.data.total,
-                hasNext: response.data.hasNext,
-                hasPrevious: response.data.hasPrevious,
-                limit: response.data.limit,
-                skip: response.data.skip
+                items: response.tenants,
+                total: response.total,
+                hasNext: response.hasNext,
+                hasPrevious: response.hasPrevious,
+                limit: response.limit,
+                skip: response.skip
             });
         } catch (error) {
             console.error("Failed to fetch tenants", error);
@@ -92,7 +92,7 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
         setSelectedTenant(action);
     }
 
-    const onCreateNewTenant = async (newTenant: NewTenantCreateRequest) => {
+    const onCreateNewTenant = async (newTenant: CreateTenantDto) => {
         try {
             await apiClient.tenants.createTenantApiV1TenantsPost({
                 requestBody: newTenant
@@ -114,8 +114,8 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
     const onDeleteTenant = async () => {
         if (!selectedTenant) return;
         try {
-            await apiClient.tenants.deleteTenantApiV1TenantsTenantIdDelete({
-                tenantId: selectedTenant.tenant.id
+            await apiClient.tenants.deleteTenantApiV1TenantsIdDelete({
+                id: selectedTenant.tenant.id!
             });
             toast.success("Tenant deleted successfully", {
                 richColors: true,

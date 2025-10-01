@@ -62,7 +62,7 @@ export default function Register() {
     const [isLoading, setIsLoading] = useState(false);
     const { register } = useAuth();
     const appConfig = useAppConfig();
-    const { setSubdomain, isAvailable, isChecking, error } = useSubdomainCheck();
+    const { setSubdomain, tenantDetails, isChecking, error } = useSubdomainCheck();
     const isMultiTenancyEnabled = appConfig.is_multi_tenant_enabled;
     const mainDomainName = appConfig.host_main_domain;
 
@@ -117,15 +117,15 @@ export default function Register() {
     useEffect(() => {
         if (!isMultiTenancyEnabled) return;
 
-        if (isAvailable === false) {
+        if (tenantDetails === null) {
             form.setError("subdomain", { type: "manual", message: "This subdomain is already taken" });
-        } else if (isAvailable === true) {
+        } else if (tenantDetails !== null) {
             form.clearErrors("subdomain");
         }
         if (error) {
             form.setError("subdomain", { type: "manual", message: error });
         }
-    }, [isAvailable, error, isMultiTenancyEnabled]);
+    }, [tenantDetails, error, isMultiTenancyEnabled]);
 
     return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">

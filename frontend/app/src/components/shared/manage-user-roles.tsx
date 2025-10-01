@@ -1,4 +1,4 @@
-import { Role } from "@/api";
+import { RoleDto } from "@/api";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,9 @@ interface ManageUserRolesProps {
     userId: string;
 }
 export function ManageUserRoles({ open, onDismiss, userId }: ManageUserRolesProps) {
-    const [roles, setRoles] = useState<Role[]>([]);
+    const [roles, setRoles] = useState<RoleDto[]>([]);
     const [query, setQuery] = useState("");
-    const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+    const [selectedRole, setSelectedRole] = useState<RoleDto | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const apiClient = getApiClient();
@@ -49,7 +49,7 @@ export function ManageUserRoles({ open, onDismiss, userId }: ManageUserRolesProp
         fetchRoles();
     };
 
-    const handleRoleSelect = (role: Role) => {
+    const handleRoleSelect = (role: RoleDto) => {
         setSelectedRole(role);
     };
 

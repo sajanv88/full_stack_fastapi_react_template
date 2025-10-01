@@ -73,6 +73,7 @@ async def ask_ai(
     current_user: CurrentUser,
     query: AIAskRequestDto,
     background_tasks: BackgroundTasks,
+    local_ai_service: LocalAIService = Depends(get_local_ai_service),
 ):
     if query.model_name is None or query.model_name.strip() == "":
         raise InvalidOperationException("Model name cannot be empty")
@@ -84,6 +85,7 @@ async def ask_ai(
         model_name=query.model_name,
         current_session=query.session_id,
         tenant_id=current_user.tenant_id,
+        local_ai_service=local_ai_service
     )
     stream = await chat.generate_response(query.question, background_tasks)
     return StreamingResponse(stream(), media_type="text/plain")

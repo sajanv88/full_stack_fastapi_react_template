@@ -1,3 +1,4 @@
+from typing import Annotated, List
 from fastapi import APIRouter, Depends, status
 from api.common.utils import get_logger
 from api.domain.dtos.role_dto import CreateRoleDto, CreateRoleResponseDto, RoleDto, RoleListDto, UpdateRoleDto
@@ -22,6 +23,14 @@ async def list_roles(
     logger.info(f"Listing roles with skip={skip}, limit={limit}")
     return await service.list_roles(skip=skip, limit=limit)
 
+@router.get("/search_by_name", response_model=List[RoleDto])
+async def search_role_by_name(
+    name: str,
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.ROLE_VIEW_ONLY])),
+    service: RoleService = Depends(get_role_service)
+):
+    roles = await service.search_role_by_name(name)
+    return roles
 
 @router.post("/", response_model=CreateRoleResponseDto, status_code=status.HTTP_201_CREATED)
 async def create_role(

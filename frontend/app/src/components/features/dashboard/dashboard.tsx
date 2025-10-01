@@ -10,7 +10,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
-import { DashboardMetrics } from "@/api";
+import { DashboardMetricsDto } from "@/api";
 import { Loading } from "@/components/shared/loading";
 import { getApiClient } from "@/lib/utils";
 
@@ -18,7 +18,7 @@ import { getApiClient } from "@/lib/utils";
 
 export function Dashboard() {
     const [filter, setFilter] = useState<"today" | "this_week" | "last_3_months">("this_week");
-    const [data, setData] = useState<DashboardMetrics | null>(null);
+    const [data, setData] = useState<DashboardMetricsDto | null>(null);
 
 
     useEffect(() => {

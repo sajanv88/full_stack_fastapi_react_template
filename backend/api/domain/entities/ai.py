@@ -31,7 +31,7 @@ class History(BaseModel):
 
     def to_serializable_dict(self):
         return {
-            "uid": self.uid,
+            "uid": str(self.uid),
             "query": self.query,
             "response": self.response,
             "timestamp": str(self.timestamp)

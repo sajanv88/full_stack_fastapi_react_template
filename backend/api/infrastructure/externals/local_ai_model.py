@@ -1,5 +1,4 @@
 import subprocess
-from time import time
 from typing import List
 from fastapi import BackgroundTasks
 from langchain_ollama import ChatOllama
@@ -8,6 +7,7 @@ from langchain.schema import HumanMessage, AIMessage, SystemMessage, BaseMessage
 from api.common.utils import get_logger
 from api.domain.dtos.ai_dto import AIModelInfoDto
 from api.usecases.local_ai_service import LocalAIService
+import time
 
 logger = get_logger(__name__)
 

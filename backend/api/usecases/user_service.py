@@ -1,3 +1,4 @@
+from typing import Any
 from beanie import PydanticObjectId
 from pydantic import EmailStr
 from api.common.exceptions import InvalidOperationException
@@ -74,9 +75,9 @@ class UserService:
         await existing.save()
         return existing
 
-    async def total_count(self) -> int:
+    async def total_count(self, params: Any | None = None) -> int:
         """Get total user count."""
-        return await self.user_repository.count()
+        return await self.user_repository.count(params=params)
     
     async def request_password_reset(self, email: EmailStr) -> UserPasswordReset:
         """Set password reset for user by ID. Returns None otherwise, Raises InvalidOperationException on failure."""

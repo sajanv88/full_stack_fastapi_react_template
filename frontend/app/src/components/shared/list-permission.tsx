@@ -1,4 +1,4 @@
-import { ApiClient, PermissionBase } from "@/api";
+import { ApiClient, PermissionDto } from "@/api";
 import { getAccessToken } from "@/lib/utils";
 import { useEffect, useState, useTransition } from "react";
 import { CheckIcon, ChevronsUpDownIcon, InfoIcon } from "lucide-react"
@@ -36,7 +36,7 @@ export function ListPermission({
     multiSelect = false,
     maxSelections
 }: ListPermissionProps) {
-    const [permissions, setPermissions] = useState<PermissionBase[]>([]);
+    const [permissions, setPermissions] = useState<PermissionDto[]>([]);
     const [pending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
     const [open, setOpen] = useState(false)

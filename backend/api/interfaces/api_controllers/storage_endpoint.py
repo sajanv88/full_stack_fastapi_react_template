@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from api.common.utils import get_logger
 from api.core.container import get_storage_settings_service
 from api.domain.dtos.storage_settings_dto import AvailableStorageProviderDTO
@@ -29,3 +29,17 @@ async def get_available_providers(
 ):
     providers = [{"name": p.value} for p in StorageProvider]
     return providers
+
+@router.post("/configure", status_code=status.HTTP_201_CREATED)
+async def configure_storage(
+    configuration: AvailableStorageProviderDTO,
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.MANAGE_STORAGE_SETTINGS])),
+    setting_service: StorageSettingsService = Depends(get_storage_settings_service
+)):
+
+    try:
+        await setting_service.configure_storage(setting=configuration)
+        return status.HTTP_201_CREATED
+    except Exception as e:
+        logger.error(f"Failed to configure storage: {e}")
+        return status.HTTP_400_BAD_REQUEST

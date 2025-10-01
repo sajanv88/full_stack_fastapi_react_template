@@ -2,25 +2,27 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { NewRole } from '../models/NewRole';
-import type { Role } from '../models/Role';
-import type { RoleListResponse } from '../models/RoleListResponse';
+import type { CreateRoleDto } from '../models/CreateRoleDto';
+import type { CreateRoleResponseDto } from '../models/CreateRoleResponseDto';
+import type { RoleDto } from '../models/RoleDto';
+import type { RoleListDto } from '../models/RoleListDto';
+import type { UpdateRoleDto } from '../models/UpdateRoleDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class RolesService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
   /**
-   * Get Roles
-   * @returns RoleListResponse Successful Response
+   * List Roles
+   * @returns RoleListDto Successful Response
    * @throws ApiError
    */
-  public getRolesApiV1RolesGet({
+  public listRolesApiV1RolesGet({
     skip,
     limit = 10,
   }: {
     skip?: number,
     limit?: number,
-  }): CancelablePromise<RoleListResponse> {
+  }): CancelablePromise<RoleListDto> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/roles/',
@@ -35,14 +37,14 @@ export class RolesService {
   }
   /**
    * Create Role
-   * @returns any Successful Response
+   * @returns CreateRoleResponseDto Successful Response
    * @throws ApiError
    */
   public createRoleApiV1RolesPost({
     requestBody,
   }: {
-    requestBody: NewRole,
-  }): CancelablePromise<any> {
+    requestBody: CreateRoleDto,
+  }): CancelablePromise<CreateRoleResponseDto> {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/roles/',
@@ -55,14 +57,14 @@ export class RolesService {
   }
   /**
    * Search Role By Name
-   * @returns Role Successful Response
+   * @returns RoleDto Successful Response
    * @throws ApiError
    */
   public searchRoleByNameApiV1RolesSearchByNameGet({
     name,
   }: {
     name: string,
-  }): CancelablePromise<Array<Role>> {
+  }): CancelablePromise<Array<RoleDto>> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/roles/search_by_name',
@@ -76,20 +78,45 @@ export class RolesService {
   }
   /**
    * Get Role
-   * @returns Role Successful Response
+   * @returns RoleDto Successful Response
    * @throws ApiError
    */
   public getRoleApiV1RolesRoleIdGet({
     roleId,
   }: {
     roleId: string,
-  }): CancelablePromise<Role> {
+  }): CancelablePromise<RoleDto> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/roles/{role_id}',
       path: {
         'role_id': roleId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Update Role
+   * @returns RoleDto Successful Response
+   * @throws ApiError
+   */
+  public updateRoleApiV1RolesRoleIdPut({
+    roleId,
+    requestBody,
+  }: {
+    roleId: string,
+    requestBody: UpdateRoleDto,
+  }): CancelablePromise<RoleDto> {
+    return this.httpRequest.request({
+      method: 'PUT',
+      url: '/api/v1/roles/{role_id}',
+      path: {
+        'role_id': roleId,
+      },
+      body: requestBody,
+      mediaType: 'application/json',
       errors: {
         422: `Validation Error`,
       },
@@ -111,31 +138,6 @@ export class RolesService {
       path: {
         'role_id': roleId,
       },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Update Role
-   * @returns Role Successful Response
-   * @throws ApiError
-   */
-  public updateRoleApiV1RolesRoleIdPut({
-    roleId,
-    requestBody,
-  }: {
-    roleId: string,
-    requestBody: NewRole,
-  }): CancelablePromise<Role> {
-    return this.httpRequest.request({
-      method: 'PUT',
-      url: '/api/v1/roles/{role_id}',
-      path: {
-        'role_id': roleId,
-      },
-      body: requestBody,
-      mediaType: 'application/json',
       errors: {
         422: `Validation Error`,
       },

@@ -22,6 +22,9 @@ class RoleService:
             raise RoleNotFoundException(role_id=name)
         return existing
 
+    async def search_role_by_name(self, name: str) -> list[Role]:
+        return await self.role_repository.search({"name": {"$regex": name, "$options": "i"}}).to_list(length=10)
+
     async def get_role_by_id(self, role_id: str) -> Role:
         existing = await self.role_repository.get(id=role_id)
         if existing is None:

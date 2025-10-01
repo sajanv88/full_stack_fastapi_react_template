@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { X, Loader2 } from 'lucide-react'
-import { ApiClient, Tenant } from '@/api'
+import { ApiClient, TenantDto } from '@/api'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getTenant, setTenant } from '@/lib/utils'
 
 interface TenantSearchProps {
-    onTenantSelect?: (tenant: Tenant | null) => void
+    onTenantSelect?: (tenant: TenantDto | null) => void
     placeholder?: string
     className?: string
 }
@@ -59,7 +59,7 @@ export function TenantSelection({
         setIsLoading(true)
         try {
             const apiClient = new ApiClient()
-            const response = await apiClient.tenants.searchTenantByNameApiV1TenantsSearchByNameGet({
+            const response = await apiClient.tenants.searchByNameApiV1TenantsSearchByNameNameGet({
                 name: query
             })
 

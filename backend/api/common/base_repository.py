@@ -45,9 +45,12 @@ class BaseRepository(Generic[T]):
         if not projection_model:
             return self.model.aggregate(pipeline)
         else:
-            return await self.model.aggregate(pipeline, projection_model=projection_model).to_list()
+            data = self.model.aggregate(pipeline, projection_model=projection_model)
+            return await data.to_list()
         
     async def collection_name(self) -> str:
         return self.model.get_collection_name()
 
     
+    async def search(self, query: Dict[str, Any], limit: int = 100) -> List[T]:
+        return await self.model.find(query).to_list(length=limit)

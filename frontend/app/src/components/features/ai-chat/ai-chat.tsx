@@ -10,13 +10,13 @@ import { cn, getAccessToken, getAIChatNewSession, getApiClient, getTenant } from
 import { Send, Bot, User, Sparkles, Copy, RefreshCw, Trash2, InfoIcon } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { ListLocalAIModels } from '@/components/shared/list-local-ai-models'
-import { AIRequest, AiModel } from '@/api'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useAppConfig } from '@/components/providers/app-config-provider'
 import { toast } from 'sonner'
 import { AIChatHistory } from './ai-chat-history'
 import { useSearchParams } from 'react-router'
 import { useAIChat } from '@/components/providers/ai-chat-provider'
+import { AIAskRequestDto, AIHistoriesDto, AIModelInfoDto } from '@/api'
 
 interface Message {
     id: string
@@ -42,7 +42,7 @@ export function AIChat() {
         isLoading: false,
         error: null
     })
-    const [selectedModel, setSelectedModel] = useState<AiModel>()
+    const [selectedModel, setSelectedModel] = useState<AIModelInfoDto>()
     const [input, setInput] = useState('')
     const scrollAreaRef = useRef<HTMLDivElement>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -70,10 +70,11 @@ export function AIChat() {
 
     // fetch histories
     async function fetchHistories(sessionId: string) {
-        const histories = sessions.find(s => s.session_id === sessionId)?.sessions
-        if (histories && histories.length > 0) {
-            return histories[0]
-        }
+        // const histories = sessions.find(s => s.session_id === sessionId)?.sessions
+        // console.log("Histories from context:", histories)
+        // if (histories && histories.length > 0) {
+        //     return histories[0]
+        // }
         try {
             const apiClient = getApiClient()
             const response = await apiClient.ai.getSingleSessionApiV1AiSessionsSessionIdGet({
@@ -122,20 +123,28 @@ export function AIChat() {
                     messages: []
                 });
 
-                const messages: Message[] = response.histories.flatMap(h => [
-                    {
-                        id: h.uid,
-                        content: h.query,
-                        role: "user",
-                        timestamp: new Date(h.timestamp)
-                    },
-                    {
-                        id: h.uid,
-                        content: h.response,
-                        role: "assistant",
-                        timestamp: new Date(h.timestamp)
+                const result = response[0].histories
+                const messages: Message[] = [];
+
+                result.forEach(h => {
+                    if (h.query) {
+                        messages.push({
+                            id: h.uid,
+                            content: h.query,
+                            role: "user",
+                            timestamp: new Date(h.timestamp)
+                        });
                     }
-                ]);
+
+                    if (h.response) {
+                        messages.push({
+                            id: h.uid,
+                            content: h.response,
+                            role: "assistant",
+                            timestamp: new Date(h.timestamp)
+                        });
+                    }
+                });
 
 
                 setTimeout(() => {
@@ -146,9 +155,6 @@ export function AIChat() {
                         error: null
                     }))
                 }, 1000)
-
-
-
 
 
             } catch (e) {
@@ -164,7 +170,9 @@ export function AIChat() {
 
         }
         if (searchParams.get("session_id") && !searchParams.get("new_session")) {
-            startTransition(() => fetchSelectedSessionHistory())
+            startTransition(() => {
+                fetchSelectedSessionHistory()
+            })
         }
     }, [searchParams])
 
@@ -211,7 +219,7 @@ export function AIChat() {
         try {
             const accessToken = getAccessToken();
             const tenant = getTenant();
-            const payload: AIRequest = {
+            const payload: AIAskRequestDto = {
                 question: userMessage.content,
                 model_name: selectedModel?.name,
                 session_id: sessionId
@@ -315,7 +323,7 @@ export function AIChat() {
         }
     }
 
-    const onSelectModelEvent = async (model: AiModel) => {
+    const onSelectModelEvent = async (model: AIModelInfoDto) => {
         try {
             const apiClient = getApiClient()
             await apiClient.ai.setPreferredModelApiV1AiSetModelPreferenceModelNamePut({ modelName: model.name })

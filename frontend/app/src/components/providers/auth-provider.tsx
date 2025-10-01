@@ -1,4 +1,5 @@
-import { Gender, Permission, type UserMeResponse } from "@/api";
+import { Gender, Permission, type MeResponseDto } from "@/api";
+import { getUserImageUrl } from "@/lib/image-utils";
 import {
     clearAllTokens,
     clearIsLoggedIn,
@@ -22,7 +23,7 @@ export type UpdateProfileType = {
 }
 type AuthProviderState = {
     isLoggedIn: boolean;
-    user: UserMeResponse | null;
+    user: MeResponseDto | null;
     can: (action: Permission) => boolean;
     onUpdateProfile: (data: UpdateProfileType) => Promise<void>;
     refreshCurrentUser: () => Promise<void>;
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         async function refreshToken() {
 
-            const auth = getApiClient().auth;
+            const auth = getApiClient().account;
             const refreshToken = getRefreshToken()
             clearIsLoggedIn();
             if (!refreshToken) {
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             try {
-                const authWithRefresh = await auth.refreshTokenApiV1AuthRefreshPost({
+                const authWithRefresh = await auth.refreshTokenApiV1AccountRefreshPost({
                     requestBody: {
                         refresh_token: refreshToken
                     }
@@ -78,20 +79,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         const fetchUser = async () => {
             const apiClient = getApiClient();
-            const auth = apiClient.auth;
+            const auth = apiClient.account;
             const users = apiClient.users;
             try {
-                const user = await auth.readUsersMeApiV1AuthMeGet();
+                const user = await auth.readUsersMeApiV1AccountMeGet();
+                let imageUrl = user.image_url
+                if (user.image_url) {
+                    imageUrl = await getUserImageUrl(user.image_url);
+                }
                 setAuthState({
                     isLoggedIn: true,
                     user: {
                         ...user,
-                        image_url: user?.image_url
+                        image_url: imageUrl
                     },
                     can: (action: Permission) => {
                         return user?.role?.permissions?.includes(action) ?? false;
                     },
                     onUpdateProfile: async (data: UpdateProfileType) => {
+
+
                         try {
                             await users.updateUserApiV1UsersUserIdPut({
                                 userId: user.id,
