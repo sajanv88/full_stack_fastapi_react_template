@@ -1,4 +1,4 @@
-# Full-Stack FastAPI React Template
+# Full-Stack FastAPI React Multi-Tenancy Template
 
 A modern full-stack Multi-tenant application template featuring a FastAPI backend with Clean Architecture, React frontend with TypeScript, and comprehensive tooling for development and deployment.
 
@@ -40,7 +40,7 @@ This full-stack template provides enterprise-ready features out of the box:
 
 ## Watch Demo
 
-[![DEMO](https://sajankumarv-my.sharepoint.com/:i:/p/connect/ESOwHRXBKSVAtDq5CXwIFwQBV_2qqToeZUk8gNZ46G7v5A?e=S8T0Tk)](https://sajankumarv-my.sharepoint.com/:v:/p/connect/EWEYQwgora9LiRdyFsHjA9wBklOhfGway_QXbvYX6zYfzg?e=0f08zN&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D)
+![DEMO](/demo.gif)
 
 ## 🏗️ Architecture Overview
 
@@ -234,8 +234,8 @@ The frontend is built with modern React patterns and TypeScript for type safety:
 3. **Backend Development**:
    ```bash
    cd backend
-   uv sync                    # Install dependencies
-   uv run fastapi dev        # Start development server
+   uv sync                      # Install dependencies
+   uv run fastapi dev api        # Start development server
    ```
 
 4. **Frontend Development**:
@@ -280,7 +280,7 @@ Start Celery worker for background processing:
 
 ```bash
 cd backend
-make worker          # Start Celery worker
+make worker          # Start Celery worker (It is required for post tenant creation process)
 make flower          # Start Flower monitoring UI
 ```
 
