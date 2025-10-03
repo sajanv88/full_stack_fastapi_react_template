@@ -1,12 +1,14 @@
-import { StorageSettings } from "@/api";
+import { AvailableStorageProviderDTO } from "@/api";
 import { getApiClient } from "@/lib/utils";
 import { useContext, createContext, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useAuthContext } from "./auth-provider";
 
+export interface StorageFormData extends Omit<AvailableStorageProviderDTO, 'id' | 'created_at' | 'updated_at'> { }
 interface SettingsContextProps {
-    storages: StorageSettings[]
+    storages: AvailableStorageProviderDTO[]
     availableStorages: Array<Record<string, string>>
-    onConfigureStorage: (settings: StorageSettings) => Promise<void>;
+    onConfigureStorage: (settings: StorageFormData) => Promise<void>;
     loading: boolean;
 }
 
@@ -24,8 +26,9 @@ interface SettingsProviderProps {
     children: React.ReactNode;
 }
 export function SettingsProvider({ children }: SettingsProviderProps) {
-    const apiClient = getApiClient();
-    const [storages, setStorages] = useState<StorageSettings[]>([]);
+    const { accessToken } = useAuthContext();
+    const apiClient = getApiClient(accessToken);
+    const [storages, setStorages] = useState<AvailableStorageProviderDTO[]>([]);
     const [availableStorages, setAvailableStorages] = useState<Array<Record<string, string>>>([]);
     const [loading, setLoading] = useState(true);
 
@@ -40,9 +43,10 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         setLoading(false);
     }
 
-    async function onConfigureStorage(settings: StorageSettings) {
+    async function onConfigureStorage(settings: StorageFormData) {
+        const update = { ...storages.find(s => s.provider === settings.provider), ...settings } as AvailableStorageProviderDTO;
         await apiClient.storageSettings.configureStorageApiV1StorageConfigurePost({
-            requestBody: settings
+            requestBody: update
         });
         const updatedStorages = await apiClient.storageSettings.getStorageSettingsApiV1StorageGet();
         setStorages(updatedStorages);

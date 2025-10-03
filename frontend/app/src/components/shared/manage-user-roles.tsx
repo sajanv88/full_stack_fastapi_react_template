@@ -1,4 +1,4 @@
-import { Role } from "@/api";
+import { RoleDto } from "@/api";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { getApiClient } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Search, Users, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthContext } from "../providers/auth-provider";
 
 
 interface ManageUserRolesProps {
@@ -17,12 +18,13 @@ interface ManageUserRolesProps {
     userId: string;
 }
 export function ManageUserRoles({ open, onDismiss, userId }: ManageUserRolesProps) {
-    const [roles, setRoles] = useState<Role[]>([]);
+    const [roles, setRoles] = useState<RoleDto[]>([]);
     const [query, setQuery] = useState("");
-    const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+    const [selectedRole, setSelectedRole] = useState<RoleDto | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
-    const apiClient = getApiClient();
+    const { accessToken } = useAuthContext();
+    const apiClient = getApiClient(accessToken);
 
 
     async function fetchRoles() {
@@ -49,7 +51,7 @@ export function ManageUserRoles({ open, onDismiss, userId }: ManageUserRolesProp
         fetchRoles();
     };
 
-    const handleRoleSelect = (role: Role) => {
+    const handleRoleSelect = (role: RoleDto) => {
         setSelectedRole(role);
     };
 
@@ -59,7 +61,6 @@ export function ManageUserRoles({ open, onDismiss, userId }: ManageUserRolesProp
         setIsLoading(true);
         try {
             // Add your role assignment logic here
-            console.log('Assigning role:', selectedRole);
             await apiClient.users.patchUserApiV1UsersUserIdAssignRolePatch({
                 userId: userId,
                 requestBody: {

@@ -2,26 +2,27 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CheckSubdomainResponse } from '../models/CheckSubdomainResponse';
-import type { NewTenantCreateRequest } from '../models/NewTenantCreateRequest';
-import type { Tenant } from '../models/Tenant';
-import type { TenantListResponse } from '../models/TenantListResponse';
+import type { CreateTenantDto } from '../models/CreateTenantDto';
+import type { CreateTenantResponseDto } from '../models/CreateTenantResponseDto';
+import type { SubdomainAvailabilityDto } from '../models/SubdomainAvailabilityDto';
+import type { TenantDto } from '../models/TenantDto';
+import type { TenantListDto } from '../models/TenantListDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class TenantsService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
   /**
-   * Get Tenants
-   * @returns TenantListResponse Successful Response
+   * List Tenants
+   * @returns TenantListDto Successful Response
    * @throws ApiError
    */
-  public getTenantsApiV1TenantsGet({
+  public listTenantsApiV1TenantsGet({
     skip,
     limit = 10,
   }: {
     skip?: number,
     limit?: number,
-  }): CancelablePromise<TenantListResponse> {
+  }): CancelablePromise<TenantListDto> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/tenants/',
@@ -36,14 +37,14 @@ export class TenantsService {
   }
   /**
    * Create Tenant
-   * @returns Tenant Successful Response
+   * @returns CreateTenantResponseDto Successful Response
    * @throws ApiError
    */
   public createTenantApiV1TenantsPost({
     requestBody,
   }: {
-    requestBody: NewTenantCreateRequest,
-  }): CancelablePromise<Tenant> {
+    requestBody: CreateTenantDto,
+  }): CancelablePromise<CreateTenantResponseDto> {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/tenants/',
@@ -55,19 +56,40 @@ export class TenantsService {
     });
   }
   /**
-   * Search Tenant By Name
-   * @returns Tenant Successful Response
+   * Delete Tenant
+   * @returns any Successful Response
    * @throws ApiError
    */
-  public searchTenantByNameApiV1TenantsSearchByNameGet({
+  public deleteTenantApiV1TenantsIdDelete({
+    id,
+  }: {
+    id: string,
+  }): CancelablePromise<any> {
+    return this.httpRequest.request({
+      method: 'DELETE',
+      url: '/api/v1/tenants/{id}',
+      path: {
+        'id': id,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Search By Name
+   * @returns TenantDto Successful Response
+   * @throws ApiError
+   */
+  public searchByNameApiV1TenantsSearchByNameNameGet({
     name,
   }: {
     name: string,
-  }): CancelablePromise<Tenant> {
+  }): CancelablePromise<TenantDto> {
     return this.httpRequest.request({
       method: 'GET',
-      url: '/api/v1/tenants/search_by_name',
-      query: {
+      url: '/api/v1/tenants/search_by_name/{name}',
+      path: {
         'name': name,
       },
       errors: {
@@ -76,21 +98,18 @@ export class TenantsService {
     });
   }
   /**
-   * Check Tenant By Subdomain
-   * @returns CheckSubdomainResponse Successful Response
+   * Search By Subdomain
+   * @returns TenantDto Successful Response
    * @throws ApiError
    */
-  public checkTenantBySubdomainApiV1TenantsCheckSubdomainSubdomainGet({
+  public searchBySubdomainApiV1TenantsSearchBySubdomainSubdomainGet({
     subdomain,
   }: {
-    /**
-     * The subdomain to validate
-     */
     subdomain: string,
-  }): CancelablePromise<CheckSubdomainResponse> {
+  }): CancelablePromise<TenantDto> {
     return this.httpRequest.request({
       method: 'GET',
-      url: '/api/v1/tenants/check_subdomain/{subdomain}',
+      url: '/api/v1/tenants/search_by_subdomain/{subdomain}',
       path: {
         'subdomain': subdomain,
       },
@@ -100,20 +119,20 @@ export class TenantsService {
     });
   }
   /**
-   * Delete Tenant
-   * @returns any Successful Response
+   * Check Subdomain Availability
+   * @returns SubdomainAvailabilityDto Successful Response
    * @throws ApiError
    */
-  public deleteTenantApiV1TenantsTenantIdDelete({
-    tenantId,
+  public checkSubdomainAvailabilityApiV1TenantsCheckSubdomainSubdomainGet({
+    subdomain,
   }: {
-    tenantId: string,
-  }): CancelablePromise<any> {
+    subdomain: string,
+  }): CancelablePromise<SubdomainAvailabilityDto> {
     return this.httpRequest.request({
-      method: 'DELETE',
-      url: '/api/v1/tenants/{tenant_id}',
+      method: 'GET',
+      url: '/api/v1/tenants/check_subdomain/{subdomain}',
       path: {
-        'tenant_id': tenantId,
+        'subdomain': subdomain,
       },
       errors: {
         422: `Validation Error`,

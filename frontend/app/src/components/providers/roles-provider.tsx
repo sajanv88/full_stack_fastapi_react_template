@@ -1,12 +1,13 @@
-import { NewRole, RoleListResponse } from '@/api';
+import { CreateRoleDto, RoleListDto, UpdateRoleDto } from '@/api';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { IResponseData } from '../shared/iresponse-data.inteface';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { getApiClient } from '@/lib/utils';
+import { useAuthContext } from './auth-provider';
 
 
-export type RoleResponse = RoleListResponse["data"]
+export type RoleResponse = RoleListDto
 export type RolesType = RoleResponse["roles"][0]
 type ActionType = 'edit' | 'delete' | 'clone' | 'manage_permissions'
 type Action = {
@@ -17,11 +18,11 @@ type Action = {
 interface RolesProviderState {
     roleResponse: IResponseData<RolesType>;
     refreshRoles: () => void;
-    onCreateNewRole: (params: NewRole) => Promise<void>;
+    onCreateNewRole: (params: CreateRoleDto) => Promise<void>;
     loading: boolean;
     selectedRole?: Action;
     onSelectRole: (action?: Action) => void;
-    onUpdateRole: (roleId: string, params: NewRole) => Promise<void>;
+    onUpdateRole: (roleId: string, params: UpdateRoleDto) => Promise<void>;
     onDeleteRole: () => Promise<void>;
     error: string | null
 }
@@ -40,7 +41,7 @@ const initialState: RolesProviderState = {
     },
     selectedRole: undefined,
     onDeleteRole: () => Promise.resolve(),
-    onUpdateRole: (roleId: string, params: NewRole) => {
+    onUpdateRole: (roleId: string, params: UpdateRoleDto) => {
         console.debug("Updating role:", roleId, params);
         return Promise.resolve();
     },
@@ -54,13 +55,14 @@ interface RolesProviderProps {
     children: React.ReactNode;
 }
 export function RolesProvider({ children }: RolesProviderProps) {
+    const { accessToken } = useAuthContext();
     const [searchParams] = useSearchParams();
     const [pending, setPending] = useState(true);
     const [roleError, setRoleError] = useState<string | null>(null);
 
     const [roleResponse, setRoleResponse] = useState<IResponseData<RolesType>>(initialState.roleResponse);
     const [selectedRole, setSelectedRole] = useState<Action | undefined>(initialState.selectedRole);
-    const apiClient = getApiClient();
+    const apiClient = getApiClient(accessToken);
     const role = apiClient.roles;
 
     async function fetchRoles() {
@@ -68,14 +70,15 @@ export function RolesProvider({ children }: RolesProviderProps) {
         const skip = searchParams.get("skip");
         const limit = searchParams.get("limit");
         try {
-            const roles = await role.getRolesApiV1RolesGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
+            const res = await role.listRolesApiV1RolesGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
+
             setRoleResponse({
-                items: roles.data.roles,
-                hasNext: roles.data.hasNext,
-                total: roles.data.total,
-                hasPrevious: roles.data.hasPrevious,
-                limit: roles.data.limit,
-                skip: roles.data.skip,
+                items: res.roles,
+                hasNext: res.hasNext,
+                total: res.total,
+                hasPrevious: res.hasPrevious,
+                limit: res.limit,
+                skip: res.skip,
             });
         } catch (error) {
             console.error("Error fetching roles:", error);
@@ -95,13 +98,13 @@ export function RolesProvider({ children }: RolesProviderProps) {
         setPending(false);
     }
 
-    async function onCreateNewRole(params: NewRole) {
+    async function onCreateNewRole(params: CreateRoleDto) {
         await role.createRoleApiV1RolesPost({
             requestBody: params
         });
     }
 
-    async function onUpdateRole(role_id: string, params: NewRole) {
+    async function onUpdateRole(role_id: string, params: CreateRoleDto) {
         await role.updateRoleApiV1RolesRoleIdPut({
             roleId: role_id,
             requestBody: params

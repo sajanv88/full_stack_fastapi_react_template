@@ -5,9 +5,9 @@
 import type { BaseHttpRequest } from './core/BaseHttpRequest';
 import type { OpenAPIConfig } from './core/OpenAPI';
 import { FetchHttpRequest } from './core/FetchHttpRequest';
+import { AccountService } from './services/AccountService';
 import { AiService } from './services/AiService';
-import { AppConfigService } from './services/AppConfigService';
-import { AuthService } from './services/AuthService';
+import { AppConfigurationService } from './services/AppConfigurationService';
 import { DashboardService } from './services/DashboardService';
 import { PermissionsService } from './services/PermissionsService';
 import { RolesService } from './services/RolesService';
@@ -16,9 +16,9 @@ import { TenantsService } from './services/TenantsService';
 import { UsersService } from './services/UsersService';
 type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
 export class ApiClient {
+  public readonly account: AccountService;
   public readonly ai: AiService;
-  public readonly appConfig: AppConfigService;
-  public readonly auth: AuthService;
+  public readonly appConfiguration: AppConfigurationService;
   public readonly dashboard: DashboardService;
   public readonly permissions: PermissionsService;
   public readonly roles: RolesService;
@@ -29,7 +29,7 @@ export class ApiClient {
   constructor(config?: Partial<OpenAPIConfig>, HttpRequest: HttpRequestConstructor = FetchHttpRequest) {
     this.request = new HttpRequest({
       BASE: config?.BASE ?? '',
-      VERSION: config?.VERSION ?? '1.0.0',
+      VERSION: config?.VERSION ?? '0.1.0',
       WITH_CREDENTIALS: config?.WITH_CREDENTIALS ?? false,
       CREDENTIALS: config?.CREDENTIALS ?? 'include',
       TOKEN: config?.TOKEN,
@@ -38,9 +38,9 @@ export class ApiClient {
       HEADERS: config?.HEADERS,
       ENCODE_PATH: config?.ENCODE_PATH,
     });
+    this.account = new AccountService(this.request);
     this.ai = new AiService(this.request);
-    this.appConfig = new AppConfigService(this.request);
-    this.auth = new AuthService(this.request);
+    this.appConfiguration = new AppConfigurationService(this.request);
     this.dashboard = new DashboardService(this.request);
     this.permissions = new PermissionsService(this.request);
     this.roles = new RolesService(this.request);

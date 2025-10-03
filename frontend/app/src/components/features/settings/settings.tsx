@@ -1,5 +1,4 @@
-import { useSettings } from "@/components/providers/settings-provider";
-import { StorageSettings, StorageProvider } from "@/api";
+import { StorageFormData, useSettings } from "@/components/providers/settings-provider";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,22 +13,17 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Cloud, Database, Settings as SettingsIcon, CheckCircle, AlertCircle } from "lucide-react";
 import { Loading } from "@/components/shared/loading";
 import { useAuthContext } from "@/components/providers/auth-provider";
+import { AvailableStorageProviderDTO } from "@/api";
 
-interface StorageFormData {
-    provider: StorageProvider;
-    is_enabled: boolean;
-    region: string;
-    aws_access_key?: string;
-    aws_secret_key?: string;
-    aws_bucket_name?: string;
-    azure_connection_string?: string;
-    azure_container_name?: string;
-}
+
+type StorageProvider = AvailableStorageProviderDTO["provider"];
+
 
 export function Settings() {
     const { storages, onConfigureStorage, loading } = useSettings();
     const { can } = useAuthContext();
     const canManageSettings = can('manage:storage_settings');
+    const isAdminWithFullAccess = can('full:access');
     const [formData, setFormData] = useState<StorageFormData>({
         provider: 's3',
         is_enabled: false,
@@ -44,7 +38,7 @@ export function Settings() {
     const [activeTab, setActiveTab] = useState('s3');
 
     // Get existing storage configuration for a provider
-    const getStorageConfig = (provider: StorageProvider): StorageSettings | null => {
+    const getStorageConfig = (provider: StorageProvider): AvailableStorageProviderDTO | null => {
         return storages.find(s => s.provider === provider) || null;
     };
 
@@ -132,7 +126,7 @@ export function Settings() {
         }
     }, [storages]);
 
-    if (!canManageSettings) {
+    if (!canManageSettings && !isAdminWithFullAccess) {
         return (
             <div className="grid place-items-center place-content-center h-40">
                 <p>

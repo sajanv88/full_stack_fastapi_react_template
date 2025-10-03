@@ -55,7 +55,7 @@ interface CreateNewTenantDialogProps {
 export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialogProps) {
     const { onCreateNewTenant } = useTenants();
     const appConfig = useAppConfig();
-    const { setSubdomain, isAvailable, isChecking, error } = useSubdomainCheck();
+    const { setSubdomain, subdomainAvailability, isChecking, error } = useSubdomainCheck();
 
     const mainDomainName = appConfig.host_main_domain;
     const [isLoading, setIsLoading] = useState(false);
@@ -76,6 +76,7 @@ export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialog
         try {
             setIsLoading(true);
             await onCreateNewTenant({
+                name: data.subdomain,
                 first_name: data.firstName,
                 last_name: data.lastName,
                 admin_email: data.adminEmail,
@@ -102,15 +103,17 @@ export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialog
     }
 
     useEffect(() => {
-        if (isAvailable === false) {
-            form.setError("subdomain", { type: "manual", message: "This subdomain is already taken" });
-        } else if (isAvailable === true) {
+        if (subdomainAvailability?.is_available === false) {
+            form.setError("subdomain", { type: "manual", message: "This subdomain is already taken" }, { shouldFocus: true });
+        } else if (subdomainAvailability?.is_available) {
             form.clearErrors("subdomain");
         }
         if (error) {
-            form.setError("subdomain", { type: "manual", message: error });
+            form.setError("subdomain", { type: "manual", message: "Invalid subdomain" });
         }
-    }, [isAvailable, error]);
+    }, [subdomainAvailability, error]);
+
+    const subdomainError = form.formState.errors.subdomain?.message;
     return (
         <Dialog open={open} onOpenChange={onDismissDialog}>
             <DialogContent className="sm:max-w-screen-sm">
@@ -194,9 +197,9 @@ export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialog
                                     />
                                 </span>
                             </div>
-                            {form.getFieldState("subdomain").error && (
+                            {subdomainError && (
                                 <Alert variant="destructive" className="mt-4">
-                                    <AlertDescription>{form.getFieldState("subdomain").error?.message}</AlertDescription>
+                                    <AlertDescription>{subdomainError}</AlertDescription>
                                 </Alert>
                             )}
                         </section>

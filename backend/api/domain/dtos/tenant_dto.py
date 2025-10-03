@@ -1,0 +1,39 @@
+
+from typing import  List, Optional
+from pydantic import BaseModel, EmailStr
+
+from api.common.enums.gender import Gender
+from api.domain.entities.tenant import Subdomain
+
+
+class TenantDto(BaseModel):
+    id: Optional[str]
+    name: str
+    subdomain: Optional[str] | None
+    is_active: bool
+    subdomain_status: str 
+
+class CreateTenantDto(BaseModel):
+    name: str
+    subdomain: Subdomain
+    admin_email: EmailStr
+    admin_password: str
+    first_name: str
+    last_name: str
+    gender: Gender
+
+class TenantListDto(BaseModel):
+    tenants: List[TenantDto]
+    skip: int
+    limit: int
+    total: int
+    hasPrevious: bool
+    hasNext: bool
+
+
+class CreateTenantResponseDto(BaseModel):
+    id: str
+
+
+class SubdomainAvailabilityDto(BaseModel):
+    is_available: bool

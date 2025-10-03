@@ -16,12 +16,12 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { NavLink } from "react-router";
-import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/shared/logo";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { Label } from "@/components/ui/label";
 import { useSubdomainCheck } from "@/hooks/use-subdomain-check";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuthContext } from "@/components/providers/auth-provider";
 
 // Gender enum matching the backend
 export const Gender = {
@@ -60,9 +60,9 @@ type SignupFormInputs = z.infer<typeof signupSchema>;
 
 export default function Register() {
     const [isLoading, setIsLoading] = useState(false);
-    const { register } = useAuth();
+    const { register } = useAuthContext();
     const appConfig = useAppConfig();
-    const { setSubdomain, isAvailable, isChecking, error } = useSubdomainCheck();
+    const { setSubdomain, subdomainAvailability, isChecking, error } = useSubdomainCheck();
     const isMultiTenancyEnabled = appConfig.is_multi_tenant_enabled;
     const mainDomainName = appConfig.host_main_domain;
 
@@ -79,7 +79,6 @@ export default function Register() {
         },
     });
 
-    console.log(form.formState.errors);
     const onSubmit = async (data: SignupFormInputs) => {
         setIsLoading(true);
         try {
@@ -117,22 +116,23 @@ export default function Register() {
     useEffect(() => {
         if (!isMultiTenancyEnabled) return;
 
-        if (isAvailable === false) {
+        if (subdomainAvailability?.is_available === false) {
             form.setError("subdomain", { type: "manual", message: "This subdomain is already taken" });
-        } else if (isAvailable === true) {
+        } else if (subdomainAvailability?.is_available) {
             form.clearErrors("subdomain");
         }
         if (error) {
             form.setError("subdomain", { type: "manual", message: error });
         }
-    }, [isAvailable, error, isMultiTenancyEnabled]);
+    }, [subdomainAvailability, error, isMultiTenancyEnabled]);
+    const subdomainError = form.formState.errors.subdomain?.message;
 
     return (
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-1rem)]">
             <Card className="w-full max-w-xl shadow-lg">
                 <CardHeader>
                     <CardTitle className="text-2xl font-bold text-center">
-                        <Logo className="justify-center pb-5" />
+                        <Logo className="justify-center pb-5" size="sm" showText={false} />
                     </CardTitle>
                     <CardDescription className="text-center text-muted-foreground">
                         Enter your information to create a new account
@@ -213,9 +213,9 @@ export default function Register() {
                                             />
                                         </span>
                                     </div>
-                                    {form.getFieldState("subdomain").error && (
+                                    {subdomainError && (
                                         <Alert variant="destructive" className="mt-4">
-                                            <AlertDescription>{form.getFieldState("subdomain").error?.message}</AlertDescription>
+                                            <AlertDescription>{subdomainError}</AlertDescription>
                                         </Alert>
                                     )}
                                 </section>

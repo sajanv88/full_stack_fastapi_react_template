@@ -16,7 +16,8 @@ import { SettingsProvider } from "@/components/providers/settings-provider";
 import { Settings } from "@/components/features/settings/settings";
 import { useAuthContext } from "./components/providers/auth-provider";
 import { AIChatProvider } from "@/components/providers/ai-chat-provider";
-import { PasswordReset } from "@/components/shared/password-reset";
+import { PasswordResetRequest } from "@/components/features/auth/password-reset-request";
+import { PasswordResetConfirmation } from "@/components/features/auth/password_reset_confirmation";
 
 function App() {
   const { user } = useAuthContext();
@@ -25,7 +26,8 @@ function App() {
       <Route element={<DefaultLayout />}>
         <Route index path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
-        <Route path="forgot-password" element={<PasswordReset />} />
+        <Route path="forgot-password" element={<PasswordResetRequest />} />
+        <Route path="password_reset_confirmation" element={<PasswordResetConfirmation />} />
       </Route>
 
       <Route element={<DashboardLayout />}>
