@@ -38,6 +38,10 @@ This full-stack template provides enterprise-ready features out of the box:
 - **Model Selection**: Dynamic switching between different AI models
 - **Responsive Design**: Mobile-optimized chat interface
 
+## Watch Demo
+
+[![DEMO](https://sajankumarv-my.sharepoint.com/:i:/p/connect/ESOwHRXBKSVAtDq5CXwIFwQBV_2qqToeZUk8gNZ46G7v5A?e=S8T0Tk)](https://sajankumarv-my.sharepoint.com/:v:/p/connect/EWEYQwgora9LiRdyFsHjA9wBklOhfGway_QXbvYX6zYfzg?e=0f08zN&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D)
+
 ## 🏗️ Architecture Overview
 
 This project follows a **Clean Architecture** pattern with clear separation between backend and frontend, designed for scalability, maintainability, and testability.
