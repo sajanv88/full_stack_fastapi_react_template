@@ -1,17 +1,12 @@
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
-
     Heart,
-    Zap
 } from 'lucide-react'
 import { Logo } from './logo'
 
 export function SimpleFooter() {
     const currentYear = new Date().getFullYear()
-
-
-
     return (
         <footer className="bg-background border-t border-border mx-5">
             <div className=" px-4 py-6">
