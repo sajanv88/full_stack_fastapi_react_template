@@ -5,6 +5,7 @@ import jwt
 from api.common.dtos.token_dto import AccessTokenDto, ActivationTokenPayloadDto, RefreshTokenDto, RefreshTokenDto, RefreshTokenPayloadDto, TokenPayloadDto, TokenSetDto, VerifyEmailTokenPayloadDto
 from api.common.utils import get_logger, get_utc_now
 from api.common.security import ACCESS_TOKEN_EXPIRE_MINUTES, ACTIVATION_TOKEN_EXPIRE_HOURS, ALGORITHM, JWT_SECRET, REFRESH_ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS, REFRESH_TOKEN_SECRET
+from api.common.exceptions import InvalidOperationException
 
 logger  = get_logger(__name__)
 class JwtTokenService:
@@ -78,10 +79,10 @@ class JwtTokenService:
             )
         except jwt.ExpiredSignatureError:
             logger.error("Activation token has expired")
-            raise jwt.ExpiredSignatureError("Activation token has expired")
+            raise InvalidOperationException("Activation token has expired")
         except jwt.InvalidTokenError:
             logger.error("Invalid activation token")
-            raise jwt.InvalidTokenError("Invalid activation token")
+            raise InvalidOperationException("Invalid activation token")
 
 
     async def verify_password_reset_token(self, token: str, jwt_secret: str) -> VerifyEmailTokenPayloadDto:
@@ -94,17 +95,17 @@ class JwtTokenService:
             logger.debug(f"Decoded password reset token payload: {payload}")
             if payload.get("type") != "password_reset_confirmation":
                 logger.debug(f"Invalid token type: {payload.get('type')}")
-                raise jwt.InvalidTokenError("Invalid token type")
+                raise InvalidOperationException("Invalid token type")
             return VerifyEmailTokenPayloadDto(
                 user_id=payload.get("user_id"),
                 email=payload.get("email")
             )
         except jwt.ExpiredSignatureError:
             logger.error("Password reset token has expired")
-            raise jwt.ExpiredSignatureError("Password reset token has expired")
+            raise InvalidOperationException("Password reset token has expired")
         except jwt.InvalidTokenError:
             logger.error("Invalid password reset token")
-            raise jwt.InvalidTokenError("Invalid password reset token")
+            raise InvalidOperationException("Invalid password reset token")
     
     async def verify_change_email_token(self, token: str) -> VerifyEmailTokenPayloadDto:
         """
@@ -123,10 +124,10 @@ class JwtTokenService:
             )
         except jwt.ExpiredSignatureError:
             logger.error("Change email token has expired")
-            raise jwt.ExpiredSignatureError("Change email token has expired")
+            raise InvalidOperationException("Change email token has expired")
         except jwt.InvalidTokenError:
             logger.error("Invalid change email token")
-            raise jwt.InvalidTokenError("Invalid change email token")
+            raise InvalidOperationException("Invalid change email token")
 
 
     async def encode_activation_token(self, payload: ActivationTokenPayloadDto) -> str:

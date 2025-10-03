@@ -133,14 +133,17 @@ async def password_reset_confirm(
     request: PasswordResetConfirmRequestDto,
     token: str = Query(..., description="The password reset token"),
     user_id: str = Query(..., description="The user ID associated with the token"),
+    tenant_id: str | None = Query(None, description="The tenant ID associated with the user, if applicable"),
     auth_service: AuthService = Depends(get_auth_service)
 
 ):
+    logger.info(f"Password reset confirmation attempt for user_id: {user_id} with tenant_id: {tenant_id}")
     await auth_service.change_password(
         new_password=request.new_password,
         token=token,
         user_id=user_id
     )
+   
     return PasswordResetResponseDto(message="Password has been reset successfully. A notification email has been sent!")
 
 @router.post("/resend_activation_email", status_code=status.HTTP_202_ACCEPTED)
@@ -158,6 +161,7 @@ async def resend_activation_email(
 @router.post("/activate", status_code=status.HTTP_200_OK)
 async def activate_account(
     req: UserActivationRequestDto,
+    tenant_id: str | None = Query(None, description="The tenant ID associated with the user, if applicable"),
     auth_service: AuthService = Depends(get_auth_service)
 ):
     await auth_service.activate_account(req)

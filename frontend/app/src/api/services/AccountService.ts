@@ -130,6 +130,7 @@ export class AccountService {
     token,
     userId,
     requestBody,
+    tenantId,
   }: {
     /**
      * The password reset token
@@ -140,6 +141,10 @@ export class AccountService {
      */
     userId: string,
     requestBody: PasswordResetConfirmRequestDto,
+    /**
+     * The tenant ID associated with the user, if applicable
+     */
+    tenantId?: (string | null),
   }): CancelablePromise<PasswordResetResponseDto> {
     return this.httpRequest.request({
       method: 'POST',
@@ -147,6 +152,7 @@ export class AccountService {
       query: {
         'token': token,
         'user_id': userId,
+        'tenant_id': tenantId,
       },
       body: requestBody,
       mediaType: 'application/json',

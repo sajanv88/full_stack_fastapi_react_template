@@ -139,7 +139,7 @@ class AuthService:
             tenant_id=str(reset_data.tenant_id)
         )
         token = await self.jwt_token_service.encode_activation_token(data)
-        link = get_email_sharing_link(token=token, user_id=str(reset_data.user_id), type=data.type)
+        link = get_email_sharing_link(token=token, user_id=str(reset_data.user_id), type=data.type, tenant_id=str(reset_data.tenant_id))
         html = password_reset_email_template_html(user_first_name=reset_data.first_name, password_reset_link=link)
         await self.email_service.send_email(
             to=email,
@@ -163,17 +163,16 @@ class AuthService:
         if payload.user_id != user_id:
             raise InvalidOperationException("Invalid password reset token.")
         await self.user_service.update_user_password(user_id=user_id, new_password=new_password)
-        result = await self.user_service.clear_password_reset_data_by_user_id(user_id=user_id)
-        if result is True:
-            logger.info(f"Password reset successful for user {user_id}. Cleared reset data.")
-            html = notify_password_change_template_html(user_first_name=reset_data.first_name)
-            await self.email_service.send_email(
-                to=payload.email,
-                subject="Your Password Has Been Changed",
-                body=html,
-                type=MessageType.html
-            )
-        
+        await reset_data.delete()
+        logger.info(f"Password reset successful for user {user_id}. Cleared reset data.")
+        html = notify_password_change_template_html(user_first_name=reset_data.first_name)
+        await self.email_service.send_email(
+            to=payload.email,
+            subject="Your Password Has Been Changed",
+            body=html,
+            type=MessageType.html
+        )
+    
 
     async def send_activation_email(self, payload: UserResendActivationEmailRequestDto) -> None:
         """

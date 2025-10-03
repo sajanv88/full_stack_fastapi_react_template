@@ -1,7 +1,5 @@
-from typing import Any
-from fastapi import  Header
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import  Request, Security
+from fastapi import  Request
 from beanie import PydanticObjectId
 from api.common.utils import get_logger
 from api.core.config import settings
@@ -12,8 +10,9 @@ logger = get_logger(__name__)
 
 class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        tenant_id = request.headers.get("X-Tenant-ID") or None
-        logger.debug(f"Tenant ID from headers assigned: {tenant_id}")
+        tenant_id = request.headers.get("X-Tenant-ID") or request.query_params.get('tenant_id') or None
+        logger.debug(f"Tenant ID found: {tenant_id}")
+ 
         if tenant_id is not None:
             request.state.tenant_id = PydanticObjectId(tenant_id)
             # Initialize the database for the tenant and initialize Beanie with tenant-specific models

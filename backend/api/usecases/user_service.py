@@ -94,7 +94,8 @@ class UserService:
 
     async def clear_password_reset_data_by_user_id(self, user_id: str) -> bool:
         """Clear password reset entry by user ID. Returns boolean."""
-        return await self.user_password_reset_repository.delete(user_id=PydanticObjectId(user_id))
+        logger.info(f"Clearing password reset data for user_id: {user_id}")
+        return await self.user_password_reset_repository.delete(id=user_id)
     
     async def check_email_exists(self, email: EmailStr) -> bool:
         """Check if email exists. Returns boolean."""

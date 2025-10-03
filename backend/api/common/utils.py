@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone, timedelta
 import re
+from typing import Optional
 from api.common.exceptions import InvalidOperationException
 from api.core.config import settings
 
@@ -37,11 +38,14 @@ def validate_password(password: str) -> str:
     return password
 
 
-def get_email_sharing_link(user_id: str, type: str, token: str) -> str:
+def get_email_sharing_link(user_id: str, type: str, token: str, tenant_id: Optional[str] = None) -> str:
     """
     Generate a complete email sharing link with token.
     """
-    sharing_link = f"{settings.api_endpoint_base}/v1/account/{type}?user_id={user_id}&token={token}"
+    domain = settings.fastapi_env == "development" and "http://localhost:3000" or settings.host_main_domain
+    sharing_link = f"{domain}/{type}?user_id={user_id}&token={token}"
+    if tenant_id:
+        sharing_link += f"&tenant_id={tenant_id}"
     return sharing_link
 
 

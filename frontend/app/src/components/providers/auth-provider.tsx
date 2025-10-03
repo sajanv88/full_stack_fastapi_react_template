@@ -5,7 +5,7 @@ import {
     setTenant,
 } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 
 
@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [accessToken, setAccessToken] = useState<string>("");
 
     const navigate = useNavigate();
+    const { pathname } = useLocation();
 
     const refreshToken = useCallback(async function refreshToken() {
         const auth = getApiClient().account;
@@ -161,6 +162,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     useEffect(() => {
+        if (pathname === "/password_reset_confirmation" || pathname === "/password-reset-request") {
+            return;
+        }
         if (!accessToken) {
             fetchUser();
         } else if (accessToken) {

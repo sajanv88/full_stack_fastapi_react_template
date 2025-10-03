@@ -3,6 +3,10 @@ from beanie import Document, PydanticObjectId
 from beanie.operators import Set
 from beanie.odm.interfaces.aggregate import DocumentProjectionType, AggregationQuery
 
+from api.common.utils import get_logger
+
+logger = get_logger(__name__)
+
 T = TypeVar("T", bound=Document)
 
 class BaseRepository(Generic[T]):
@@ -30,10 +34,12 @@ class BaseRepository(Generic[T]):
         return doc
 
     async def delete(self, id: str) -> bool:
-        doc = await self.model.get(PydanticObjectId(id))
+        doc = await self.get(PydanticObjectId(id))
+        logger.info(f"Deleting document with id: {id}, Found doc: {doc is not None}")
         if not doc:
             return False
         await doc.delete()
+        logger.info(f"Document with id: {id} deleted successfully.")
         return True
     
     async def count(self, params: Optional[Any] | None = None) -> int:
