@@ -7,18 +7,18 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/hooks/use-auth";
 import { NavLink } from "react-router";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Logo } from "@/components/shared/logo";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { TenantSelection } from "../tenant/tenant-selection";
+import { useAuthContext } from "@/components/providers/auth-provider";
 
 
 
@@ -36,7 +36,7 @@ type LoginFormInputs = z.infer<typeof loginSchema>;
 export function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { login, refreshToken } = useAuth();
+    const { login } = useAuthContext();
     const appConfig = useAppConfig();
 
     const form = useForm<LoginFormInputs>({
@@ -58,17 +58,15 @@ export function Login() {
         await login({
             email: data.email,
             password: data.password
-        }).catch((error) => {
-            setError(error.message);
+        }).catch(() => {
+            setError("Invalid email or password");
         }).finally(() => {
             setIsLoading(false);
         });
 
     };
 
-    useEffect(() => {
-        refreshToken();
-    }, [])
+
 
     return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
@@ -139,7 +137,7 @@ export function Login() {
 
                     <CardFooter className="p-0 mt-4">
                         {error && (
-                            <Alert>
+                            <Alert variant="destructive">
                                 <AlertTitle>Error</AlertTitle>
                                 <AlertDescription>{error}</AlertDescription>
                             </Alert>

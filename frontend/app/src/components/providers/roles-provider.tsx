@@ -4,6 +4,7 @@ import { IResponseData } from '../shared/iresponse-data.inteface';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { getApiClient } from '@/lib/utils';
+import { useAuthContext } from './auth-provider';
 
 
 export type RoleResponse = RoleListDto
@@ -54,13 +55,14 @@ interface RolesProviderProps {
     children: React.ReactNode;
 }
 export function RolesProvider({ children }: RolesProviderProps) {
+    const { accessToken } = useAuthContext();
     const [searchParams] = useSearchParams();
     const [pending, setPending] = useState(true);
     const [roleError, setRoleError] = useState<string | null>(null);
 
     const [roleResponse, setRoleResponse] = useState<IResponseData<RolesType>>(initialState.roleResponse);
     const [selectedRole, setSelectedRole] = useState<Action | undefined>(initialState.selectedRole);
-    const apiClient = getApiClient();
+    const apiClient = getApiClient(accessToken);
     const role = apiClient.roles;
 
     async function fetchRoles() {

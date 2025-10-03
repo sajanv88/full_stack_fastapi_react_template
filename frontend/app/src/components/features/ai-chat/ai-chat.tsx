@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Loading } from '@/components/shared/loading'
-import { cn, getAccessToken, getAIChatNewSession, getApiClient, getTenant } from '@/lib/utils'
+import { cn, getAccessToken, getApiClient, getTenant } from '@/lib/utils'
 import { Send, Bot, User, Sparkles, Copy, RefreshCw, Trash2, InfoIcon } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { ListLocalAIModels } from '@/components/shared/list-local-ai-models'
@@ -16,7 +16,7 @@ import { toast } from 'sonner'
 import { AIChatHistory } from './ai-chat-history'
 import { useSearchParams } from 'react-router'
 import { useAIChat } from '@/components/providers/ai-chat-provider'
-import { AIAskRequestDto, AIHistoriesDto, AIModelInfoDto } from '@/api'
+import { AIAskRequestDto, AIModelInfoDto } from '@/api'
 
 interface Message {
     id: string
@@ -32,10 +32,11 @@ interface ChatState {
     error: string | null
 }
 
+
 export function AIChat() {
     const [searchParams, setSearchParams] = useSearchParams()
-    const { user } = useAuthContext()
-    const { sessions, fetchAllSessions } = useAIChat()
+    const { user, accessToken } = useAuthContext()
+    const { getAIChatNewSession, fetchAllSessions } = useAIChat()
     const { user_preferences, available_ai_models } = useAppConfig()
     const [chatState, setChatState] = useState<ChatState>({
         messages: [],
@@ -70,13 +71,9 @@ export function AIChat() {
 
     // fetch histories
     async function fetchHistories(sessionId: string) {
-        // const histories = sessions.find(s => s.session_id === sessionId)?.sessions
-        // console.log("Histories from context:", histories)
-        // if (histories && histories.length > 0) {
-        //     return histories[0]
-        // }
+
         try {
-            const apiClient = getApiClient()
+            const apiClient = getApiClient(accessToken)
             const response = await apiClient.ai.getSingleSessionApiV1AiSessionsSessionIdGet({
                 sessionId: sessionId!
             });
@@ -170,11 +167,13 @@ export function AIChat() {
 
         }
         if (searchParams.get("session_id") && !searchParams.get("new_session")) {
-            startTransition(() => {
-                fetchSelectedSessionHistory()
-            })
+            if (accessToken) {
+                startTransition(() => {
+                    fetchSelectedSessionHistory()
+                })
+            }
         }
-    }, [searchParams])
+    }, [searchParams, accessToken])
 
     const generateId = () => Math.random().toString(36).substr(2, 9)
 
@@ -217,7 +216,6 @@ export function AIChat() {
         }
 
         try {
-            const accessToken = getAccessToken();
             const tenant = getTenant();
             const payload: AIAskRequestDto = {
                 question: userMessage.content,
@@ -269,7 +267,6 @@ export function AIChat() {
             }))
 
             const shouldRefresh = new URLSearchParams(window.location.search).get("new_session") === 'true'
-            console.log(shouldRefresh, "------------")
             if (shouldRefresh) {
                 await fetchAllSessions()
 

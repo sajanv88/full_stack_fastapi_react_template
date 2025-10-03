@@ -1,11 +1,11 @@
 from typing import Annotated
 from beanie import PydanticObjectId
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from fastapi.params import Query
 from fastapi.security import OAuth2PasswordRequestForm
 from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
-from api.common.exceptions import InvalidOperationException
+from api.common.exceptions import ForbiddenException, InvalidOperationException
 from api.common.utils import get_logger
 from api.core.container import get_auth_service
 from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, MeResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
@@ -17,6 +17,8 @@ from api.infrastructure.security.current_user import CurrentUser
 from api.interfaces.middlewares.tenant_middleware import get_tenant_id
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.auth_service import AuthService
+from api.core.config import settings
+from api.common.dtos.cookies import Cookies
 
 logger = get_logger(__name__)
 
@@ -24,17 +26,57 @@ router = APIRouter(prefix="/account", tags=["Account"])
 
 @router.post("/login", response_model=TokenSetDto, status_code=status.HTTP_200_OK)
 async def login(
+    response: Response,
     login_request: Annotated[OAuth2PasswordRequestForm, Depends()],
     auth_service: AuthService = Depends(get_auth_service),
     x_tenant_id: str = Depends(get_tenant_id)
 ):
     logger.info(f"Login attempt for user: {login_request.username} x_tenant_id: {x_tenant_id}")
-    response: TokenSetDto = await auth_service.login(LoginRequestDto(
+    token_set: TokenSetDto = await auth_service.login(LoginRequestDto(
         email=login_request.username,
         password=login_request.password
     ))
-    return response
+    
+    response.set_cookie(
+        key="refresh_token",
+        value=token_set.refresh_token,
+        httponly=settings.fastapi_env == "production",
+        secure=True,
+        samesite="lax",
+        max_age=settings.refresh_token_expire_days
+    )
+    return token_set
 
+
+@router.post("/refresh",  response_model=TokenSetDto, status_code=status.HTTP_200_OK)
+async def refresh_token(
+    response: Response,
+    cookies: Annotated[Cookies, Cookie()],
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    if cookies.refresh_token is None:
+        raise ForbiddenException("Refresh token missing!")
+    
+    token = TokenRefreshRequestDto(refresh_token=cookies.refresh_token)
+    
+    token_set = await auth_service.refresh_token(token)
+    response.set_cookie(
+        key="refresh_token",
+        value=token_set.refresh_token,
+        httponly=settings.fastapi_env == "production",
+        secure=True,
+        samesite="lax",
+        max_age=settings.refresh_token_expire_days
+    )
+    return token_set
+
+@router.get("/logout", status_code=status.HTTP_200_OK)
+async def logout(
+    response: Response,
+    current_user: CurrentUser,
+):
+    response.delete_cookie("refresh_token")
+    return status.HTTP_200_OK
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(
@@ -70,12 +112,7 @@ async def read_users_me(
     return current_user
 
 
-@router.post("/refresh", response_model=TokenSetDto, status_code=status.HTTP_200_OK)
-async def refresh_token(
-    token: TokenRefreshRequestDto,
-    auth_service: AuthService = Depends(get_auth_service)
-):
-    return await auth_service.refresh_token(token)
+
 
 
 @router.post("/password_reset_request", response_model=PasswordResetResponseDto, status_code=status.HTTP_200_OK)

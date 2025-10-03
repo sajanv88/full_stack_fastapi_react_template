@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, status
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_logger
 from api.core.container import   get_tenant_service
-from api.core.exceptions import TenantNotFoundException
+from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
 from api.domain.dtos.tenant_dto import CreateTenantResponseDto, SubdomainAvailabilityDto, TenantDto, TenantListDto, CreateTenantDto
 from api.domain.dtos.user_dto import CreateUserDto
 from api.domain.entities.tenant import Subdomain
@@ -98,5 +98,7 @@ async def check_subdomain_availability(
         is_available = False
     except TenantNotFoundException as e:
         is_available = True
+    except InvalidSubdomainException as e:
+        is_available = False
 
     return SubdomainAvailabilityDto(is_available=is_available)

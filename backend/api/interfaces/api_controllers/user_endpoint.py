@@ -7,6 +7,7 @@ from api.interfaces.security.role_checker import check_permissions_for_current_r
 from api.usecases.file_service import FileService
 from api.usecases.user_service import UserService
 from api.core.container import get_file_service, get_user_service
+from api.infrastructure.security.current_user import CurrentUser
 
 
 logger = get_logger(__name__)
@@ -26,10 +27,12 @@ async def list_users(
 @router.post("/", response_model=CreateUserResponseDto, status_code=status.HTTP_201_CREATED)
 async def create_user(
     data: CreateUserDto,
+    current_user: CurrentUser,
     service: UserService = Depends(get_user_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.USER_READ_AND_WRITE_ONLY]))
 ):
 
+    data.tenant_id = current_user.tenant_id
     new_user_id = await service.create_user(data)
     return CreateUserResponseDto(id=str(new_user_id))
 

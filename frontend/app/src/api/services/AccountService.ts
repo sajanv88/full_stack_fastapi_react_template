@@ -11,7 +11,6 @@ import type { MeResponseDto } from '../models/MeResponseDto';
 import type { PasswordResetConfirmRequestDto } from '../models/PasswordResetConfirmRequestDto';
 import type { PasswordResetRequestDto } from '../models/PasswordResetRequestDto';
 import type { PasswordResetResponseDto } from '../models/PasswordResetResponseDto';
-import type { TokenRefreshRequestDto } from '../models/TokenRefreshRequestDto';
 import type { TokenSetDto } from '../models/TokenSetDto';
 import type { UserActivationRequestDto } from '../models/UserActivationRequestDto';
 import type { UserResendActivationEmailRequestDto } from '../models/UserResendActivationEmailRequestDto';
@@ -37,6 +36,38 @@ export class AccountService {
       errors: {
         422: `Validation Error`,
       },
+    });
+  }
+  /**
+   * Refresh Token
+   * @returns TokenSetDto Successful Response
+   * @throws ApiError
+   */
+  public refreshTokenApiV1AccountRefreshPost({
+    refreshToken,
+  }: {
+    refreshToken?: (string | null),
+  }): CancelablePromise<TokenSetDto> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/api/v1/account/refresh',
+      cookies: {
+        'refresh_token': refreshToken,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Logout
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public logoutApiV1AccountLogoutGet(): CancelablePromise<any> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/account/logout',
     });
   }
   /**
@@ -68,26 +99,6 @@ export class AccountService {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/account/me',
-    });
-  }
-  /**
-   * Refresh Token
-   * @returns TokenSetDto Successful Response
-   * @throws ApiError
-   */
-  public refreshTokenApiV1AccountRefreshPost({
-    requestBody,
-  }: {
-    requestBody: TokenRefreshRequestDto,
-  }): CancelablePromise<TokenSetDto> {
-    return this.httpRequest.request({
-      method: 'POST',
-      url: '/api/v1/account/refresh',
-      body: requestBody,
-      mediaType: 'application/json',
-      errors: {
-        422: `Validation Error`,
-      },
     });
   }
   /**

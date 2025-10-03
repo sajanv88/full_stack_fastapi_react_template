@@ -49,13 +49,13 @@ interface TenantsProviderProps {
 }
 
 export function TenantsProvider({ children }: TenantsProviderProps) {
+    const { accessToken, can } = useAuthContext();
     const [tenantResponse, setTenantResponse] = useState<IResponseData<TenantsType>>(initialState.tenantResponse);
     const [searchParams] = useSearchParams();
     const [selectedTenant, setSelectedTenant] = useState<Action | undefined>(undefined);
     const [pending, setPending] = useState(true);
-    const { can } = useAuthContext();
     const isHost = can("host:manage_tenants");
-    const apiClient = getApiClient();
+    const apiClient = getApiClient(accessToken);
 
     async function fetchTenants() {
         const skip = searchParams.get("skip");

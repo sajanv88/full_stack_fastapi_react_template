@@ -1,6 +1,6 @@
 from typing import List, Optional
 from beanie import PydanticObjectId
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from api.domain.enum.permission import Permission
 
@@ -29,7 +29,7 @@ class CreateRoleDto(BaseModel):
     tenant_id: PydanticObjectId | None = None
 
 class UpdateRoleDto(CreateRoleDto):
-    permissions: List[Permission] = []
+    permissions: List[Permission] = Field(default_factory=list)
 
 
 class CreateRoleResponseDto(BaseModel):

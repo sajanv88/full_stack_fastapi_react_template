@@ -1,17 +1,21 @@
 import { AISessionByUserIdDto } from "@/api";
 import { getApiClient } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
+import { useAuthContext } from "./auth-provider";
+import { toast } from "sonner";
 
 type AIChatProviderState = {
     fetchAllSessions: () => Promise<void>;
     sessions: AISessionByUserIdDto[];
     onDeleteSession: (sessionId: string) => Promise<void>;
+    getAIChatNewSession: () => Promise<string>;
 }
 
 const AIChatContext = createContext<AIChatProviderState>({
     fetchAllSessions: async () => { },
     sessions: [],
-    onDeleteSession: async () => { }
+    onDeleteSession: async () => { },
+    getAIChatNewSession: async () => { throw new Error("Not implemented"); }
 })
 
 interface AIChatProviderProps {
@@ -20,7 +24,8 @@ interface AIChatProviderProps {
 
 export function AIChatProvider({ children }: AIChatProviderProps) {
     const [sessions, setSessions] = useState<AISessionByUserIdDto[]>([]);
-    const apiClient = getApiClient()
+    const { accessToken } = useAuthContext();
+    const apiClient = getApiClient(accessToken)
 
     async function fetchAllSessions() {
         const response = await apiClient.ai.getHistoryApiV1AiHistoryGet();
@@ -34,12 +39,23 @@ export function AIChatProvider({ children }: AIChatProviderProps) {
         await fetchAllSessions();
     }
 
+    async function getAIChatNewSession() {
+        try {
+            const response = await apiClient.ai.createNewSessionApiV1AiNewSessionGet();
+            return response.session_id;
+        } catch (error) {
+            console.error("Failed to create new AI session:", error);
+            toast.error("Failed to create new AI session", { richColors: true, position: "top-center" });
+            throw new Error("Failed to create new AI session");
+        }
+    }
+
     useEffect(() => {
         fetchAllSessions();
-    }, [])
+    }, [accessToken])
 
     return (
-        <AIChatContext.Provider value={{ fetchAllSessions, sessions, onDeleteSession }}>
+        <AIChatContext.Provider value={{ fetchAllSessions, sessions, onDeleteSession, getAIChatNewSession }}>
             {children}
         </AIChatContext.Provider>
     )

@@ -53,7 +53,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>
 
 export function Profile() {
-    const { user, onUpdateProfile, refreshCurrentUser } = useAuthContext()
+    const { user, onUpdateProfile, refreshCurrentUser, accessToken } = useAuthContext()
 
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
@@ -123,7 +123,7 @@ export function Profile() {
             formData.append('file', file)
 
             // TODO: Implement image upload API endpoint
-            const apiClient = getApiClient();
+            const apiClient = getApiClient(accessToken);
             await apiClient.users.updateProfilePictureApiV1UsersUserIdUpdateProfilePicturePut({
                 formData: {
                     file: file as File

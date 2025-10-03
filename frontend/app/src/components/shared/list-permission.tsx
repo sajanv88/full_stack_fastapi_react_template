@@ -1,5 +1,5 @@
-import { ApiClient, PermissionDto } from "@/api";
-import { getAccessToken } from "@/lib/utils";
+import { PermissionDto } from "@/api";
+import { getApiClient } from "@/lib/utils";
 import { useEffect, useState, useTransition } from "react";
 import { CheckIcon, ChevronsUpDownIcon, InfoIcon } from "lucide-react"
 
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/popover"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { useAuthContext } from "../providers/auth-provider";
 
 interface ListPermissionProps {
     value?: string[]
@@ -40,14 +41,10 @@ export function ListPermission({
     const [pending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
     const [open, setOpen] = useState(false)
+    const { accessToken } = useAuthContext();
     const [selectedPermissions, setSelectedPermissions] = useState<string[]>(value)
 
-    const accessToken = getAccessToken();
-    const apiClient = new ApiClient({
-        HEADERS: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-    });
+    const apiClient = getApiClient(accessToken)
     const permission = apiClient.permissions;
     async function fetchPermissions() {
         try {

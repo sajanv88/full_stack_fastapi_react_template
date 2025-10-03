@@ -30,7 +30,7 @@ async def search_role_by_name(
     service: RoleService = Depends(get_role_service)
 ):
     roles = await service.search_role_by_name(name)
-    return roles
+    return [RoleDto(**(await role.to_serializable_dict())) for role in roles]
 
 @router.post("/", response_model=CreateRoleResponseDto, status_code=status.HTTP_201_CREATED)
 async def create_role(

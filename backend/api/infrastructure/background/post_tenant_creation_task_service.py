@@ -2,7 +2,7 @@ from beanie import PydanticObjectId
 from api.common.seeder_utils import get_seed_roles
 from api.common.utils import get_logger
 from api.core.exceptions import EmailAlreadyExistsException, RoleNotFoundException, UserNotFoundException
-from api.domain.dtos.role_dto import CreateRoleDto
+from api.domain.entities.role import Role
 from api.domain.dtos.user_dto import CreateUserDto
 from api.domain.enum.role import RoleType
 from api.domain.interfaces.background_task import IBackgroundTask
@@ -24,21 +24,18 @@ class PostTenantCreationTaskService(IBackgroundTask):
 
     async def _seed_roles(self, tenant_id: PydanticObjectId) -> None:
         roles = get_seed_roles()
-
         for role in roles:
-            try:
-                await self.role_service.find_by_name(name=role['name'])
-                logger.info(f"Role already exists, skipping seeding: {role['name']}")
-            except RoleNotFoundException as exc:
-                logger.info(f"Role not found, seeding role: {role['name']}. Exception: {exc}")
-                role_dto = CreateRoleDto(
-                    name=role['name'],
-                    description=role["description"],
-                    permissions=role["permissions"],
+            logger.info(f"Seeding role {role.name} and permissions: {role.permissions}")
+            await Role.insert_one(
+                document=Role(
+                    name=role.name,
+                    description=role.description,
+                    permissions=role.permissions.copy(),
                     tenant_id=tenant_id
                 )
-                await self.role_service.create_role(role_dto)
-                logger.info(f"Seeded role: {role['name']}")
+            )
+        logger.info("Seeded default roles successfully.")
+
 
 
     async def _init_and_run(self, admin_user: CreateUserDto) -> None:
@@ -48,7 +45,7 @@ class PostTenantCreationTaskService(IBackgroundTask):
             response  = await self.user_service.create_user(admin_user)
             user = await self.user_service.get_user_by_id(user_id=str(response))
             logger.info(f"Created admin user with ID: {user.id} and email: {user.email}")
-            role = await self.role_service.find_by_name(name=RoleType.ADMIN.value)
+            role = await self.role_service.find_by_name(name=RoleType.ADMIN)
             logger.info(f"Assigning 'Admin' role to user {user.email}")
             user.role_id = role.id
             await user.save()

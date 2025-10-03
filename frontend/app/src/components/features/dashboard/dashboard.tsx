@@ -14,6 +14,7 @@ import { DashboardMetricsDto } from "@/api";
 import { Loading } from "@/components/shared/loading";
 import { getApiClient } from "@/lib/utils";
 import { AllCards } from "./all-cards";
+import { useAuthContext } from "@/components/providers/auth-provider";
 
 
 
@@ -21,22 +22,23 @@ export function Dashboard() {
     const [filter, setFilter] = useState<"today" | "this_week" | "last_3_months">("this_week");
     const [data, setData] = useState<DashboardMetricsDto | null>(null);
 
-
+    const { accessToken } = useAuthContext();
     useEffect(() => {
         async function fetchData() {
             try {
-                const metrics = await getApiClient().dashboard.getDashboardMetricsApiV1DashboardGet({ filter })
+                const metrics = await getApiClient(accessToken).dashboard.getDashboardMetricsApiV1DashboardGet({ filter })
                 setData(metrics);
             } catch (error) {
                 if (error instanceof Error) {
                     console.error("Error fetching dashboard metrics:", error.cause);
-                    window.location.reload();
+                    // window.location.reload();
+                    // await refreshCurrentUser();
                 }
             }
 
         }
         fetchData();
-    }, [filter])
+    }, [filter, accessToken])
 
     return (
         <div>

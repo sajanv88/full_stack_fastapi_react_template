@@ -45,7 +45,6 @@ export type { SubdomainAvailabilityDto } from './models/SubdomainAvailabilityDto
 export type { TenantDto } from './models/TenantDto';
 export type { TenantListDto } from './models/TenantListDto';
 export type { TimeSeriesDto } from './models/TimeSeriesDto';
-export type { TokenRefreshRequestDto } from './models/TokenRefreshRequestDto';
 export type { TokenSetDto } from './models/TokenSetDto';
 export type { UpdateRoleDto } from './models/UpdateRoleDto';
 export type { UpdateUserDto } from './models/UpdateUserDto';

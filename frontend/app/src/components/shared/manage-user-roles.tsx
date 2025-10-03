@@ -9,6 +9,7 @@ import { getApiClient } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Search, Users, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthContext } from "../providers/auth-provider";
 
 
 interface ManageUserRolesProps {
@@ -22,7 +23,8 @@ export function ManageUserRoles({ open, onDismiss, userId }: ManageUserRolesProp
     const [selectedRole, setSelectedRole] = useState<RoleDto | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
-    const apiClient = getApiClient();
+    const { accessToken } = useAuthContext();
+    const apiClient = getApiClient(accessToken);
 
 
     async function fetchRoles() {
@@ -59,7 +61,6 @@ export function ManageUserRoles({ open, onDismiss, userId }: ManageUserRolesProp
         setIsLoading(true);
         try {
             // Add your role assignment logic here
-            console.log('Assigning role:', selectedRole);
             await apiClient.users.patchUserApiV1UsersUserIdAssignRolePatch({
                 userId: userId,
                 requestBody: {

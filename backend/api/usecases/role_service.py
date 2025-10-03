@@ -23,7 +23,7 @@ class RoleService:
         return existing
 
     async def search_role_by_name(self, name: str) -> list[Role]:
-        return await self.role_repository.search({"name": {"$regex": name, "$options": "i"}}).to_list(length=10)
+        return await self.role_repository.search({"name": {"$regex": name, "$options": "i"}})
 
     async def get_role_by_id(self, role_id: str) -> Role:
         existing = await self.role_repository.get(id=role_id)
@@ -35,7 +35,7 @@ class RoleService:
         existing = await self.role_repository.single_or_none(name=role_data.name)
         if existing is not None:
             raise RoleAlreadyExistsException(name=role_data.name)
-        return await self.role_repository.create(role_data) 
+        return await self.role_repository.create(data=role_data) 
 
     async def update_role(self, role_id: str, role_data: UpdateRoleDto) -> Role | None:
         existing = await self.role_repository.get(id=role_id)

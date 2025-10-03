@@ -11,7 +11,6 @@ import {
     SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Button } from "../ui/button";
-import { clearAllTokens } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
 import {
     LayoutDashboard,
@@ -26,6 +25,8 @@ import {
 } from 'lucide-react';
 import { useAuthContext } from '../providers/auth-provider';
 import { useMemo } from 'react';
+import { getApiClient } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -45,7 +46,7 @@ export function DashboardSidebar() {
     const location = useLocation();
     const pathname = location.pathname;
     const navigate = useNavigate();
-    const { user } = useAuthContext();
+    const { user, accessToken } = useAuthContext();
     const isTenant = user?.tenant_id;
 
     function isLinkActive(href: string) {
@@ -56,9 +57,20 @@ export function DashboardSidebar() {
         return pathname === href;
     };
 
-    function logout() {
-        clearAllTokens();
-        navigate("/login");
+    async function logout() {
+        try {
+            await getApiClient(accessToken).account.logoutApiV1AccountLogoutGet();
+            toast.success("Logged out successfully.",
+                { richColors: true, position: "top-center", description: "Redirecting to login..." });
+        } catch (error) {
+            console.error("Logout failed:", error);
+            toast.error("Logout failed. Please try again.", { richColors: true, position: "top-center" });
+        } finally {
+            setTimeout(() => {
+                navigate("/login");
+            }, 2000); // Small delay to ensure toast is shown before navigation
+
+        }
     };
 
     const mainNavLinksToRender = useMemo(() => isTenant ? navLinks.filter(link => !link.href.includes('/tenants')) : navLinks, [isTenant]);

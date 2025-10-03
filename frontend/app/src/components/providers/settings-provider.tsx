@@ -2,6 +2,7 @@ import { AvailableStorageProviderDTO } from "@/api";
 import { getApiClient } from "@/lib/utils";
 import { useContext, createContext, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useAuthContext } from "./auth-provider";
 
 export interface StorageFormData extends Omit<AvailableStorageProviderDTO, 'id' | 'created_at' | 'updated_at'> { }
 interface SettingsContextProps {
@@ -25,7 +26,8 @@ interface SettingsProviderProps {
     children: React.ReactNode;
 }
 export function SettingsProvider({ children }: SettingsProviderProps) {
-    const apiClient = getApiClient();
+    const { accessToken } = useAuthContext();
+    const apiClient = getApiClient(accessToken);
     const [storages, setStorages] = useState<AvailableStorageProviderDTO[]>([]);
     const [availableStorages, setAvailableStorages] = useState<Array<Record<string, string>>>([]);
     const [loading, setLoading] = useState(true);

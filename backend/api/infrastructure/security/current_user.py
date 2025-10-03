@@ -36,4 +36,22 @@ async def get_current_user(
     return MeResponseDto(**user_dto.model_dump(), role=role_doc)
 
 
+
 CurrentUser = Annotated[MeResponseDto, Depends(get_current_user)]
+
+async def current_user_optional(token: Annotated[str, Depends(oauth2_scheme)],
+        user_service: UserService = Depends(get_user_service),
+        token_service: JwtTokenService = Depends(get_jwt_token_service),
+        role_service: RoleService = Depends(get_role_service)) -> MeResponseDto | None:
+    """
+        Optional current user information. If the user is not authenticated, this will be None.
+        Useful for endpoints that can be accessed by both authenticated and unauthenticated users.
+    """
+    try:
+        return await get_current_user(token, user_service, token_service, role_service)
+    except Exception as e:
+        logger.info(f"Optional current user retrieval failed: {e}")
+        return None
+
+
+CurrentUserOptional = Annotated[MeResponseDto | None, Depends(current_user_optional)]

@@ -10,6 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function storeTokenSet(tokenSet: TokenSetDto) {
   sessionStorage.setItem("access_token", tokenSet.access_token);
+  sessionStorage.setItem("access_token_expires_at", tokenSet.expires_in?.toString() || "");
   localStorage.setItem("refresh_token", tokenSet.refresh_token);
   localStorage.setItem("refresh_token_expires_at", tokenSet.refresh_token_expires_in?.toString() || "");
   sessionStorage.setItem("logged_in", "true");
@@ -60,26 +61,23 @@ export function scheduleTokenRefresh(cb: () => Promise<void>) {
   }
 
   const refreshTokenExpiresAt = localStorage.getItem("refresh_token_expires_at");
+  const accessTokenExpiresIn = sessionStorage.getItem("access_token_expires_at");
   if (!refreshTokenExpiresAt) {
     console.error("No refresh token expiry available");
     return;
   }
-  const expiry = Date.now() + (Number(refreshTokenExpiresAt) * 1000); // Convert to milliseconds
-  console.log("Refresh token expiry (ms):", expiry);
+  const expiry = Number(accessTokenExpiresIn) * 1000; // Convert to milliseconds
 
-  const refreshTime = expiry - Date.now() - (5 * 60 * 1000); // refresh 5 mins early
-  console.log("Scheduling token refresh in (ms):", refreshTime);
+  const refreshTime = expiry - Date.now() - (10 * 60 * 1000); // refresh 10 mins early
 
-  if (refreshTime <= 0) {
-    console.log("⏰ Refreshing immediately...");
+  if (refreshTime <= 0 || expiry - Date.now() <= 0) {
+    console.error("Refresh time is in the past, cannot schedule token refresh");
     cb();
-  } else {
-    setTimeout(async () => {
-      console.log("⏰ Refreshing token...");
-      await cb();
-    }, refreshTime);
+    return;
   }
-
+  setTimeout(() => {
+    cb().catch(err => console.error("Token refresh failed", err));
+  }, refreshTime);
 }
 
 export function userProfileImageUrl(url: string | null | undefined) {
@@ -88,36 +86,29 @@ export function userProfileImageUrl(url: string | null | undefined) {
 }
 
 
-export function getApiClient() {
-  const accessToken = getAccessToken();
+export function getApiClient(accessToken?: string) {
+  // console.log("Getting API client with access token:", accessToken);
   const tenant = getTenant();
   if (!accessToken) {
     if (tenant) {
       return new ApiClient({
         HEADERS: {
           "X-Tenant-ID": tenant.id!
-        }
+        },
+        WITH_CREDENTIALS: true,
       })
     }
-    return new ApiClient();
+    return new ApiClient({
+      WITH_CREDENTIALS: true,
+    });
   }
   return new ApiClient({
     HEADERS: {
       Authorization: `Bearer ${accessToken}`,
       ...tenant?.id && { "X-Tenant-ID": tenant.id }
-    }
+    },
+    WITH_CREDENTIALS: true
   });
 }
 
 
-export async function getAIChatNewSession() {
-  try {
-    const apiClient = getApiClient();
-    const response = await apiClient.ai.createNewSessionApiV1AiNewSessionGet();
-    return response.session_id;
-  } catch (error) {
-    console.error("Failed to create new AI session:", error);
-    toast.error("Failed to create new AI session", { richColors: true, position: "top-center" });
-    throw new Error("Failed to create new AI session");
-  }
-}

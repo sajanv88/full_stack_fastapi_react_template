@@ -4,6 +4,7 @@ import { IResponseData } from '../shared/iresponse-data.inteface';
 import { getApiClient } from '@/lib/utils';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
+import { useAuthContext } from './auth-provider';
 
 export type UserResponse = UserListDto
 export type UsersType = UserResponse["users"][0]
@@ -54,12 +55,13 @@ interface UsersProviderProps {
 }
 
 export function UsersProvider({ children }: UsersProviderProps) {
+    const { accessToken } = useAuthContext();
     const [searchParams] = useSearchParams();
     const [pending, setPending] = useState(true);
     const [userError, setUserError] = useState<string | null>(null);
     const [userResponse, setUserResponse] = useState<IResponseData<UsersType>>(initialState.userResponse);
     const [selectedUser, setSelectedUser] = useState<Action | undefined>(initialState.selectedUser);
-    const apiClient = getApiClient();
+    const apiClient = getApiClient(accessToken);
     const user = apiClient.users;
     const auth = apiClient.account;
 

@@ -16,12 +16,12 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { NavLink } from "react-router";
-import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/shared/logo";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { Label } from "@/components/ui/label";
 import { useSubdomainCheck } from "@/hooks/use-subdomain-check";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuthContext } from "@/components/providers/auth-provider";
 
 // Gender enum matching the backend
 export const Gender = {
@@ -60,7 +60,7 @@ type SignupFormInputs = z.infer<typeof signupSchema>;
 
 export default function Register() {
     const [isLoading, setIsLoading] = useState(false);
-    const { register } = useAuth();
+    const { register } = useAuthContext();
     const appConfig = useAppConfig();
     const { setSubdomain, subdomainAvailability, isChecking, error } = useSubdomainCheck();
     const isMultiTenancyEnabled = appConfig.is_multi_tenant_enabled;
@@ -125,6 +125,7 @@ export default function Register() {
             form.setError("subdomain", { type: "manual", message: error });
         }
     }, [subdomainAvailability, error, isMultiTenancyEnabled]);
+    const subdomainError = form.formState.errors.subdomain?.message;
 
     return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-1rem)]">
@@ -212,9 +213,9 @@ export default function Register() {
                                             />
                                         </span>
                                     </div>
-                                    {form.getFieldState("subdomain").error && (
+                                    {subdomainError && (
                                         <Alert variant="destructive" className="mt-4">
-                                            <AlertDescription>{form.getFieldState("subdomain").error?.message}</AlertDescription>
+                                            <AlertDescription>{subdomainError}</AlertDescription>
                                         </Alert>
                                     )}
                                 </section>
