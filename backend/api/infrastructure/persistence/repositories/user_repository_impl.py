@@ -27,6 +27,7 @@ class UserRepository(BaseRepository[User]):
             self, 
             data: CreateUserDto,
         ) -> PydanticObjectId | None:
+
         new_user = User(
             email=data.email,
             first_name=data.first_name,
@@ -34,6 +35,7 @@ class UserRepository(BaseRepository[User]):
             gender=data.gender,
             password=data.password,
             is_active=False,
+            role_id=data.role_id,
             tenant_id=data.tenant_id
         )
         result = await super().create(new_user.model_dump())

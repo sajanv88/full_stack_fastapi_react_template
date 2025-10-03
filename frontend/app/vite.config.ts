@@ -18,7 +18,7 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: "../../backend/app/ui",
+    outDir: "../../backend/api/ui",
     emptyOutDir: true,
   },
 })

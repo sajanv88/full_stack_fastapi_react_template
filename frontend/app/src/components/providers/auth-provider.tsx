@@ -8,7 +8,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 
-
+const notProtectedRoutes = ["/password_reset_confirmation", "/password-reset-request", "/register", "/forgot-password"];
 export type UpdateProfileType = {
     firstName: string;
     lastName: string;
@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     useEffect(() => {
-        if (pathname === "/password_reset_confirmation" || pathname === "/password-reset-request") {
+        if (notProtectedRoutes.includes(pathname)) {
             return;
         }
         if (!accessToken) {

@@ -7,7 +7,7 @@ from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.exceptions import ForbiddenException, InvalidOperationException
 from api.common.utils import get_logger
-from api.core.container import get_auth_service
+from api.core.container import get_auth_service, get_role_service
 from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, MeResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserDto, UserResendActivationEmailRequestDto
@@ -19,6 +19,8 @@ from api.interfaces.security.role_checker import check_permissions_for_current_r
 from api.usecases.auth_service import AuthService
 from api.core.config import settings
 from api.common.dtos.cookies import Cookies
+from api.usecases.role_service import RoleService
+from api.domain.enum.role import RoleType
 
 logger = get_logger(__name__)
 
@@ -82,9 +84,11 @@ async def logout(
 async def register(
     data: CreateUserDto,
     auth_service: AuthService = Depends(get_auth_service),
+    role_service: RoleService = Depends(get_role_service),
     x_tenant_id: PydanticObjectId | None = Depends(get_tenant_id)
 ):
     logger.info(f"Register attempt for user: {data.email} x_tenant_id: {x_tenant_id}")
+    role_guest = await role_service.find_by_name(name=RoleType.GUEST)
 
     if x_tenant_id is not None:
         data.tenant_id = x_tenant_id
@@ -100,7 +104,8 @@ async def register(
         handle_post_tenant_creation.delay(
             payload=payload.model_dump_json()
         )
-        
+    
+    data.role_id = role_guest.id
     await auth_service.register(data, process_user_creation)
     return status.HTTP_201_CREATED
         

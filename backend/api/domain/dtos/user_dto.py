@@ -11,6 +11,7 @@ class BaseUserDto(BaseModel):
     email: EmailStr
     gender: Gender
     tenant_id: PydanticObjectId | None = None
+    role_id: PydanticObjectId | None = None
 
 class CreateUserDto(BaseUserDto):
     password: str

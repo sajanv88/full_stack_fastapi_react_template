@@ -1,0 +1,8 @@
+tests
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env.example
+pytest.ini

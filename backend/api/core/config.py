@@ -6,6 +6,11 @@ from pydantic_settings import BaseSettings
 load_dotenv()
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(
+        env_file = ".env",
+        env_file_encoding = "utf-8",
+        extra="allow"
+    )
     mongo_uri: str = "mongodb://localhost:27017"
     mongo_db_name: str = "myapp"
 
@@ -41,15 +46,12 @@ class Settings(BaseSettings):
     smtp_port: int
     smtp_mail_from_name: str = "FSR App"
     smtp_mail_from: EmailStr
-    smtp_start_tls: bool = False
+    smtp_starttls: bool = False
     smtp_ssl_tls: bool = False
     smtp_use_credentials: bool = False # Changed to True when running production env
     smtp_validate_certs: bool = False
 
-    model_config = ConfigDict(
-        env_file = ".env",
-        env_file_encoding = "utf-8"
-    )
+
     
 # Instantiate settings once
 settings = Settings()
