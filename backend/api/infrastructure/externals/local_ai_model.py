@@ -20,27 +20,31 @@ class OllamaModels:
         """
             Lists available AI models using the Ollama CLI.
         """
-        result = subprocess.run(["ollama", "list"], capture_output=True, text=True)
         models: List[AIModelInfoDto] = []
-        lines = result.stdout.strip().split("\n")
-            # Skip header line (first one)
-        for line in lines[1:]:
-            if not line.strip():
-                continue
-            parts = line.split()
-            if len(parts) < 4:
-                continue
-            name = parts[0]
-            digest = parts[1]
-            size = parts[2] + (f" {parts[3]}" if parts[3].upper() in ["GB", "MB"] else "")
-            created = " ".join(parts[4:])
-            models.append(AIModelInfoDto(
-                name=name,
-                digest=digest,
-                size=size,
-                created=created
-            ))
-        return models
+        try:
+            result = subprocess.run(["ollama", "list"], capture_output=True, text=True)
+            lines = result.stdout.strip().split("\n")
+                # Skip header line (first one)
+            for line in lines[1:]:
+                if not line.strip():
+                    continue
+                parts = line.split()
+                if len(parts) < 4:
+                    continue
+                name = parts[0]
+                digest = parts[1]
+                size = parts[2] + (f" {parts[3]}" if parts[3].upper() in ["GB", "MB"] else "")
+                created = " ".join(parts[4:])
+                models.append(AIModelInfoDto(
+                    name=name,
+                    digest=digest,
+                    size=size,
+                    created=created
+                ))
+        except Exception as e:
+            logger.error(f"Error listing Ollama models: {e}")
+        finally:
+            return models
 
 
 class OllamaChat:
