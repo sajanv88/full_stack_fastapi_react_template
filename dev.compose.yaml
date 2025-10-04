@@ -24,6 +24,7 @@ services:
       - "1083:1080"
     # networks:
     #   - fastapi_network
+  
 
 volumes:
   mongodb_data:

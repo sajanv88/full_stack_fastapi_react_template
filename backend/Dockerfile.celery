@@ -1,0 +1,78 @@
+# Celery Worker Dockerfile
+# Multi-stage build for optimal size
+FROM python:3.13-alpine AS builder
+
+# Install uv for dependency management
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Install build dependencies (only needed during build)
+RUN apk add --no-cache \
+    gcc \
+    g++ \
+    musl-dev \
+    libffi-dev \
+    openssl-dev \
+    python3-dev \
+    make \
+    cmake \
+    pkgconfig \
+    rust \
+    cargo \
+    linux-headers
+
+# Set work directory
+WORKDIR /api
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Set environment variables for better package installation
+ENV PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONHASHSEED=random \
+    PYTHONUNBUFFERED=1
+
+# Install dependencies using uv sync in a virtual environment
+RUN uv sync --frozen --no-dev
+
+# Production stage - minimal runtime image
+FROM python:3.13-alpine AS runtime
+
+# Install only runtime dependencies
+RUN apk add --no-cache \
+    libffi \
+    openssl \
+    ca-certificates && \
+    rm -rf /var/cache/apk/*
+
+# Create non-root user
+RUN addgroup -g 1000 celeryuser && \
+    adduser -u 1000 -G celeryuser -s /bin/sh -D celeryuser
+
+# Copy virtual environment from builder
+COPY --from=builder /api/.venv /opt/venv
+
+# Set environment variables
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH="/api" \
+    CELERY_BROKER_URL="redis://localhost:6372/0" \
+    CELERY_RESULT_BACKEND="redis://localhost:6372/0"
+
+# Set work directory
+WORKDIR /api
+
+# Copy only application code (exclude unnecessary files)
+COPY --chown=celeryuser:celeryuser api/ ./api/
+COPY --chown=celeryuser:celeryuser pyproject.toml ./
+
+# Switch to non-root user
+USER celeryuser
+
+# Expose port for Flower (if running flower)
+EXPOSE 5555
+
+# Default command - can be overridden
+CMD ["python", "-m", "celery", "-A", "api.infrastructure.messaging.celery_worker", "worker", "--loglevel=info"]

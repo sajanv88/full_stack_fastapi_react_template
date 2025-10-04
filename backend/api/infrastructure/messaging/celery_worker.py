@@ -1,21 +1,21 @@
 import asyncio
-
+import os
 from celery import Celery
 from api.common.dtos.worker_dto import WorkerPayloadDto
-from api.core.config import settings
 from api.common.utils import get_logger
 from api.core.container import get_role_service, get_user_service
 from api.domain.dtos.user_dto import CreateUserDto
 from api.infrastructure.persistence.mongodb import Database, models
 from api.infrastructure.background.post_tenant_creation_task_service import PostTenantCreationTaskService
 
-
+broker_url = os.getenv("CELERY_BROKER_URL")
+backend_url = os.getenv("CELERY_RESULT_BACKEND")
 logger = get_logger(__name__)
 
 celery_app = Celery(
     'worker',
-    broker=settings.redis_uri,
-    backend=settings.redis_uri,
+    broker=broker_url,
+    backend=backend_url,
     include=['api.infrastructure.messaging.celery_worker']
 )
 
