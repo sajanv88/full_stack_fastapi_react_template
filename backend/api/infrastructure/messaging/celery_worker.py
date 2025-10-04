@@ -50,7 +50,7 @@ async def _handle_post_tenant_creation_async(payload: str):
     logger.info(f"Handling task with label: {worker_payload.label}")
     if worker_payload.label == "post-tenant-creation":
         db_name = f"tenant_{worker_payload.tenant_id}"
-        db = Database(uri=settings.mongo_uri, models=models)
+        db = Database(uri=mongo_uri, models=models)
         await db.init_db(db_name=db_name, is_tenant=True)
         worker_payload.data.tenant_id = worker_payload.tenant_id # Set tenant_id in admin user data DTO
 
