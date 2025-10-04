@@ -8,6 +8,7 @@ from api.common.seeder_utils import get_seed_roles
 from api.domain.dtos.role_dto import CreateRoleDto, UpdateRoleDto
 from api.domain.enum.role import RoleType
 from api.common.security import hash_it
+from api.domain.enum.permission import Permission
 
 fake = Faker()
 
@@ -59,6 +60,12 @@ async def seed_initial_data():
         logger.info(f"Created admin user with email: {settings.admin_email}")
         update_user = UpdateUserDto(role_id=str(existing_role_admin.id))
         await user_repo.update(user_id=user_id, data=update_user)
+        existing_role_admin.permissions.append(Permission.HOST_MANAGE_TENANTS)
+        await role_repo.update(role_id=existing_role_admin.id, data=UpdateRoleDto(
+            name=existing_role_admin.name,
+            description=existing_role_admin.description,
+            permissions=existing_role_admin.permissions.copy()
+        ))
         logger.info(f"Updated admin user with role: {existing_role_admin.name}")
         logger.info("Seeding completed.")
 
