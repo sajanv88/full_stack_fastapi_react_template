@@ -200,26 +200,52 @@ The frontend is built with modern React patterns and TypeScript for type safety:
    
    Edit `backend/.env` with your configuration:
    ```bash
-   # MongoDB settings
-   MONGO_URI=mongodb://127.0.0.1:27012
-   MONGO_DB_NAME=full_stack_fastapi_react_template
-   
-   # JWT settings (generate strong secrets for production)
-   JWT_SECRET=your_jwt_secret_key
-   REFRESH_TOKEN_SECRET=your_refresh_jwt_secret_key
-   
-   # Default admin credentials
-   ADMIN_EMAIL=admin@example.com
-   ADMIN_PASSWORD=Test@123!
-   
-   # SMTP Email settings (using fake SMTP for development)
-   SMTP_HOST=localhost
-   SMTP_PORT=1023
-   SMTP_USER=""
-   SMTP_PASSWORD=""
-   SMTP_MAIL_FROM=noreply@example.com
-   SMTP_MAIL_FROM_NAME="Full-Stack FastAPI"
-   SMTP_STARTTLS=False
+        # MongoDB settings
+        MONGO_URI=mongodb://127.0.0.1:27012
+        MONGO_DB_NAME=full_stack_fastapi_react_template
+
+        # JWT settings
+        JWT_SECRET=your_jwt_secret_key
+        REFRESH_TOKEN_SECRET=your_refresh_jwt_secret_key
+
+        # Configure your default app admin credentials.
+        ADMIN_EMAIL=admin@example.com
+        ADMIN_PASSWORD=Test@123!
+
+        # SMTP Email settings
+        SMTP_HOST="localhost"
+        SMTP_PORT=1023
+        SMTP_USER=""
+        SMTP_PASSWORD=""
+        SMTP_MAIL_FROM=noreply@example.com
+        SMTP_MAIL_FROM_NAME="Full-Stack Fast API"
+        SMTP_STARTTLS=False
+        SMTP_SSL_TLS=False
+        SMTP_USE_CREDENTIALS=False
+        SMTP_VALIDATE_CERTS=False
+
+        # Redis settings
+
+        REDIS_URI="redis://localhost:6372/0"
+
+        # Celery settings
+        CELERY_BROKER_URL="redis://localhost:6372/0"
+        CELERY_RESULT_BACKEND="redis://localhost:6372/0"
+
+        # App configuration
+        APP_TITLE="Full-Stack FastAPI React Template"
+        APP_VERSION="0.1.0"
+
+        API_ENDPOINT_BASE="http://localhost:8000/api"
+
+        # Configure Multi-Tenancy
+        MULTI_TENANCY_STRATEGY="header"  # Options: "header", "subdomain", "none"
+
+        # Host main domain name
+        HOST_MAIN_DOMAIN="fsrapp.com"
+
+        # Environment
+        FASTAPI_ENV="development"  # Options: "development", "production"
    ```
 
 2. **Start Infrastructure Services**:
