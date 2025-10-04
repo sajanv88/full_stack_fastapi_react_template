@@ -10,6 +10,8 @@ from api.infrastructure.background.post_tenant_creation_task_service import Post
 
 broker_url = os.getenv("CELERY_BROKER_URL")
 backend_url = os.getenv("CELERY_RESULT_BACKEND")
+mongo_uri = os.getenv("MONGO_URI")
+
 logger = get_logger(__name__)
 
 celery_app = Celery(
@@ -69,7 +71,7 @@ async def _handle_post_tenant_deletion_async(payload: str):
     if worker_payload.label == "post-tenant-deletion":
         logger.info(f"Starting post-tenant-deletion tasks for tenant_id: {worker_payload.tenant_id}")
         db_name = f"tenant_{worker_payload.tenant_id}"
-        db = Database(uri=settings.mongo_uri, models=models)
+        db = Database(uri=mongo_uri, models=models)
         await db.init_db(db_name=db_name, is_tenant=True)
         await db.drop()
         await db.close()
