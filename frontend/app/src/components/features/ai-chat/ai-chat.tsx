@@ -14,7 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useAppConfig } from '@/components/providers/app-config-provider'
 import { toast } from 'sonner'
 import { AIChatHistory } from './ai-chat-history'
-import { useSearchParams } from 'react-router'
+import { NavLink, useSearchParams } from 'react-router'
 import { useAIChat } from '@/components/providers/ai-chat-provider'
 import { AIAskRequestDto, AIModelInfoDto } from '@/api'
 
@@ -335,6 +335,18 @@ export function AIChat() {
     return (
         <section className="h-full flex flex-col pb-10">
             {/* Page Header */}
+            {available_ai_models?.length == 0 && (
+                <Alert className='mb-5' variant="destructive">
+                    <AlertTitle>No AI Models Available</AlertTitle>
+                    <AlertDescription>
+                        Please ensure you have installed locally running AI models.
+                        <NavLink to="https://docs.ollama.com/quickstart"
+                            target="_blank" className="underline underline-offset-4 font-medium ml-1">
+                            Learn more
+                        </NavLink>
+                    </AlertDescription>
+                </Alert>
+            )}
             <section className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <section className="px-3 sm:px-4 py-4 sm:py-6">
                     <section className="flex items-center flex-wrap md:flex-nowrap justify-between">
@@ -583,7 +595,7 @@ export function AIChat() {
                                             ref={inputRef}
                                             value={input}
                                             onChange={handleInputChange}
-                                            onKeyPress={handleKeyPress}
+                                            onKeyUp={handleKeyPress}
                                             placeholder="Type your message..."
                                             disabled={chatState.isLoading}
                                             className="pr-8 sm:pr-12 min-h-[40px] sm:min-h-[44px] max-h-[120px] text-sm sm:text-base resize-none"
@@ -595,10 +607,16 @@ export function AIChat() {
                                                 <Loading variant="spinner" size="sm" />
                                             </section>
                                         )}
+                                        {available_ai_models?.length === 0 && (
+                                            <section className="pt-4 flex items-center">
+                                                <InfoIcon className="w-4 h-4 text-muted-foreground" />
+                                                <span className="ml-2 text-xs text-muted-foreground">No AI models available. Please install a local AI model to start chatting.</span>
+                                            </section>
+                                        )}
                                     </section>
                                     <Button
                                         onClick={sendMessage}
-                                        disabled={!input.trim() || chatState.isLoading}
+                                        disabled={!input.trim() || chatState.isLoading || !selectedModel?.name || available_ai_models?.length === 0}
                                         className="px-3 sm:px-6 h-10 sm:h-11"
                                         size="default"
                                     >

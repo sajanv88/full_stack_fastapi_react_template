@@ -52,7 +52,7 @@ async def seed_initial_data():
             email=settings.admin_email,
             first_name="Admin",
             last_name="User",
-            password=settings.admin_password,
+            password=hash_it(settings.admin_password),
             gender=Gender.MALE
         )
         user_id = await user_repo.create(data=create_user)

@@ -15,7 +15,7 @@ class SmtpEmail(IEmailService):
                 MAIL_FROM=settings.smtp_mail_from,
                 MAIL_PORT=settings.smtp_port,
                 MAIL_SERVER=settings.smtp_host,
-                MAIL_STARTTLS=settings.smtp_start_tls,
+                MAIL_STARTTLS=settings.smtp_starttls,
                 MAIL_SSL_TLS=settings.smtp_ssl_tls,
                 USE_CREDENTIALS=settings.smtp_use_credentials,
                 VALIDATE_CERTS=settings.smtp_validate_certs,
