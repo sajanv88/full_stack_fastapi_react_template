@@ -1,5 +1,5 @@
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import Request, Response, status
+from fastapi import Request, status
 from api.common.exceptions import ApiBaseException
 from fastapi.responses import JSONResponse
 
@@ -19,7 +19,7 @@ class KnownDomainMiddleware(BaseHTTPMiddleware):
             ip = request.client.host if request.client else "unknown"
 
             allowed_domain = f".{get_host_main_domain_name()}"
-            if not origin or not origin.endswith(allowed_domain) and origin != f"https://{get_host_main_domain_name()}":
+            if origin and not origin.endswith(allowed_domain) or origin != f"https://{get_host_main_domain_name()}":
                 logger.error(f"Unknown domain access attempt: {origin} from IP: {ip}")
                 raise ApiBaseException(message="Unknown domain, If you are the administrator, please check your configuration. Otherwise, contact the administrator.")
             response = await call_next(request)

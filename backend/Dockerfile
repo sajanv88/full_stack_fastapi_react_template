@@ -1,31 +1,55 @@
-FROM python:3.13-slim
+# Multi-stage build for optimal size
+FROM python:3.13-alpine AS builder
 
-# Install uv
+# Install uv for dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Create non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# Install build dependencies (only needed during build)
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    openssl-dev \
+    python3-dev
 
 # Set work directory
 WORKDIR /api
 
-COPY . /api/
-RUN uv sync --frozen --no-cache
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+# Install dependencies using uv sync in a virtual environment
+RUN uv sync --frozen --no-dev
 
+# Production stage - minimal runtime image
+FROM python:3.13-alpine AS runtime
 
+# Install only runtime dependencies
+RUN apk add --no-cache \
+    libffi \
+    openssl \
+    ca-certificates && \
+    rm -rf /var/cache/apk/*
 
-# Copy backend application code
-COPY api/ .
+# Create non-root user
+RUN addgroup -g 1000 appuser && \
+    adduser -u 1000 -G appuser -s /bin/sh -D appuser
 
+# Copy virtual environment from builder
+COPY --from=builder /api/.venv /opt/venv
 
-# Change ownership to non-root user
-RUN chown -R appuser:appuser /api
+# Set environment variables
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH="/api"
+
+# Set work directory
+WORKDIR /api
+
+# Copy only application code (exclude unnecessary files)
+COPY --chown=appuser:appuser api/ ./api/
+COPY --chown=appuser:appuser pyproject.toml ./
 
 # Switch to non-root user
 USER appuser
@@ -33,9 +57,9 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/api/v1/health/', timeout=10)"
+# Lightweight health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/', timeout=5)" || exit 1
 
 # Run the application
-CMD ["/api/.venv/bin/fastapi", "run", "api", "--port", "8000", "--host", "0.0.0.0"]
+CMD ["python", "-m", "fastapi", "run", "api", "--port", "8000", "--host", "0.0.0.0"]

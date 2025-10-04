@@ -48,6 +48,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
+
+
 @app.exception_handler(ApiBaseException)
 async def api_exception_handler(req: Request, ex: ApiBaseException) -> JSONResponse:
     status_code = status.HTTP_400_BAD_REQUEST
