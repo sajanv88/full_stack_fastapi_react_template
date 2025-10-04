@@ -66,7 +66,7 @@ export function RolesProvider({ children }: RolesProviderProps) {
     const role = apiClient.roles;
 
     async function fetchRoles() {
-
+        setRoleError(null);
         const skip = searchParams.get("skip");
         const limit = searchParams.get("limit");
         try {
@@ -160,7 +160,7 @@ export function RolesProvider({ children }: RolesProviderProps) {
 
     useEffect(() => {
         refreshRoles();
-    }, [searchParams]);
+    }, [searchParams, accessToken]);
 
     return (
         <RolesContext.Provider value={

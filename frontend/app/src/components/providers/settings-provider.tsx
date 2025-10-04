@@ -59,7 +59,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
     useEffect(() => {
         fetchSettings();
-    }, [])
+    }, [accessToken])
 
     return (
         <SettingsContext.Provider value={{ loading, onConfigureStorage, storages, availableStorages }}>

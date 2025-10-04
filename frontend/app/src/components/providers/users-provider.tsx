@@ -66,7 +66,7 @@ export function UsersProvider({ children }: UsersProviderProps) {
     const auth = apiClient.account;
 
     async function fetchUsers() {
-
+        setUserError(null);
         const skip = searchParams.get("skip");
         const limit = searchParams.get("limit");
         try {
@@ -163,7 +163,7 @@ export function UsersProvider({ children }: UsersProviderProps) {
 
     useEffect(() => {
         refreshUsers();
-    }, [searchParams]);
+    }, [searchParams, accessToken]);
 
     return (
         <UsersContext.Provider value={

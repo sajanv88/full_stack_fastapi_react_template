@@ -58,6 +58,7 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
     const apiClient = getApiClient(accessToken);
 
     async function fetchTenants() {
+        toast.dismiss();
         const skip = searchParams.get("skip");
         const limit = searchParams.get("limit");
         try {
@@ -134,7 +135,7 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
 
     useEffect(() => {
         fetchTenants();
-    }, [searchParams]);
+    }, [searchParams, accessToken]);
 
     return (
         <TenantsContext.Provider value={{
