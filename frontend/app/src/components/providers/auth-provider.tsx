@@ -2,6 +2,7 @@ import { CreateUserDto, Gender, Permission, TokenSetDto, type MeResponseDto } fr
 import { getUserImageUrl } from "@/lib/image-utils";
 import {
     getApiClient,
+    getTenant,
 } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useLocation, useNavigate } from "react-router";
@@ -166,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         worker.addEventListener("message", (event: MessageEvent<TokenSetDto | { message: string; code: number }>) => {
             if (event.data && 'access_token' in event.data) {
                 setAccessToken(event.data.access_token);
-            } else if (event.data && 'code' in event.data && event.data.code === 401) {
+            } else if (event.data && 'code' in event.data && event.data.code === 401 || event.data.code === 400) {
                 setIsLoggedInState(false);
                 setUser(null);
                 setAccessToken("");
@@ -174,6 +175,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
         });
+        window.addEventListener("tenant_set", () => {
+            console.log("tenant_set event received in auth provider");
+            const tenant = getTenant();
+            if (tenant) {
+                worker.postMessage({ tenantId: tenant.id });
+            }
+
+        })
+
+        window.addEventListener("tenant_removed", () => {
+            console.log("tenant_removed event received in auth provider");
+            worker.postMessage({ tenantId: null });
+        })
+
     }, [])
 
     useEffect(() => {

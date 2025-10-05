@@ -1,1 +1,0 @@
-(function(){"use strict";setInterval(async()=>{const e=await fetch("/api/v1/account/refresh",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"}}),s=await e.json(),t={message:"Unauthorized",code:e.status};if(!e.ok||e.status===401)return self.postMessage(t);self.postMessage(s)},6e5)})();
