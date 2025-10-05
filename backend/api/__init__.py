@@ -70,8 +70,9 @@ async def api_exception_handler(req: Request, ex: ApiBaseException) -> JSONRespo
         status_code=status_code,
         content={"error": ex.message, "code": status_code}
     )
-    
-app.add_middleware(KnownDomainMiddleware)
+
+# Todo: After fixing the bug. Uncomment the following line to enable KnownDomainMiddleware   
+#app.add_middleware(KnownDomainMiddleware)
 
 if is_tenancy_enabled():
     app.add_middleware(TenantMiddleware)

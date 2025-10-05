@@ -189,7 +189,7 @@ class AuthService:
             type="activation",
             tenant_id=payload.tenant_id
         ))
-        link = get_email_sharing_link(token=activation_token, user_id=payload.id, type="activation")
+        link = get_email_sharing_link(token=activation_token, user_id=payload.id, type="activation", tenant_id=payload.tenant_id)
         html = activation_template_html(user_first_name=payload.first_name, activation_link=link)
         await self.email_service.send_email(
             to=payload.email,
@@ -242,7 +242,7 @@ class AuthService:
             type="change_email_confirmation",
             tenant_id=user.tenant_id
         ))
-        link = get_email_sharing_link(token=activation_token, user_id=str(user.id), type="change_email_confirmation")
+        link = get_email_sharing_link(token=activation_token, user_id=str(user.id), type="change_email_confirmation", tenant_id=str(user.tenant_id))
         html = email_changes_confirmation_template_html(user_first_name=user.first_name, email_change_link=link)
         await self.email_service.send_email(
             to=user.email,
