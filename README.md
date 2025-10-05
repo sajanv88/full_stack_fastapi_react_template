@@ -42,6 +42,36 @@ This full-stack template provides enterprise-ready features out of the box:
 
 ![DEMO](/demo.gif)
 
+[Check out deployed DEMO Version](https://fsrapp.dev.sajankumarv.tech/)
+
+### Login as Host
+
+Use the following credentials to log in as the **host administrator**:
+
+| Username                        | Password   |
+|----------------------------------|------------|
+| admin@fsrapp.dev.sajankumarv.tech | Test@123! |
+
+---
+
+### Login as Tenant
+
+To log in as a **tenant admin**:
+
+1. On the login page, search a **dentally** tenant from the search field.  
+2. Then enter the credentials below:
+
+| Username            | Password       |
+|----------------------|----------------|
+| admin@dentally.nl    | Dentally@123!  |
+
+### Login as a Tenant User
+
+1. First, create a new user while logged in as the **Tenant Admin**.  
+2. After creating the user, **log out** from the admin account.  
+3. Finally, **log in** again using the newly created user's credentials.
+
+
 ## 🏗️ Architecture Overview
 
 This project follows a **Clean Architecture** pattern with clear separation between backend and frontend, designed for scalability, maintainability, and testability.
@@ -317,7 +347,7 @@ make flower          # Start Flower monitoring UI
 Each service includes production-ready Dockerfiles:
 
 - **Backend**: Multi-stage build with Python optimization
-- **Frontend**: Static build served by nginx
+- **Frontend**: Static build served by backend. 
 
 ### Kubernetes Deployment
 
