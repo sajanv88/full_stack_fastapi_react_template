@@ -42,7 +42,7 @@ This full-stack template provides enterprise-ready features out of the box:
 
 ![DEMO](/demo.gif)
 
-[Check out deployed DEMO Version](https://fsrapp.dev.sajankumarv.tech/)
+[Check out deployed DEMO Version](https://demo.fsrapp.xyz/)
 
 ### Login as Host
 
@@ -50,7 +50,7 @@ Use the following credentials to log in as the **host administrator**:
 
 | Username                        | Password   |
 |----------------------------------|------------|
-| admin@fsrapp.dev.sajankumarv.tech | Test@123! |
+| admin@fsrapp.xyz | Test@123! |
 
 ---
 
