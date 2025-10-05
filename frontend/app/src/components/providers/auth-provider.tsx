@@ -1,4 +1,4 @@
-import { CreateUserDto, Gender, Permission, type MeResponseDto } from "@/api";
+import { CreateUserDto, Gender, Permission, TokenSetDto, type MeResponseDto } from "@/api";
 import { getUserImageUrl } from "@/lib/image-utils";
 import {
     getApiClient,
@@ -162,6 +162,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     useEffect(() => {
+        const worker = new Worker(new URL('../../worker.ts', import.meta.url));
+        worker.addEventListener("message", (event: MessageEvent<TokenSetDto | { message: string; code: number }>) => {
+            if (event.data && 'access_token' in event.data) {
+                setAccessToken(event.data.access_token);
+            } else if (event.data && 'code' in event.data && event.data.code === 401) {
+                setIsLoggedInState(false);
+                setUser(null);
+                setAccessToken("");
+                navigate("/login");
+            }
+
+        });
+    }, [])
+
+    useEffect(() => {
         if (notProtectedRoutes.includes(pathname)) {
             return;
         }
@@ -175,6 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
     }, [accessToken]);
+
 
 
 

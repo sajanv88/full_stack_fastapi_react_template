@@ -26,7 +26,7 @@ export function DashboardLayout() {
                 <SidebarTrigger />
                 <section className="w-full h-full flex flex-col">
                     <div className="flex-1 flex-col">
-                        <header className="flex items-center">
+                        <header className="flex items-center p-2">
                             <Avatar>
                                 <AvatarImage src={userImage} />
                                 <AvatarFallback>{auth.user?.first_name[0]}</AvatarFallback>

@@ -62,7 +62,7 @@ class OllamaChat:
         self.current_session = current_session
         self.tenant_id = tenant_id
         self.history.append(SystemMessage(content=f"The user’s name is {username}. Please refer to them by name."))
-        self.llm = ChatOllama(model=model_name, streaming=True)
+        self.llm = ChatOllama(model=model_name, base_url=settings.ollama_host, temperature=0.7)
         self.prompt = ChatPromptTemplate.from_template(
             "You are a helpful assistant talking to {username}.\n\n{history}\nUser: {question}\nAssistant:"
         )
