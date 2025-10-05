@@ -42,7 +42,8 @@ def get_email_sharing_link(user_id: str, type: str, token: str, tenant_id: Optio
     """
     Generate a complete email sharing link with token.
     """
-    domain = settings.fastapi_env == "development" and "http://localhost:3000" or settings.host_main_domain
+    # fsrapp.com is the local development domain
+    domain = settings.host_main_domain == "fsrapp.com" and "http://localhost:3000" or settings.host_main_domain
     sharing_link = f"{domain}/{type}?user_id={user_id}&token={token}"
     
     if not tenant_id and is_tenancy_enabled():
