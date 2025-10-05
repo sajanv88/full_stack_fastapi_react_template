@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { useSubdomainCheck } from "@/hooks/use-subdomain-check";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthContext } from "@/components/providers/auth-provider";
+import { getTenant } from "@/lib/utils";
 
 // Gender enum matching the backend
 export const Gender = {
@@ -127,6 +128,15 @@ export default function Register() {
     }, [subdomainAvailability, error, isMultiTenancyEnabled]);
     const subdomainError = form.formState.errors.subdomain?.message;
 
+    const tenantDetail = getTenant();
+    const subdomainExists = tenantDetail?.subdomain ?? "";
+    useEffect(() => {
+        if (subdomainExists) {
+            form.setValue("subdomain", subdomainExists.split('.')[0]);
+            form.clearErrors("subdomain");
+        }
+    }, [subdomainExists]);
+
     return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-1rem)]">
             <Card className="w-full max-w-xl shadow-lg">
@@ -194,7 +204,7 @@ export default function Register() {
                                                             type="text"
                                                             placeholder="subdomain name"
                                                             onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSubdomain(e.target.value)}
-                                                            disabled={isChecking || isLoading}
+                                                            disabled={isChecking || isLoading || subdomainExists !== ""}
                                                             {...field}
                                                         />
                                                     </FormControl>

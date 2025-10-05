@@ -2,7 +2,6 @@ import { CreateUserDto, Gender, Permission, type MeResponseDto } from "@/api";
 import { getUserImageUrl } from "@/lib/image-utils";
 import {
     getApiClient,
-    setTenant,
 } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useLocation, useNavigate } from "react-router";
@@ -141,14 +140,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const auth = getApiClient().account
 
         try {
-            const response = await auth.registerApiV1AccountRegisterPost({
+            await auth.registerApiV1AccountRegisterPost({
                 requestBody: data
             });
 
-            if (response.new_tenant_created && response.tenant) {
-                setTenant(response.tenant);
-
-            }
+            toast.success("Registration successful! Please check your email to verify your account.", {
+                richColors: true,
+                position: "top-center",
+                description: "Redirecting to login..."
+            });
             setTimeout(() => {
                 navigate("/login");
             }, 2000);

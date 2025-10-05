@@ -2,10 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { X, Loader2 } from 'lucide-react'
-import { ApiClient, TenantDto } from '@/api'
-import { toast } from 'sonner'
+import { TenantDto } from '@/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { getTenant, setTenant } from '@/lib/utils'
+import { cn, getApiClient, getTenant, setTenant } from '@/lib/utils'
 
 interface TenantSearchProps {
     onTenantSelect?: (tenant: TenantDto | null) => void
@@ -22,7 +21,7 @@ export function TenantSelection({
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery, setDebouncedQuery] = useState('')
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
+    const [error, setError] = useState<string | null>(null)
     useEffect(() => {
         const tenant = getTenant();
         if (tenant) {
@@ -56,9 +55,11 @@ export function TenantSelection({
     }, [debouncedQuery])
 
     const searchTenants = async (query: string) => {
+        setError(null)
+
         setIsLoading(true)
         try {
-            const apiClient = new ApiClient()
+            const apiClient = getApiClient()
             const response = await apiClient.tenants.searchByNameApiV1TenantsSearchByNameNameGet({
                 name: query
             })
@@ -73,10 +74,7 @@ export function TenantSelection({
                 setTenant(null)
             }
         } catch (error) {
-            console.error('Error searching tenants:', error)
-            toast.error('Failed to search tenant', {
-                richColors: true
-            })
+            setError("We can't find the tenant you're looking for. Please check the name and try again.")
             onTenantSelect?.(null)
             setTenant(null)
         } finally {
@@ -88,6 +86,7 @@ export function TenantSelection({
         setSearchQuery('')
         onTenantSelect?.(null)
         setTenant(null)
+        setError(null)
     }
 
     return (
@@ -106,9 +105,10 @@ export function TenantSelection({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder={placeholder}
-                        className="pr-20"
+                        className={cn("pr-20", error && "border-red-500")}
                     />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+
+                    <div className="absolute top-[5px] right-0 flex items-center pr-3">
                         {isLoading && (
                             <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mr-2" />
                         )}
@@ -124,6 +124,9 @@ export function TenantSelection({
                             </Button>
                         )}
                     </div>
+                    {error && (
+                        <span className="inline-flex pt-4   text-sm text-red-500">{error}</span>
+                    )}
                 </div>
             </CardContent>
         </Card>

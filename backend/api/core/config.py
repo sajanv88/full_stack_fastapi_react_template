@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     smtp_use_credentials: bool = False # Changed to True when running production env
     smtp_validate_certs: bool = False
 
-
+    ollama_host: str = "http://localhost:11434"
     
 # Instantiate settings once
 settings = Settings()
