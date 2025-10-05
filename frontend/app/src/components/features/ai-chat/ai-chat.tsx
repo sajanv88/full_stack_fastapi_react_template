@@ -422,7 +422,7 @@ export function AIChat() {
                         </section>
 
                         {/* Mobile Model Selection */}
-                        <section className="sm:hidden mt-4">
+                        <section className="sm:hidden mt-4 w-full">
                             <ListLocalAIModels
                                 onModelSelect={setSelectedModel}
                                 selectedModel={selectedModel}

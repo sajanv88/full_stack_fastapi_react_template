@@ -108,7 +108,7 @@ export default function AdvanceTable<T>({
     };
 
     return (
-        <div className="shadow">
+        <div className="shadow max-w-[calc(100vw-1rem)] md:max-w-full overflow-hidden rounded-md border">
             <Table>
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => {

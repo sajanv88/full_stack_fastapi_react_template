@@ -51,7 +51,7 @@ export function AIChatHistory({ mobile }: AIChatHistoryProps) {
     if (mobile) {
 
         return (
-            <section className="py-3 pr-3 md:hidden">
+            <section className="py-3 md:pr-3 md:hidden">
                 <Card className="flex-flex flex-col h-full">
                     <CardTitle className="border-b border-primary/10 p-4">
                         Chat History

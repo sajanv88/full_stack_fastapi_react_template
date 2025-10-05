@@ -19,35 +19,32 @@ export function DashboardLayout() {
     const auth = useAuthContext();
     const userImage = auth.user?.image_url ? auth.user?.image_url : "https://github.com/evilrabbit.png";
     return (
-        <div className="">
-            <SidebarProvider style={
-                {
-                    "--sidebar-width": "16rem",
-                    "--sidebar-width-mobile": "20rem",
-                } as React.CSSProperties
-            }>
-                <DashboardSidebar />
-                <main className="flex min-h-screen bg-muted w-full">
-                    <SidebarTrigger />
-                    <section className="w-full h-full flex flex-col">
-                        <div className="flex-1 flex-col p-4">
-                            <header className="flex items-center">
-                                <Avatar>
-                                    <AvatarImage src={userImage} />
-                                    <AvatarFallback>{auth.user?.first_name[0]}</AvatarFallback>
-                                </Avatar>
-                                <span className="ml-2 mr-auto flex-1 capitalize flex flex-col">
-                                    Welcome {auth.user?.last_name} | Your role: {auth.user?.role?.name}
-                                    <em className="text-xs text-muted-foreground">
-                                        {auth.user?.role?.name === "guest" && "You are currently a guest user. So, you can only view read-only content."}
-                                        {auth.user?.role?.name === "user" && "You are currently a regular user. So, you can view and edit your own content. Sometimes, edit others if you have permission."}
-                                        {auth.user?.role?.name === "admin" && "You are currently an admin user. So, you have full access to all resources."}
-                                    </em>
-                                </span>
-                                <DarkMode />
-                            </header>
 
-                            <section className="pt-10 flex-1">
+        <SidebarProvider>
+            <DashboardSidebar />
+            <main className="sm:w-full">
+                <SidebarTrigger />
+                <section className="w-full h-full flex flex-col">
+                    <div className="flex-1 flex-col">
+                        <header className="flex items-center">
+                            <Avatar>
+                                <AvatarImage src={userImage} />
+                                <AvatarFallback>{auth.user?.first_name[0]}</AvatarFallback>
+                            </Avatar>
+                            <span className="ml-2 mr-auto flex-1 capitalize flex flex-col">
+                                Welcome {auth.user?.last_name} | Your role: {auth.user?.role?.name}
+                                <em className="text-xs text-muted-foreground">
+                                    {auth.user?.role?.name === "guest" && "You are currently a guest user. So, you can only view read-only content."}
+                                    {auth.user?.role?.name === "user" && "You are currently a regular user. So, you can view and edit your own content. Sometimes, edit others if you have permission."}
+                                    {auth.user?.role?.name === "admin" && "You are currently an admin user. So, you have full access to all resources."}
+                                </em>
+                            </span>
+                            <DarkMode />
+                        </header>
+
+                        <section className="pt-10 flex-1">
+
+                            <div className="p-2">
                                 {!auth.user?.is_active && (
                                     <Alert variant="destructive" className="mb-4">
                                         <InfoIcon className="h-4 w-4" />
@@ -57,17 +54,18 @@ export function DashboardLayout() {
                                 )}
                                 <Outlet />
                                 <Toaster />
+                            </div>
 
-                            </section>
+                        </section>
 
-                        </div>
-                        <SimpleFooter />
-                    </section>
+                    </div>
+                    <SimpleFooter />
+                </section>
 
-                </main>
+            </main>
 
-            </SidebarProvider>
+        </SidebarProvider>
 
-        </div>
+
     )
 }

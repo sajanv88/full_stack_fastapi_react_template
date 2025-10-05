@@ -57,7 +57,7 @@ export function ListLocalAIModels({ onModelSelect, selectedModel }: ListLocalAIM
     }
 
     return (
-        <div className="w-full max-w-sm">
+        <div className="w-full md:max-w-sm">
             <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                     <Brain className="h-4 w-4 text-muted-foreground" />
