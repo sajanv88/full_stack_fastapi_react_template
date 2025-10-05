@@ -70,6 +70,13 @@ jobs:
           echo "Labels applied:"
           echo "${{ steps.meta.outputs.labels }}"
 
+      - name: Trigger deployment fsrapp
+        run: |
+          echo "Triggering deployment via Coolify webhook"
+          curl --request GET "${{ secrets.COOLIFY_WEBHOOK_URI }}" --header "Authorization: Bearer ${{ secrets.COOLIFY_DEPLOY_KEY }}"
+          echo "Deployment triggered."
+
+
   push-fsrapp-worker-celery:
     runs-on: ubuntu-latest
     
@@ -128,3 +135,10 @@ jobs:
           echo "Celery image digest: ${{ steps.build-celery.outputs.digest }}"
           echo "Celery tags created:"
           echo "${{ steps.meta-celery.outputs.tags }}"
+      
+      - name: Trigger deployment fsrappworker
+        run: |
+          echo "Triggering deployment via Coolify webhook"
+          curl --request GET "${{ secrets.COOLIFY_FSRAPP_WORKER_WEBHOOK_URI }}" --header "Authorization: Bearer ${{ secrets.COOLIFY_DEPLOY_KEY }}"
+          echo "Deployment triggered."
+
