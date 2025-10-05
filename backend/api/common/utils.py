@@ -68,3 +68,12 @@ def get_date_range(filter_type: str):
         start = None
         group_format = "%Y-%m-%d"
     return start, now, group_format
+
+
+def format_bytes_to_human_readable_size(size_in_bytes: int) -> str:
+    """Convert bytes into a human-readable format (KB, MB, GB, TB)."""
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if size_in_bytes < 1024:
+            return f"{size_in_bytes:.2f} {unit}"
+        size_in_bytes /= 1024
+    return f"{size_in_bytes:.2f} PB"

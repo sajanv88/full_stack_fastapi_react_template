@@ -322,7 +322,7 @@ export function AIChat() {
 
     const onSelectModelEvent = async (model: AIModelInfoDto) => {
         try {
-            const apiClient = getApiClient()
+            const apiClient = getApiClient(accessToken)
             await apiClient.ai.setPreferredModelApiV1AiSetModelPreferenceModelNamePut({ modelName: model.name })
             setSelectedModel(model)
             toast.success(`Model set to ${model.name}`, { richColors: true, position: "top-center" })

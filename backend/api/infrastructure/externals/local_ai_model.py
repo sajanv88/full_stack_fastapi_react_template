@@ -4,9 +4,11 @@ from fastapi import BackgroundTasks
 from langchain_ollama import ChatOllama
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import HumanMessage, AIMessage, SystemMessage, BaseMessage
-from api.common.utils import get_logger
+from api.common.utils import format_bytes_to_human_readable_size, get_logger
 from api.domain.dtos.ai_dto import AIModelInfoDto
 from api.usecases.local_ai_service import LocalAIService
+from api.core.config import settings
+import requests
 import time
 
 logger = get_logger(__name__)
@@ -22,24 +24,19 @@ class OllamaModels:
         """
         models: List[AIModelInfoDto] = []
         try:
-            result = subprocess.run(["ollama", "list"], capture_output=True, text=True)
-            lines = result.stdout.strip().split("\n")
-                # Skip header line (first one)
-            for line in lines[1:]:
-                if not line.strip():
-                    continue
-                parts = line.split()
-                if len(parts) < 4:
-                    continue
-                name = parts[0]
-                digest = parts[1]
-                size = parts[2] + (f" {parts[3]}" if parts[3].upper() in ["GB", "MB"] else "")
-                created = " ".join(parts[4:])
+            response = requests.get(f"{settings.ollama_host}/api/tags")
+            if response.status_code != 200:
+                logger.error(f"Failed to fetch models from Ollama API: {response.status_code} - {response.text}")
+                raise Exception(f"Failed to fetch models from Ollama API: {response.status_code}")
+            
+            data = response.json()
+            logger.debug(f"Ollama models fetched: {data}")
+            for item in data["models"]:
                 models.append(AIModelInfoDto(
-                    name=name,
-                    digest=digest,
-                    size=size,
-                    created=created
+                    name=item["name"],
+                    digest=item["digest"],
+                    size=format_bytes_to_human_readable_size(item["size"]),
+                    created=item["modified_at"]
                 ))
         except Exception as e:
             logger.error(f"Error listing Ollama models: {e}")
