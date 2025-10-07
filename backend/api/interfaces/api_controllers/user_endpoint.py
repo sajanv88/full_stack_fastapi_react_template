@@ -6,8 +6,10 @@ from api.domain.enum.permission import Permission
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.file_service import FileService
 from api.usecases.user_service import UserService
-from api.core.container import get_file_service, get_user_service
+from api.core.container import get_file_service, get_role_service, get_user_service
 from api.infrastructure.security.current_user import CurrentUser
+from api.usecases.role_service import RoleService
+from api.domain.enum.role import RoleType
 
 
 logger = get_logger(__name__)
@@ -29,10 +31,13 @@ async def create_user(
     data: CreateUserDto,
     current_user: CurrentUser,
     service: UserService = Depends(get_user_service),
+    role_service: RoleService = Depends(get_role_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.USER_READ_AND_WRITE_ONLY]))
 ):
 
     data.tenant_id = current_user.tenant_id
+    role_guest = await role_service.find_by_name(name=RoleType.GUEST)
+    data.role_id = role_guest.id
     new_user_id = await service.create_user(data)
     return CreateUserResponseDto(id=str(new_user_id))
 

@@ -27,6 +27,7 @@ export function Tenants() {
             }} />
             <CreateNewTenantDialog open={isCreateNewTenantDialogOpen} onDismiss={() => setIsCreateNewTenantDialogOpen(false)} />
             {selectedTenant?.type === 'delete' && <TenantDeleteDialog open={true} onDismiss={onTenantDismissHandler} />}
+            
 
             {tenantResponse && <TenantTable tenantResponse={tenantResponse} loading={isLoading} errorMsg={errorMsg} />}
         </section>

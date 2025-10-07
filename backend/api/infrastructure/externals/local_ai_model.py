@@ -30,7 +30,7 @@ class OllamaModels:
                 raise Exception(f"Failed to fetch models from Ollama API: {response.status_code}")
             
             data = response.json()
-            logger.debug(f"Ollama models fetched: {data}")
+            
             for item in data["models"]:
                 models.append(AIModelInfoDto(
                     name=item["name"],

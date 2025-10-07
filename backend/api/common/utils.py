@@ -45,8 +45,8 @@ def get_email_sharing_link(user_id: str, type: str, token: str, tenant_id: Optio
     # fsrapp.com is the local development domain
     domain = settings.host_main_domain == "fsrapp.com" and "http://localhost:3000" or settings.host_main_domain
     sharing_link = f"{domain}/{type}?user_id={user_id}&token={token}"
-    
-    if not tenant_id and is_tenancy_enabled():
+
+    if tenant_id is not None and is_tenancy_enabled():
         get_logger(__name__).info(f"tenant id in utils: {tenant_id}")
         sharing_link += f"&tenant_id={tenant_id}"
     return sharing_link

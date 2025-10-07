@@ -120,7 +120,8 @@ export function UsersProvider({ children }: UsersProviderProps) {
                     requestBody: {
                         email: action.user.email,
                         id: action.user.id,
-                        first_name: action.user.first_name
+                        first_name: action.user.first_name,
+                        tenant_id: action.user.tenant_id
                     }
                 });
                 toast.success("User email resent successfully", {

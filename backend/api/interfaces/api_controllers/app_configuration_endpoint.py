@@ -23,6 +23,7 @@ async def get_app_configuration(
         user_pref_doc = await user_preferences.to_serializable_dict() if user_preferences is not None else None
 
 
+     # Fetch available AI models from Ollama
     available_ai_models = OllamaModels().list_models()
     return AppConfigurationDto(
         is_multi_tenant_enabled=is_tenancy_enabled(),
