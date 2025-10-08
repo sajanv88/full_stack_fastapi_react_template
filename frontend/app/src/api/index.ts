@@ -48,6 +48,8 @@ export type { TenantListDto } from './models/TenantListDto';
 export type { TimeSeriesDto } from './models/TimeSeriesDto';
 export type { TokenSetDto } from './models/TokenSetDto';
 export type { UpdateRoleDto } from './models/UpdateRoleDto';
+export type { UpdateTenantDto } from './models/UpdateTenantDto';
+export type { UpdateTenantResponseDto } from './models/UpdateTenantResponseDto';
 export type { UpdateUserDto } from './models/UpdateUserDto';
 export type { UserActivationRequestDto } from './models/UserActivationRequestDto';
 export type { UserDto } from './models/UserDto';

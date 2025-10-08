@@ -21,5 +21,6 @@ class Permission(str, Enum):
     
     HOST_MANAGE_TENANTS = "host:manage_tenants"
     MANAGE_STORAGE_SETTINGS = "manage:storage_settings"
-
+    
+    MANAGE_TENANT_SETTINGS = "manage:tenant_settings"
 

@@ -10,10 +10,14 @@ class EmailAlreadyExistsException(ConflictException):
     def __init__(self, email: str):
         super().__init__("User", email)
 
-
 class InvalidSubdomainException(InvalidOperationException):
     def __init__(self, subdomain: str):
         message = f"Subdomain '{subdomain}' is invalid format (3–63 chars, letters/digits/hyphens, no leading/trailing hyphen)."
+        super().__init__(message)
+
+class InvalidCustomDomainException(InvalidOperationException):
+    def __init__(self, custom_domain: str):
+        message = f"Custom domain '{custom_domain}' is invalid format."
         super().__init__(message)
 
 class TenantNotFoundException(NotFoundException):

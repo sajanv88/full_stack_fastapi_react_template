@@ -42,8 +42,8 @@ def get_email_sharing_link(user_id: str, type: str, token: str, tenant_id: Optio
     """
     Generate a complete email sharing link with token.
     """
-    # fsrapp.com is the local development domain
-    domain = settings.host_main_domain == "fsrapp.com" and "http://localhost:3000" or settings.host_main_domain
+    
+    domain = settings.host_main_domain
     sharing_link = f"{domain}/{type}?user_id={user_id}&token={token}"
 
     if tenant_id is not None and is_tenancy_enabled():

@@ -108,7 +108,6 @@ dependencies = [
     { name = "beanie" },
     { name = "boto3" },
     { name = "celery", extra = ["redis"] },
-    { name = "cloudflare" },
     { name = "colorlog" },
     { name = "faker" },
     { name = "fastapi", extra = ["standard"] },
@@ -138,7 +137,6 @@ requires-dist = [
     { name = "beanie", specifier = ">=2.0.0" },
     { name = "boto3", specifier = ">=1.40.32" },
     { name = "celery", extras = ["redis"], specifier = ">=5.3.1" },
-    { name = "cloudflare", specifier = ">=4.3.1" },
     { name = "colorlog", specifier = ">=6.9.0" },
     { name = "faker", specifier = ">=37.8.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.116.2" },
@@ -390,23 +388,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/cb/a2/57f4ac79838cfae6912f997b4d1a64a858fb0c86d7fcaae6f7b58d267fca/click-repl-0.3.0.tar.gz", hash = "sha256:17849c23dba3d667247dc4defe1757fff98694e90fe37474f3feebb69ced26a9", size = 10449, upload-time = "2023-06-15T12:43:51.141Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/52/40/9d857001228658f0d59e97ebd4c346fe73e138c6de1bce61dc568a57c7f8/click_repl-0.3.0-py3-none-any.whl", hash = "sha256:fb7e06deb8da8de86180a33a9da97ac316751c094c6899382da7feeeeb51b812", size = 10289, upload-time = "2023-06-15T12:43:48.626Z" },
-]
-
-[[package]]
-name = "cloudflare"
-version = "4.3.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "anyio" },
-    { name = "distro" },
-    { name = "httpx" },
-    { name = "pydantic" },
-    { name = "sniffio" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5d/48/e481c0a9b9010a5c41b5ca78ff9fbe00dc8a9a4d39da5af610a4ec49c7f7/cloudflare-4.3.1.tar.gz", hash = "sha256:b1e1c6beeb8d98f63bfe0a1cba874fc4e22e000bcc490544f956c689b3b5b258", size = 1933187, upload-time = "2025-06-16T21:43:18.716Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/8f/c6c543565efd3144da4304efa5917aac06b6416a8663a6defe0e9b2b7569/cloudflare-4.3.1-py3-none-any.whl", hash = "sha256:6927135a5ee5633d6e2e1952ca0484745e933727aeeb189996d2ad9d292071c6", size = 4406465, upload-time = "2025-06-16T21:43:17.3Z" },
 ]
 
 [[package]]
