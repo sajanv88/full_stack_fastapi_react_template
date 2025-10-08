@@ -327,6 +327,9 @@ pnpm preview                # Preview production build locally
    - Check Tailwind configuration
    - Verify component imports from `@/components/ui`
 
+4. **Cloudflare DNS**:
+    - Tenant contains subdomain for example:  `test.demo.fsrapp.xyz` then clouldflare doesn't provide free ssl certificate.. [Read here](https://developers.cloudflare.com/ssl/edge-certificates/)
+
 ### Development Tips
 
 - **Hot Reload**: Vite provides instant hot module replacement

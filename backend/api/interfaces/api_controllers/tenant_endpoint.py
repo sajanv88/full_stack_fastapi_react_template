@@ -2,15 +2,16 @@ from fastapi import APIRouter, Depends, status
 
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_logger
-from api.core.container import   get_tenant_service
+from api.core.container import   get_cloudflare_dns_service, get_tenant_service
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
 from api.domain.dtos.tenant_dto import CreateTenantResponseDto, SubdomainAvailabilityDto, TenantDto, TenantListDto, CreateTenantDto
 from api.domain.dtos.user_dto import CreateUserDto
 from api.domain.entities.tenant import Subdomain
 from api.domain.enum.permission import Permission
+from api.infrastructure.externals.cloudflare_dns import CloudflareDNS
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.tenant_service import TenantService
-from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation, handle_post_tenant_deletion
+from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation, handle_post_tenant_deletion, handle_tenant_dns_update
 
 logger = get_logger(__name__)
 
@@ -28,10 +29,19 @@ async def list_tenants(
 async def create_tenant(
     data: CreateTenantDto,
     service: TenantService = Depends(get_tenant_service),
+    cloudflare_service: CloudflareDNS = Depends(get_cloudflare_dns_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS]))
 ):
     tenant_id = await service.create_tenant(data)
+    
     response = CreateTenantResponseDto(id=str(tenant_id))
+    handle_tenant_dns_update.delay(
+        payload=WorkerPayloadDto[CreateTenantDto](
+            label="update-tenant-dns",
+            data=data,
+            tenant_id=response.id
+        ).model_dump_json()
+    )
     admin_user = CreateUserDto(
         email=data.admin_email,
         password=data.admin_password,
@@ -102,3 +112,5 @@ async def check_subdomain_availability(
         is_available = False
 
     return SubdomainAvailabilityDto(is_available=is_available)
+
+

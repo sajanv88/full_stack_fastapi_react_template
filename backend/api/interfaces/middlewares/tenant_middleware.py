@@ -9,7 +9,8 @@ from api.infrastructure.persistence.mongodb import mongo_client as db
 logger = get_logger(__name__)
 
 class TenantMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):       
+    async def dispatch(self, request: Request, call_next):
+        
         tenant_id = request.headers.get("X-Tenant-ID") or request.query_params.get('tenant_id') or None
         logger.debug(f"Tenant ID found: {tenant_id}")
  

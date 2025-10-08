@@ -9,6 +9,7 @@ dependencies = [
     "beanie>=2.0.0",
     "boto3>=1.40.32",
     "celery[redis]>=5.3.1",
+    "cloudflare>=4.3.1",
     "colorlog>=6.9.0",
     "faker>=37.8.0",
     "fastapi-mail>=1.5.0",

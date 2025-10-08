@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     multi_tenancy_strategy: str = "header"
     
     host_main_domain: str = "fsrapp.com"
+    host_main_domain_prefix: str = "demo"  # Prefix for subdomains, e.g., demo.fsrapp.com. Change as needed.
 
     redis_uri: str = "redis://localhost:6372"
     celery_result_backend: str = "redis://localhost:6372/0"
@@ -53,6 +54,9 @@ class Settings(BaseSettings):
     smtp_validate_certs: bool = False
 
     ollama_host: str = "http://localhost:11434"
+
+    cloudflare_zone_id: str
+    cloudflare_api_token: str
     
 # Instantiate settings once
 settings = Settings()

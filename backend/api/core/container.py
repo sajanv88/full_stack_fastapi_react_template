@@ -1,6 +1,7 @@
 import punq
 from api.domain.interfaces.email_service import IEmailService
 from api.infrastructure.externals.smtp_email import SmtpEmail
+from api.infrastructure.externals.cloudflare_dns import CloudflareDNS
 from api.infrastructure.persistence.repositories.chat_history_ai_repository_impl import ChatHistoryAIRepository
 from api.infrastructure.persistence.repositories.chat_session_ai_repository_impl import ChatSessionAIRepository
 from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
@@ -33,6 +34,9 @@ container.register(IEmailService, SmtpEmail, scope=punq.Scope.singleton)
 
 ## JWT Token Service
 container.register(JwtTokenService, scope=punq.Scope.singleton)
+
+## Cloudflare DNS Service
+container.register(CloudflareDNS, scope=punq.Scope.singleton)
 
 # Register repositories and services
 
@@ -107,5 +111,7 @@ def get_local_ai_service() -> LocalAIService:
     return container.resolve(LocalAIService)
 
 
+def get_cloudflare_dns_service() -> CloudflareDNS:
+    return container.resolve(CloudflareDNS)
+
 print("Dependency injection container configured.")
-print(LocalAIService, "-----------------")
