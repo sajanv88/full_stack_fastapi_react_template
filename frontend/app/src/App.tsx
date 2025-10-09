@@ -19,6 +19,7 @@ import { AIChatProvider } from "@/components/providers/ai-chat-provider";
 import { PasswordResetRequest } from "@/components/features/auth/password-reset-request";
 import { PasswordResetConfirmation } from "@/components/features/auth/password_reset_confirmation";
 import { Activation } from "@/components/features/auth/activation";
+import { TenantSetting } from "@/components/features/tenant/tenant-setting";
 
 function App() {
   const { user } = useAuthContext();
@@ -60,8 +61,15 @@ function App() {
           <SettingsProvider>
             <Settings />
           </SettingsProvider>
-        }
-        />
+        } />
+
+        <Route path="settings/tenant" element={
+          <SettingsProvider>
+            <TenantsProvider>
+              <TenantSetting />
+            </TenantsProvider>
+          </SettingsProvider>
+        } />
 
         <Route path="profile" element={<Profile />} />
         <Route path="ai" element={

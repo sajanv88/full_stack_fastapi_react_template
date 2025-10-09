@@ -27,7 +27,8 @@ async def get_app_configuration(
         user_pref_doc = await user_preferences.to_serializable_dict() if user_preferences is not None else None
         if current_user.tenant_id:
             try:
-                current_tenant = await tenant_service.get_tenant_by_id(current_user.tenant_id)
+                tenant = await tenant_service.get_tenant_by_id(current_user.tenant_id)
+                current_tenant = await tenant.to_serializable_dict()
             except TenantNotFoundException:
                 logger.warning(f"Tenant with ID {current_user.tenant_id} not found for current user.")
                 current_tenant = None

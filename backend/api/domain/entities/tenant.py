@@ -98,7 +98,7 @@ class Tenant(Document):
         data["subdomain"] = str(self.subdomain) if self.subdomain else None
         data["is_active"] = self.is_active 
         data["custom_domain"] = str(self.custom_domain) if self.custom_domain else None
-        data["custom_domain_status"] = self.custom_domain_status
+        data["custom_domain_status"] = str(self.custom_domain_status) if self.custom_domain_status else None
         return data
     
     class Settings:
