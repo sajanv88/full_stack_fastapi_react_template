@@ -51,7 +51,7 @@ src/
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 22+ 
 - pnpm (recommended) or npm
 - Backend API running on `http://localhost:8000`
 
@@ -138,21 +138,6 @@ The `AuthProvider` manages:
 - Automatic token refresh
 - Protected route access
 
-### Usage Example
-
-```typescript
-import { useAuthContext } from '@/components/providers/auth-provider'
-
-function MyComponent() {
-  const { user, login, logout } = useAuthContext()
-  
-  if (!user) {
-    return <LoginForm onLogin={login} />
-  }
-  
-  return <DashboardContent user={user} />
-}
-```
 
 ## 🌐 API Integration
 

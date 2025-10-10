@@ -22,8 +22,8 @@ class JwtTokenService:
         encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
         return AccessTokenDto(access_token=encoded_jwt, token_type="bearer", expires_in=expire)
 
-    async def get_refresh_token(self, user_id: str, expires_delta: timedelta | None = None) -> RefreshTokenDto:
-        to_encode = {"sub": user_id}
+    async def get_refresh_token(self, payload: TokenPayloadDto, expires_delta: timedelta | None = None) -> RefreshTokenDto:
+        to_encode = {"sub": str(payload.sub), "tenant_id": str(payload.tenant_id) if payload.tenant_id else None, "type": "refresh"}
         if expires_delta:
             expire = get_utc_now() + expires_delta
         else:
@@ -37,7 +37,7 @@ class JwtTokenService:
             Generate access and refresh tokens.
         """
         access_token = await self.get_access_token(payload)
-        refresh_token = await self.get_refresh_token(str(payload.sub))
+        refresh_token = await self.get_refresh_token(payload)
         return TokenSetDto(
             access_token=access_token.access_token,
             token_type=access_token.token_type,
@@ -55,7 +55,8 @@ class JwtTokenService:
                 return TokenPayloadDto(**payload)
             elif type == "refresh_token":
                 payload = jwt.decode(token, REFRESH_TOKEN_SECRET, algorithms=[REFRESH_ALGORITHM])
-                return RefreshTokenPayloadDto(**payload)
+                logger.debug(f"Decoded refresh token payload: {payload}")
+                return RefreshTokenPayloadDto(sub=payload.get("sub"), tenant_id=payload.get("tenant_id", None), type=payload.get("type"))
         except jwt.ExpiredSignatureError:
             logger.error("Token has expired.")
             return None

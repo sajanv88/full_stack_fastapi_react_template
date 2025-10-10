@@ -18,6 +18,7 @@ This full-stack template provides enterprise-ready features out of the box:
 - **Tenant Search**: Advanced search functionality by name and subdomain
 - **Tenant Administration**: Create, update, and manage tenant configurations
 - **Subdomain Routing**: Custom subdomain support for each tenant
+- **Custom Domain Routing**: Bring your own domain
 
 ### 👥 Role Management
 - **Role-Based Access Control (RBAC)**: Granular permission system
@@ -208,7 +209,7 @@ The frontend is built with modern React patterns and TypeScript for type safety:
 ### Prerequisites
 
 - Python 3.13+
-- Node.js 18+
+- Node.js 22+
 - Docker & Docker Compose
 - pnpm (recommended) or npm
 - Git
@@ -269,7 +270,7 @@ The frontend is built with modern React patterns and TypeScript for type safety:
         API_ENDPOINT_BASE="http://localhost:8000/api"
 
         # Configure Multi-Tenancy
-        MULTI_TENANCY_STRATEGY="header"  # Options: "header", "subdomain", "none"
+        MULTI_TENANCY_STRATEGY="header"
 
         # Host main domain name
         HOST_MAIN_DOMAIN="fsrapp.com"

@@ -82,6 +82,11 @@ class AuthService:
                 tenant = await self.tenant_service.find_by_subdomain(subdomain=new_user.sub_domain)
                 if tenant is not None:
                     raise InvalidOperationException(f"Subdomain '{new_user.sub_domain}' is already taken.")
+            except InvalidOperationException as ioe:
+                logger.warning(f"Subdomain validation failed for '{new_user.sub_domain}': {ioe}")
+                # If it is coming here.. that means the request is valid and made by a legit tenant.. because the tenant middleware has already validated it.
+                await self.user_service.create_user(user_data=new_user)
+        
             except TenantNotFoundException as tnfe:
                 logger.warning(f"Tenant not found for subdomain '{new_user.sub_domain}': {tnfe} - Proceeding to create new tenant.")
                 create_new_tenant = CreateTenantDto(
@@ -123,8 +128,8 @@ class AuthService:
         return await self.jwt_token_service.generate_tokens(payload)
 
 
-            
-    async def initate_password_reset(self, email: EmailStr) -> None:
+
+    async def initate_password_reset(self, email: EmailStr, domain: str) -> None:
         """
             Initiate the password reset process by sending a password reset email to the user.
             Raises InvalidOperationException if the user with the provided email does not exist.
@@ -139,7 +144,7 @@ class AuthService:
             tenant_id=str(reset_data.tenant_id)
         )
         token = await self.jwt_token_service.encode_activation_token(data)
-        link = get_email_sharing_link(token=token, user_id=str(reset_data.user_id), type=data.type, tenant_id=str(reset_data.tenant_id))
+        link = get_email_sharing_link(token=token, user_id=str(reset_data.user_id), domain=domain, type=data.type, tenant_id=str(reset_data.tenant_id))
         html = password_reset_email_template_html(user_first_name=reset_data.first_name, password_reset_link=link)
         await self.email_service.send_email(
             to=email,
@@ -174,7 +179,7 @@ class AuthService:
         )
     
 
-    async def send_activation_email(self, payload: UserResendActivationEmailRequestDto) -> None:
+    async def send_activation_email(self, payload: UserResendActivationEmailRequestDto, domain: str) -> None:
         """
             Resend the activation email to the user.
             Raises InvalidOperationException if the user is already active.
@@ -189,7 +194,7 @@ class AuthService:
             type="activation",
             tenant_id=payload.tenant_id
         ))
-        link = get_email_sharing_link(token=activation_token, user_id=payload.id, type="activation", tenant_id=payload.tenant_id)
+        link = get_email_sharing_link(token=activation_token, user_id=payload.id, domain=domain, type="activation", tenant_id=payload.tenant_id)
         html = activation_template_html(user_first_name=payload.first_name, activation_link=link)
         await self.email_service.send_email(
             to=payload.email,
@@ -221,7 +226,7 @@ class AuthService:
         logger.info(f"User {user.id} ({user.email}) has been activated.")
         
 
-    async def change_email_request(self, current_email: EmailStr, new_email: EmailStr) -> None:
+    async def change_email_request(self, current_email: EmailStr, new_email: EmailStr, domain: str) -> None:
         """
             Initiate the email change process by sending a confirmation email to the new email address.
             Raises InvalidOperationException if the new email is the same as the current email or if the new email is already in use.
@@ -242,7 +247,7 @@ class AuthService:
             type="change_email_confirmation",
             tenant_id=user.tenant_id
         ))
-        link = get_email_sharing_link(token=activation_token, user_id=str(user.id), type="change_email_confirmation", tenant_id=str(user.tenant_id))
+        link = get_email_sharing_link(token=activation_token, user_id=str(user.id), domain=domain, type="change_email_confirmation", tenant_id=str(user.tenant_id))
         html = email_changes_confirmation_template_html(user_first_name=user.first_name, email_change_link=link)
         await self.email_service.send_email(
             to=user.email,

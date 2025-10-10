@@ -35,14 +35,14 @@ export function DashboardLayout() {
                                 <AvatarFallback>{auth.user?.first_name[0]}</AvatarFallback>
                             </Avatar>
                             <span className="ml-2 mr-auto flex-1 capitalize flex flex-col">
-                                <span className="flex items-center w-xs">
+                                <span className="flex items-center w-[12rem] sm:w-[25rem]">
                                     <span className="flex-1">
                                         Welcome {auth.user?.last_name}
                                     </span>
 
                                     <span className="flex gap-2">
                                         <Badge variant="secondary">Role: {auth.user?.role?.name}</Badge>
-                                        <Badge variant="secondary">Tenant: {current_tenant?.name}</Badge>
+                                        {current_tenant && (<Badge variant="secondary">Tenant: {current_tenant?.name}</Badge>)}
                                     </span>
                                 </span>
                                 <em className="text-xs text-muted-foreground mt-2">

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 from beanie import PydanticObjectId
 from pydantic import BaseModel, EmailStr, ConfigDict, field_serializer
 
@@ -27,7 +27,15 @@ class TokenPayloadDto(BaseModel):
 
 class RefreshTokenPayloadDto(BaseModel):
     sub: PydanticObjectId
-    
+    tenant_id: PydanticObjectId | None  = None
+    type: Literal["refresh"] = "refresh"
+
+    @field_serializer('sub', 'tenant_id')
+    def serialize_object_id(self, v: PydanticObjectId | None) -> str | None:
+        if v is None:
+            return None
+        return str(v)
+
 
 class AccessTokenDto(BaseModel):
     access_token: str

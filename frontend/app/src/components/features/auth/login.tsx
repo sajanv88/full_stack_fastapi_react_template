@@ -70,8 +70,7 @@ export function Login() {
 
     return (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
-            {appConfig.is_multi_tenant_enabled && (
-
+            {appConfig.shouldShowTenantSelection && (
                 <TenantSelection />
             )}
             <Card className="w-full max-w-md shadow-lg">

@@ -27,6 +27,7 @@ import { useAuthContext } from '../providers/auth-provider';
 import { useMemo } from 'react';
 import { getApiClient } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAppConfig } from '../providers/app-config-provider';
 
 const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -55,6 +56,7 @@ export function DashboardSidebar() {
     const location = useLocation();
     const pathname = location.pathname;
     const navigate = useNavigate();
+    const { current_tenant } = useAppConfig();
     const { user, accessToken } = useAuthContext();
     const isTenant = user?.tenant_id;
 
@@ -100,7 +102,7 @@ export function DashboardSidebar() {
                         )}
                     </NavLink>
                 </SidebarMenuButton>
-                {link.children && link.children.length > 0 && (
+                {(link.children && link.children.length > 0 && current_tenant) && (
                     <SidebarMenu className='pl-8 mt-1'>
                         {link.children.map((child) => (
                             <SidebarMenuItem key={child.href}>

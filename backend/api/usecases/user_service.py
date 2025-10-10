@@ -51,17 +51,19 @@ class UserService:
         user_data.password = hash_it(user_data.password)
         user_id = await self.user_repository.create(user_data)
         
+        # Todo: Refactor this to use Celery task to Or fire and forget 
+        
         # avoid circular import
-        from api.core.container import get_auth_service
+        # from api.core.container import get_auth_service
 
-        auth_service = get_auth_service()
-        welcome_email = UserResendActivationEmailRequestDto(
-            email=user_data.email,
-            first_name=user_data.first_name,
-            tenant_id=user_data.tenant_id,
-            id=str(user_id)
-        )
-        await auth_service.send_activation_email(welcome_email)
+        # auth_service = get_auth_service()
+        # welcome_email = UserResendActivationEmailRequestDto(
+        #     email=user_data.email,
+        #     first_name=user_data.first_name,
+        #     tenant_id=str(user_data.tenant_id),
+        #     id=str(user_id)
+        # )
+        # await auth_service.send_activation_email(welcome_email) 
         return user_id
 
     async def update_user(self, user_id: str, user_data: UpdateUserDto) -> User | None:

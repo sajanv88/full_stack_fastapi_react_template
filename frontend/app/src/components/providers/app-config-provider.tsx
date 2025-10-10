@@ -5,6 +5,7 @@ import { useAuthContext } from "./auth-provider";
 
 interface Configuration extends AppConfigurationDto {
     reloadAppConfig: () => Promise<void>;
+    shouldShowTenantSelection?: boolean;
 }
 const appConfigContext = createContext<Configuration>({
     is_multi_tenant_enabled: false,
@@ -38,6 +39,7 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
             user_id: ""
         }
     });
+    const [shouldShowTenantSelection, setShouldShowTenantSelection] = useState(false);
 
     const reloadAppConfig = useCallback(async function reloadAppConfig() {
         if (!accessToken) return;
@@ -52,12 +54,24 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
             setAppConfig(config)
             if (config.is_multi_tenant_enabled === false) {
                 setTenant(null);
+
             }
         };
         fetchConfig();
     }, [accessToken]);
+
+    useEffect(() => {
+        if (appConfig.is_multi_tenant_enabled && !appConfig.current_tenant) {
+            setShouldShowTenantSelection(true);
+        }
+        if (appConfig.current_tenant) {
+            setTenant(appConfig.current_tenant);
+        }
+
+
+    }, [appConfig, accessToken]);
     return (
-        <appConfigContext.Provider value={{ ...appConfig, reloadAppConfig }}>
+        <appConfigContext.Provider value={{ ...appConfig, reloadAppConfig, shouldShowTenantSelection }}>
             {children}
         </appConfigContext.Provider>
     )

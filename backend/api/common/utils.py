@@ -2,8 +2,10 @@ import logging
 from datetime import datetime, timezone, timedelta
 import re
 from typing import Optional
+
 from api.common.exceptions import InvalidOperationException
 from api.core.config import settings
+
 
 def get_utc_now():
     return datetime.now(timezone.utc)
@@ -38,12 +40,11 @@ def validate_password(password: str) -> str:
     return password
 
 
-def get_email_sharing_link(user_id: str, type: str, token: str, tenant_id: Optional[str] = None) -> str:
+def get_email_sharing_link(user_id: str, type: str, token: str, domain: str, tenant_id: Optional[str] = None) -> str:
     """
     Generate a complete email sharing link with token.
     """
     
-    domain = settings.host_main_domain
     sharing_link = f"{domain}/{type}?user_id={user_id}&token={token}"
 
     if tenant_id is not None and is_tenancy_enabled():
@@ -78,3 +79,4 @@ def format_bytes_to_human_readable_size(size_in_bytes: int) -> str:
             return f"{size_in_bytes:.2f} {unit}"
         size_in_bytes /= 1024
     return f"{size_in_bytes:.2f} PB"
+

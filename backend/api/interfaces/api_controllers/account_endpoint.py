@@ -14,7 +14,7 @@ from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, Us
 from api.domain.enum.permission import Permission
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation
 from api.infrastructure.security.current_user import CurrentUser
-from api.interfaces.middlewares.tenant_middleware import get_tenant_id
+from api.interfaces.middlewares.tenant_middleware import FrontendHost, get_tenant_id
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.auth_service import AuthService
 from api.core.config import settings
@@ -42,8 +42,8 @@ async def login(
     response.set_cookie(
         key="refresh_token",
         value=token_set.refresh_token,
-        httponly=settings.fastapi_env == "production",
-        secure=True,
+        httponly=True,
+        secure=settings.fastapi_env == "production",
         samesite="lax",
         max_age=settings.refresh_token_expire_days
     )
@@ -65,8 +65,8 @@ async def refresh_token(
     response.set_cookie(
         key="refresh_token",
         value=token_set.refresh_token,
-        httponly=settings.fastapi_env == "production",
-        secure=True,
+        httponly=True,
+        secure=settings.fastapi_env == "production",
         samesite="lax",
         max_age=settings.refresh_token_expire_days
     )
@@ -123,6 +123,7 @@ async def read_users_me(
 @router.post("/password_reset_request", response_model=PasswordResetResponseDto, status_code=status.HTTP_200_OK)
 async def password_reset_request(
     request: PasswordResetRequestDto,
+    frontend_host: FrontendHost,
     auth_service: AuthService = Depends(get_auth_service)
 ):
     try:
@@ -154,12 +155,13 @@ async def password_reset_confirm(
 @router.post("/resend_activation_email", status_code=status.HTTP_202_ACCEPTED)
 async def resend_activation_email(
     req: UserResendActivationEmailRequestDto,
+    frontend_host: FrontendHost,
     auth_service: AuthService = Depends(get_auth_service),
     _bool: bool = Depends(check_permissions_for_current_role(
         required_permissions=[Permission.USER_READ_AND_WRITE_ONLY, Permission.FULL_ACCESS]
     ))
 ):
-    await auth_service.send_activation_email(req)
+    await auth_service.send_activation_email(req, frontend_host)
     return status.HTTP_202_ACCEPTED
 
 
@@ -177,13 +179,15 @@ async def activate_account(
 async def change_email(
     request: ChangeEmailRequestDto,
     current_user: CurrentUser,
+    frontend_host: FrontendHost,
     auth_service: AuthService = Depends(get_auth_service)
 ):
     
     try:
         await auth_service.change_email_request(
             current_email=current_user.email,
-            new_email=request.new_email
+            new_email=request.new_email,
+            domain=frontend_host
         )
     finally:
         return status.HTTP_202_ACCEPTED
