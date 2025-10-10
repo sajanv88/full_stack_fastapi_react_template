@@ -9,7 +9,8 @@ def dns_notification_email(user_first_name: str, hostname: str, status: str) -> 
             
             <div style="text-align: center; margin: 30px 0;">
                 <a href="{hostname}" 
-                style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;"
+                  target="_blank" rel="noopener">
                     View DNS Configuration Details
                 </a>
             </div>

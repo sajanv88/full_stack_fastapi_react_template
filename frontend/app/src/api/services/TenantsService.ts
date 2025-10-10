@@ -172,4 +172,25 @@ export class TenantsService {
       },
     });
   }
+  /**
+   * Check Dns Status
+   * @returns UpdateTenantResponseDto Successful Response
+   * @throws ApiError
+   */
+  public checkDnsStatusApiV1TenantsCheckDnsTenantIdGet({
+    tenantId,
+  }: {
+    tenantId: string,
+  }): CancelablePromise<UpdateTenantResponseDto> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/tenants/check_dns/{tenant_id}',
+      path: {
+        'tenant_id': tenantId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

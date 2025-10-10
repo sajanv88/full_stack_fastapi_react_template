@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { getApiClient } from "@/lib/utils";
 import { UpdateTenantDto } from "@/api";
 import { Building2, Globe, CheckCircle, Clock, XCircle, Plus, AlertTriangle } from "lucide-react";
+import { NavLink } from "react-router";
 
 const tenantFormSchema = z.object({
     custom_domain: z.string().optional().refine((val) => {
@@ -38,8 +39,8 @@ const tenantFormSchema = z.object({
 type TenantFormData = z.infer<typeof tenantFormSchema>;
 
 export function TenantSetting() {
-    const { can } = useAuthContext();
-    const { current_tenant } = useAppConfig();
+    const { can, accessToken } = useAuthContext();
+    const { current_tenant, reloadAppConfig } = useAppConfig();
     const [isLoading, setIsLoading] = useState(false);
     const [showCustomDomainForm, setShowCustomDomainForm] = useState(false);
 
@@ -52,18 +53,59 @@ export function TenantSetting() {
         }
     });
 
+    const checkCustomDomainStatus = async () => {
+        if (!current_tenant?.id) {
+            toast.error("Tenant information is not available");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const apiClient = getApiClient(accessToken);
+            const response = await apiClient.tenants.checkDnsStatusApiV1TenantsCheckDnsTenantIdGet({
+                tenantId: current_tenant.id
+            });
+
+            toast.success(response.message || "Custom domain status checked successfully");
+            setTimeout(async () => {
+                await reloadAppConfig();
+            }, 2000); // Slight delay to ensure backend has processed the status update
+
+        } catch (error: any) {
+            console.error("Error checking tenant DNS status:", error);
+            toast.error(error?.body?.detail || "Failed to check custom domain status");
+        } finally {
+            setIsLoading(false);
+        }
+    }
     const getCustomDomainStatusBadge = (status: string | null) => {
         switch (status) {
             case "active":
                 return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Active</Badge>;
             case "activation-progress":
-                return <Badge variant="default" className="bg-yellow-100 text-yellow-800 border-yellow-200"><Clock className="w-3 h-3 mr-1" />In Progress</Badge>;
+                return (
+                    <div className="flex items-center">
+                        <Clock className="w-3 h-3 mr-1" />
+                        <Badge variant="default" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                            In Progress
+                        </Badge>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="ml-2"
+                            onClick={checkCustomDomainStatus}
+                        >
+                            Check Status
+                        </Button>
+                    </div>
+                )
             case "failed":
-                return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Failed</Badge>;
+                return <div className="flex items-center"><XCircle className="w-3 h-3 mr-1" /><Badge variant="destructive">Failed</Badge></div>;
             default:
                 return <Badge variant="secondary">Not Set</Badge>;
         }
     };
+
 
     const onSubmit = async (data: TenantFormData) => {
         if (!current_tenant?.id) {
@@ -73,7 +115,7 @@ export function TenantSetting() {
 
         setIsLoading(true);
         try {
-            const apiClient = getApiClient();
+            const apiClient = getApiClient(accessToken);
             const updateData: UpdateTenantDto = {
                 custom_domain: data.custom_domain?.trim() || null,
                 is_active: current_tenant.is_active
@@ -195,9 +237,14 @@ export function TenantSetting() {
 
                         <div className="space-y-2">
                             <Label>Domain Status</Label>
-                            <div>
-                                {getCustomDomainStatusBadge(current_tenant.custom_domain_status)}
-                            </div>
+                            {getCustomDomainStatusBadge(current_tenant.custom_domain_status)}
+                            {current_tenant.custom_domain_status === "active" && (
+                                <div>
+                                    <NavLink to={`http://${current_tenant.custom_domain}`} target="_blank" rel="noopener noreferrer">
+                                        https://{current_tenant.custom_domain}
+                                    </NavLink>
+                                </div>
+                            )}
                         </div>
 
                         {/* Add Custom Domain Button or Form */}
@@ -212,7 +259,7 @@ export function TenantSetting() {
                             </Button>
                         )}
 
-                        {(showCustomDomainForm || current_tenant.custom_domain) && (
+                        {(showCustomDomainForm || current_tenant.custom_domain && current_tenant.custom_domain_status !== "active") && (
                             <Form {...form}>
                                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                     <FormField
@@ -263,7 +310,7 @@ export function TenantSetting() {
             </div>
 
             {/* DNS Configuration Instructions */}
-            {(showCustomDomainForm || current_tenant.custom_domain) && (
+            {(showCustomDomainForm || current_tenant.custom_domain && current_tenant.custom_domain_status !== "active") && (
                 <Card className="mt-6">
                     <CardHeader>
                         <CardTitle className="flex items-center space-x-2">

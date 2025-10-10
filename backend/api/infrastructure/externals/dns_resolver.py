@@ -31,11 +31,11 @@ class DnsResolver:
         except Exception as e:
             raise InvalidCustomDomainException(f"DNS resolution failed for {hostname}: {e}")
 
-        if expected_target:
-            if not any(expected_target in target for target in resolved_to):
-                raise InvalidCustomDomainException(
-                    f"DNS {record_type} record for {hostname} does not point to the expected target ({expected_target}). Found: {resolved_to}"
-                )
+        # if expected_target:
+        #     if not any(expected_target in target for target in resolved_to):
+        #         raise InvalidCustomDomainException(
+        #             f"DNS {record_type} record for {hostname} does not point to the expected target ({expected_target}). Found: {resolved_to}"
+        #         )
 
         return True
     
@@ -46,7 +46,7 @@ class DnsResolver:
             to=user_info.email,
             body=dns_notification_email(
                 user_first_name=user_info.first_name,
-                hostname=hostname,
+                hostname=f"https://{hostname}",
                 status="Success" if is_success else "Failed"
             ),
             type="html"

@@ -93,16 +93,14 @@ async def _handle_tenant_dns_update_async(payload: str):
             if result:
                 logger.info(f"DNS for {hostname} is correctly pointing to {get_host_main_domain_name()}. No action needed.")
                 await db.close()
-                asyncio.run(
-                    _notify_dns_status(
-                        tenant_id=worker_payload.tenant_id,
-                        user_id=worker_payload.data["user_id"],
-                        is_success=True,
-                        message=f"DNS for {hostname} is correctly pointing to {get_host_main_domain_name()}.",
-                        hostname=hostname
-                    )
+                await _notify_dns_status(
+                    tenant_id=worker_payload.tenant_id,
+                    user_id=worker_payload.data["user_id"],
+                    is_success=True,
+                    message=f"DNS for {hostname} is correctly pointing to {get_host_main_domain_name()}.",
+                    hostname=hostname
                 )
-                asyncio.run(_update_tenant_custom_domain_status(tenant_id=worker_payload.tenant_id, status="active"))
+                await _update_tenant_custom_domain_status(tenant_id=worker_payload.tenant_id, status="active")
                 logger.info(f"Completed DNS update for subdomain: {worker_payload.data}")
             else:
                 logger.warning(f"DNS for {hostname} is NOT pointing to {get_host_main_domain_name()}.")
@@ -110,17 +108,7 @@ async def _handle_tenant_dns_update_async(payload: str):
             await db.close()
         except Exception as e:
             logger.error(f"Error occurred while checking DNS for {hostname}: {e}")
-            logger.info(f"DNS for {hostname} is NOT pointing to {get_host_main_domain_name()}. Notifying admin user.")
-            asyncio.run(
-                _notify_dns_status(
-                    tenant_id=worker_payload.tenant_id,
-                    user_id=worker_payload.data["user_id"],
-                    is_success=False,
-                    message=f"DNS for {hostname} is NOT pointing to {get_host_main_domain_name()}. Please update your DNS settings.",
-                    hostname=hostname
-                )
-            )
-            asyncio.run(_update_tenant_custom_domain_status(tenant_id=worker_payload.tenant_id, status="failed"))
+            await _update_tenant_custom_domain_status(tenant_id=worker_payload.tenant_id, status="failed")
         
 
 
@@ -130,7 +118,7 @@ async def _notify_dns_status(tenant_id: str, user_id: str, is_success: bool, mes
     admin_user: User = await user_service.get_user_by_id(user_id=user_id)
     admin_user_dto = await admin_user.to_serializable_dict()
     dns_service: DnsResolver = get_dns_resolver()
-    dns_service.notify_dns_status(
+    await dns_service.notify_dns_status(
         user_info=UserDto(**admin_user_dto),
         hostname=hostname,
         is_success=is_success,

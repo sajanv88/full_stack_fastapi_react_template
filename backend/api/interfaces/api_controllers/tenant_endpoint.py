@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
 from api.common.dtos.worker_dto import WorkerPayloadDto
+from api.common.exceptions import InvalidOperationException
 from api.common.utils import get_host_main_domain_name, get_logger
 from api.core.container import    get_tenant_service
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
@@ -157,3 +158,47 @@ async def update_tenant_dns_record(
         message="We have received your request. The changes will reflect in a few minutes. And email notification will be sent."
     )
 
+@router.get("/check_dns/{tenant_id}", response_model=UpdateTenantResponseDto, status_code=status.HTTP_200_OK)
+async def check_dns_status(
+    tenant_id: str,
+    current_user: CurrentUser,
+    tenant_service: TenantService = Depends(get_tenant_service),
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS, Permission.MANAGE_TENANT_SETTINGS]))
+):
+    tenant_doc = await tenant_service.get_tenant_by_id(tenant_id)
+    payload=WorkerPayloadDto[dict[str, str]](
+        label="update-tenant-dns",
+            data={
+                "custom_domain": tenant_doc.custom_domain,
+                "user_id": str(current_user.id),
+            },
+            tenant_id=str(tenant_doc.id)
+        )
+    if not tenant_doc.custom_domain:
+        raise InvalidOperationException("No custom domain is set for this tenant.")
+    
+    if tenant_doc.custom_domain_status == "activation-progress":
+        handle_tenant_dns_update.delay(
+            payload=payload.model_dump_json()
+        )
+        return UpdateTenantResponseDto(
+            message="Your custom domain activation is still in progress. Please wait until it is processed."
+        )
+    
+    if tenant_doc.custom_domain_status == "active":
+        return UpdateTenantResponseDto(
+            message="Your custom domain is already active. No further action is needed."
+        )
+    
+    if tenant_doc.custom_domain_status == "failed":
+        
+        handle_tenant_dns_update.delay(
+            payload=payload.model_dump_json()
+        )
+        return UpdateTenantResponseDto(
+            message="Your custom domain activation previously failed. Please update your DNS settings and try again."
+        )
+
+    return UpdateTenantResponseDto(
+        message="DNS status check completed successfully."
+    )
