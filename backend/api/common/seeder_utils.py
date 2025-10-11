@@ -17,7 +17,7 @@ def get_seed_roles() -> List[Role]:
         Role(
             name=RoleType.ADMIN,
             description="Admin role can give full access to application. Can read, write and delete any resource.",
-            permissions=[Permission.FULL_ACCESS, Permission.MANAGE_STORAGE_SETTINGS]
+            permissions=[Permission.FULL_ACCESS, Permission.MANAGE_STORAGE_SETTINGS, Permission.MANAGE_TENANT_SETTINGS]
             ),
         Role(
             name=RoleType.USER,

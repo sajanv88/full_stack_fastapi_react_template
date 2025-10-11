@@ -2,12 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type TenantDto = {
-  id: (string | null);
-  name: string;
-  subdomain: (string | null);
-  is_active: boolean;
+export type UpdateTenantDto = {
+  is_active: (boolean | null);
   custom_domain: (string | null);
-  custom_domain_status: (string | null);
 };
 

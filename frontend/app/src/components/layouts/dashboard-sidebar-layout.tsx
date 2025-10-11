@@ -27,13 +27,21 @@ import { useAuthContext } from '../providers/auth-provider';
 import { useMemo } from 'react';
 import { getApiClient } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAppConfig } from '../providers/app-config-provider';
 
 const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/users?skip=0&limit=10", label: "Users", icon: Users },
     { href: "/roles?skip=0&limit=10", label: "Roles", icon: Shield },
     { href: "/tenants?skip=0&limit=10", label: "Tenants", icon: Tent },
-    { href: "/settings", label: "Settings", icon: Cog },
+    {
+        href: "/settings",
+        label: "Settings",
+        icon: Cog,
+        children: [
+            { href: "/settings/tenant", label: "Tenant Settings", icon: Tent },
+        ]
+    },
 ];
 
 const bottomLinks = [
@@ -41,11 +49,14 @@ const bottomLinks = [
     { href: "/ai", label: "AI Chat", icon: MessageSquare },
 ];
 
+type LinkType = typeof navLinks[number];
+
 
 export function DashboardSidebar() {
     const location = useLocation();
     const pathname = location.pathname;
     const navigate = useNavigate();
+    const { current_tenant } = useAppConfig();
     const { user, accessToken } = useAuthContext();
     const isTenant = user?.tenant_id;
 
@@ -74,7 +85,47 @@ export function DashboardSidebar() {
     };
 
     const mainNavLinksToRender = useMemo(() => isTenant ? navLinks.filter(link => !link.href.includes('/tenants')) : navLinks, [isTenant]);
+    function renderMainNavLinks(link: LinkType) {
 
+        return (
+            <SidebarMenuItem key={link.href}>
+                <SidebarMenuButton
+                    asChild
+                    isActive={isLinkActive(link.href)}
+                    className="group relative"
+                >
+                    <NavLink to={link.href} className="w-full flex items-center space-x-3">
+                        <link.icon className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <span className="group-hover:translate-x-0.5 transition-transform">{link.label}</span>
+                        {isLinkActive(link.href) && (
+                            <ChevronRight className="w-4 h-4 ml-auto text-primary" />
+                        )}
+                    </NavLink>
+                </SidebarMenuButton>
+                {(link.children && link.children.length > 0 && current_tenant) && (
+                    <SidebarMenu className='pl-8 mt-1'>
+                        {link.children.map((child) => (
+                            <SidebarMenuItem key={child.href}>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isLinkActive(child.href)}
+                                    className="group relative"
+                                >
+                                    <NavLink to={child.href} className="w-full flex items-center space-x-3">
+                                        <child.icon className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                        <span className="group-hover:translate-x-0.5 transition-transform">{child.label}</span>
+                                        {isLinkActive(child.href) && (
+                                            <ChevronRight className="w-4 h-4 ml-auto text-primary" />
+                                        )}
+                                    </NavLink>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        ))}
+                    </SidebarMenu>
+                )}
+            </SidebarMenuItem>
+        )
+    }
     return (
         <Sidebar>
             <SidebarHeader className="pb-6 pt-6 px-4">
@@ -87,23 +138,7 @@ export function DashboardSidebar() {
             </SidebarHeader>
             <SidebarContent>
                 <SidebarMenu>
-                    {mainNavLinksToRender.map((link) => (
-                        <SidebarMenuItem key={link.href}>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={isLinkActive(link.href)}
-                                className="group relative"
-                            >
-                                <NavLink to={link.href} className="w-full flex items-center space-x-3">
-                                    <link.icon className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                                    <span className="group-hover:translate-x-0.5 transition-transform">{link.label}</span>
-                                    {isLinkActive(link.href) && (
-                                        <ChevronRight className="w-4 h-4 ml-auto text-primary" />
-                                    )}
-                                </NavLink>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
+                    {mainNavLinksToRender.map(renderMainNavLinks)}
                 </SidebarMenu>
             </SidebarContent>
             <SidebarSeparator />

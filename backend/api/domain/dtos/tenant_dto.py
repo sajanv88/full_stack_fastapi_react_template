@@ -3,7 +3,7 @@ from typing import  List, Optional
 from pydantic import BaseModel, EmailStr
 
 from api.common.enums.gender import Gender
-from api.domain.entities.tenant import Subdomain
+from api.domain.entities.tenant import CustomDomain, Subdomain
 
 
 class TenantDto(BaseModel):
@@ -11,7 +11,8 @@ class TenantDto(BaseModel):
     name: str
     subdomain: Optional[str] | None
     is_active: bool
-    subdomain_status: str 
+    custom_domain: Optional[str] | None
+    custom_domain_status: Optional[str] | None
 
 class CreateTenantDto(BaseModel):
     name: str
@@ -37,3 +38,11 @@ class CreateTenantResponseDto(BaseModel):
 
 class SubdomainAvailabilityDto(BaseModel):
     is_available: bool
+
+class UpdateTenantDto(BaseModel):
+    is_active: Optional[bool]
+    custom_domain: Optional[CustomDomain] | None
+
+
+class UpdateTenantResponseDto(BaseModel):
+   message: str

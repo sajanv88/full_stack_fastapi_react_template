@@ -51,7 +51,7 @@ src/
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 22+ 
 - pnpm (recommended) or npm
 - Backend API running on `http://localhost:8000`
 
@@ -138,21 +138,6 @@ The `AuthProvider` manages:
 - Automatic token refresh
 - Protected route access
 
-### Usage Example
-
-```typescript
-import { useAuthContext } from '@/components/providers/auth-provider'
-
-function MyComponent() {
-  const { user, login, logout } = useAuthContext()
-  
-  if (!user) {
-    return <LoginForm onLogin={login} />
-  }
-  
-  return <DashboardContent user={user} />
-}
-```
 
 ## 🌐 API Integration
 
@@ -326,6 +311,9 @@ pnpm preview                # Preview production build locally
 3. **Styling Issues**:
    - Check Tailwind configuration
    - Verify component imports from `@/components/ui`
+
+4. **Cloudflare DNS**:
+    - Tenant contains subdomain for example:  `test.demo.fsrapp.xyz` then clouldflare doesn't provide free ssl certificate.. [Read here](https://developers.cloudflare.com/ssl/edge-certificates/)
 
 ### Development Tips
 

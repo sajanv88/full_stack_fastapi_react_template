@@ -18,9 +18,13 @@ import { useAuthContext } from "./components/providers/auth-provider";
 import { AIChatProvider } from "@/components/providers/ai-chat-provider";
 import { PasswordResetRequest } from "@/components/features/auth/password-reset-request";
 import { PasswordResetConfirmation } from "@/components/features/auth/password_reset_confirmation";
+import { Activation } from "@/components/features/auth/activation";
+import { TenantSetting } from "@/components/features/tenant/tenant-setting";
+import { useAppConfig } from "./components/providers/app-config-provider";
 
 function App() {
   const { user } = useAuthContext();
+  const { current_tenant } = useAppConfig();
   return (
     <Routes>
       <Route element={<DefaultLayout />}>
@@ -28,6 +32,7 @@ function App() {
         <Route path="register" element={<Register />} />
         <Route path="forgot-password" element={<PasswordResetRequest />} />
         <Route path="password_reset_confirmation" element={<PasswordResetConfirmation />} />
+        <Route path="activation" element={<Activation />} />
       </Route>
 
       <Route element={<DashboardLayout />}>
@@ -58,8 +63,17 @@ function App() {
           <SettingsProvider>
             <Settings />
           </SettingsProvider>
-        }
-        />
+        } />
+
+        {current_tenant && (
+          <Route path="settings/tenant" element={
+            <SettingsProvider>
+              <TenantsProvider>
+                <TenantSetting />
+              </TenantsProvider>
+            </SettingsProvider>
+          } />
+        )}
 
         <Route path="profile" element={<Profile />} />
         <Route path="ai" element={

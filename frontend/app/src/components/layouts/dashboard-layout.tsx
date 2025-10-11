@@ -11,12 +11,15 @@ import { InfoIcon } from "lucide-react"
 import { Toaster } from "sonner";
 import { SimpleFooter } from "@/components/shared/simple-footer";
 import { DashboardSidebar } from "@/components/layouts/dashboard-sidebar-layout";
+import { useAppConfig } from "../providers/app-config-provider";
+import { Badge } from "@/components/ui/badge";
 
 
 
 
 export function DashboardLayout() {
     const auth = useAuthContext();
+    const { current_tenant } = useAppConfig();
     const userImage = auth.user?.image_url ? auth.user?.image_url : "https://github.com/evilrabbit.png";
     return (
 
@@ -32,12 +35,22 @@ export function DashboardLayout() {
                                 <AvatarFallback>{auth.user?.first_name[0]}</AvatarFallback>
                             </Avatar>
                             <span className="ml-2 mr-auto flex-1 capitalize flex flex-col">
-                                Welcome {auth.user?.last_name} | Your role: {auth.user?.role?.name}
-                                <em className="text-xs text-muted-foreground">
+                                <span className="flex items-center w-[12rem] sm:w-[25rem]">
+                                    <span className="flex-1">
+                                        Welcome {auth.user?.last_name}
+                                    </span>
+
+                                    <span className="flex gap-2">
+                                        <Badge variant="secondary">Role: {auth.user?.role?.name}</Badge>
+                                        {current_tenant && (<Badge variant="secondary">Tenant: {current_tenant?.name}</Badge>)}
+                                    </span>
+                                </span>
+                                <em className="text-xs text-muted-foreground mt-2">
                                     {auth.user?.role?.name === "guest" && "You are currently a guest user. So, you can only view read-only content."}
                                     {auth.user?.role?.name === "user" && "You are currently a regular user. So, you can view and edit your own content. Sometimes, edit others if you have permission."}
                                     {auth.user?.role?.name === "admin" && "You are currently an admin user. So, you have full access to all resources."}
                                 </em>
+
                             </span>
                             <DarkMode />
                         </header>

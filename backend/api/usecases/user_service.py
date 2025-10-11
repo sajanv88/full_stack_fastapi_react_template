@@ -6,7 +6,7 @@ from api.common.utils import get_logger
 from api.core.exceptions import EmailAlreadyExistsException, UserNotFoundException
 from api.domain.dtos.dashboard_dto import TimeSeriesDto
 from api.domain.entities.user import User
-from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto, UserDto, UserListDto
+from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto, UserDto, UserListDto, UserResendActivationEmailRequestDto
 from api.domain.entities.user_password_reset import UserPasswordReset
 from api.infrastructure.persistence.repositories.user_password_reset_repository_impl import UserPasswordResetRepository
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
@@ -49,7 +49,22 @@ class UserService:
         if existing is not None:
             raise EmailAlreadyExistsException(user_data.email)
         user_data.password = hash_it(user_data.password)
-        return await self.user_repository.create(user_data)
+        user_id = await self.user_repository.create(user_data)
+        
+        # Todo: Refactor this to use Celery task to Or fire and forget 
+        
+        # avoid circular import
+        # from api.core.container import get_auth_service
+
+        # auth_service = get_auth_service()
+        # welcome_email = UserResendActivationEmailRequestDto(
+        #     email=user_data.email,
+        #     first_name=user_data.first_name,
+        #     tenant_id=str(user_data.tenant_id),
+        #     id=str(user_id)
+        # )
+        # await auth_service.send_activation_email(welcome_email) 
+        return user_id
 
     async def update_user(self, user_id: str, user_data: UpdateUserDto) -> User | None:
         """Update user by ID. Returns updated User model. Raises UserNotFoundException if user does not exist."""

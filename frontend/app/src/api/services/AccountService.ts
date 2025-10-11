@@ -188,12 +188,20 @@ export class AccountService {
    */
   public activateAccountApiV1AccountActivatePost({
     requestBody,
+    tenantId,
   }: {
     requestBody: UserActivationRequestDto,
+    /**
+     * The tenant ID associated with the user, if applicable
+     */
+    tenantId?: (string | null),
   }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/account/activate',
+      query: {
+        'tenant_id': tenantId,
+      },
       body: requestBody,
       mediaType: 'application/json',
       errors: {

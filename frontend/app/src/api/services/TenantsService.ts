@@ -7,6 +7,8 @@ import type { CreateTenantResponseDto } from '../models/CreateTenantResponseDto'
 import type { SubdomainAvailabilityDto } from '../models/SubdomainAvailabilityDto';
 import type { TenantDto } from '../models/TenantDto';
 import type { TenantListDto } from '../models/TenantListDto';
+import type { UpdateTenantDto } from '../models/UpdateTenantDto';
+import type { UpdateTenantResponseDto } from '../models/UpdateTenantResponseDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class TenantsService {
@@ -133,6 +135,58 @@ export class TenantsService {
       url: '/api/v1/tenants/check_subdomain/{subdomain}',
       path: {
         'subdomain': subdomain,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Update Tenant Dns Record
+   * When bringing your own domain you must map the DNS records for your custom domain to point to our main domain.
+   * You can do this by adding a CNAME record in your domain's DNS settings.
+   * Here is an example of how to set it up:
+   * Type: CNAME
+   * Name: app
+   * Value: demo.fsrapp.xyz
+   * @returns UpdateTenantResponseDto Successful Response
+   * @throws ApiError
+   */
+  public updateTenantDnsRecordApiV1TenantsUpdateDnsTenantIdPost({
+    tenantId,
+    requestBody,
+  }: {
+    tenantId: string,
+    requestBody: UpdateTenantDto,
+  }): CancelablePromise<UpdateTenantResponseDto> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/api/v1/tenants/update_dns/{tenant_id}',
+      path: {
+        'tenant_id': tenantId,
+      },
+      body: requestBody,
+      mediaType: 'application/json',
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Check Dns Status
+   * @returns UpdateTenantResponseDto Successful Response
+   * @throws ApiError
+   */
+  public checkDnsStatusApiV1TenantsCheckDnsTenantIdGet({
+    tenantId,
+  }: {
+    tenantId: string,
+  }): CancelablePromise<UpdateTenantResponseDto> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/tenants/check_dns/{tenant_id}',
+      path: {
+        'tenant_id': tenantId,
       },
       errors: {
         422: `Validation Error`,

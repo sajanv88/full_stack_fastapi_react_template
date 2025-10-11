@@ -17,15 +17,7 @@ const columns = [
             const { can } = useAuthContext()
             const isHostManageTenants = can("host:manage_tenants");
             const baseOptions: ActionOption<typeof c.row.original>[] = [
-                {
-                    label: "Edit",
-                    data: c.row.original,
-                    onClick: (data) => onSelectTenant({
-                        type: 'edit',
-                        tenant: data
-                    }),
-                    disabled: isHostManageTenants
-                },
+
                 {
                     label: "Delete",
                     data: c.row.original,
@@ -51,6 +43,10 @@ const columns = [
     }),
     columHelper.accessor("subdomain", {
         header: "Subdomain",
+    }),
+    columHelper.accessor("is_active", {
+        header: "Is Active",
+        cell: (c) => c.getValue() ? "Yes" : "No",
     }),
 
 ];

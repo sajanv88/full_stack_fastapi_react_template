@@ -9,6 +9,7 @@ import { AccountService } from './services/AccountService';
 import { AiService } from './services/AiService';
 import { AppConfigurationService } from './services/AppConfigurationService';
 import { DashboardService } from './services/DashboardService';
+import { HealthService } from './services/HealthService';
 import { PermissionsService } from './services/PermissionsService';
 import { RolesService } from './services/RolesService';
 import { StorageSettingsService } from './services/StorageSettingsService';
@@ -20,6 +21,7 @@ export class ApiClient {
   public readonly ai: AiService;
   public readonly appConfiguration: AppConfigurationService;
   public readonly dashboard: DashboardService;
+  public readonly health: HealthService;
   public readonly permissions: PermissionsService;
   public readonly roles: RolesService;
   public readonly storageSettings: StorageSettingsService;
@@ -29,7 +31,7 @@ export class ApiClient {
   constructor(config?: Partial<OpenAPIConfig>, HttpRequest: HttpRequestConstructor = FetchHttpRequest) {
     this.request = new HttpRequest({
       BASE: config?.BASE ?? '',
-      VERSION: config?.VERSION ?? '0.1.0',
+      VERSION: config?.VERSION ?? '1.0.0',
       WITH_CREDENTIALS: config?.WITH_CREDENTIALS ?? false,
       CREDENTIALS: config?.CREDENTIALS ?? 'include',
       TOKEN: config?.TOKEN,
@@ -42,6 +44,7 @@ export class ApiClient {
     this.ai = new AiService(this.request);
     this.appConfiguration = new AppConfigurationService(this.request);
     this.dashboard = new DashboardService(this.request);
+    this.health = new HealthService(this.request);
     this.permissions = new PermissionsService(this.request);
     this.roles = new RolesService(this.request);
     this.storageSettings = new StorageSettingsService(this.request);

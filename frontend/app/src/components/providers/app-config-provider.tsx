@@ -1,9 +1,13 @@
 import { AppConfigurationDto } from "@/api";
 import { getApiClient, setTenant } from "@/lib/utils";
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useAuthContext } from "./auth-provider";
 
-const appConfigContext = createContext<AppConfigurationDto>({
+interface Configuration extends AppConfigurationDto {
+    reloadAppConfig: () => Promise<void>;
+    shouldShowTenantSelection?: boolean;
+}
+const appConfigContext = createContext<Configuration>({
     is_multi_tenant_enabled: false,
     multi_tenancy_strategy: "none",
     host_main_domain: "",
@@ -12,7 +16,8 @@ const appConfigContext = createContext<AppConfigurationDto>({
     user_preferences: {
         preferences: {},
         user_id: ""
-    }
+    },
+    reloadAppConfig: async () => { }
 });
 
 
@@ -34,7 +39,14 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
             user_id: ""
         }
     });
+    const [shouldShowTenantSelection, setShouldShowTenantSelection] = useState(false);
 
+    const reloadAppConfig = useCallback(async function reloadAppConfig() {
+        if (!accessToken) return;
+        const config = await getApiClient(accessToken).appConfiguration.getAppConfigurationApiV1AppConfigurationGet();
+        setAppConfig(config)
+
+    }, [accessToken]);
     useEffect(() => {
 
         const fetchConfig = async () => {
@@ -42,12 +54,24 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
             setAppConfig(config)
             if (config.is_multi_tenant_enabled === false) {
                 setTenant(null);
+
             }
         };
         fetchConfig();
     }, [accessToken]);
+
+    useEffect(() => {
+        if (appConfig.is_multi_tenant_enabled && !appConfig.current_tenant) {
+            setShouldShowTenantSelection(true);
+        }
+        if (appConfig.current_tenant) {
+            setTenant(appConfig.current_tenant);
+        }
+
+
+    }, [appConfig, accessToken]);
     return (
-        <appConfigContext.Provider value={appConfig}>
+        <appConfigContext.Provider value={{ ...appConfig, reloadAppConfig, shouldShowTenantSelection }}>
             {children}
         </appConfigContext.Provider>
     )

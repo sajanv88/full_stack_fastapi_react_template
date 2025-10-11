@@ -68,14 +68,14 @@ ADMIN_PASSWORD=SecurePassword123!
 - **Permission Matrix** for fine-grained access control
 - **Role Inheritance** and hierarchical permissions
 - **Runtime Permission Checking** with decorators
-- **Audit Trail** for role and permission changes
+
 
 ### 🤖 AI Integration
 - **Local AI Models** integration with Ollama support
 - **Real-time Streaming** responses for chat interfaces
 - **Conversation History** with persistent storage
 - **Multiple Model Support** with dynamic switching
-- **LangChain Integration** for advanced AI workflows
+
 
 ### ☁️ Cloud Storage
 - **Azure Blob Storage** native integration
@@ -144,185 +144,53 @@ api/
 - **Dependency Injection**: Punq container
 - **Testing**: Pytest with async support
 
-## 🔌 API Endpoints
-
-### Authentication
-```
-POST   /api/v1/auth/login          # User login
-POST   /api/v1/auth/refresh        # Refresh access token
-POST   /api/v1/auth/logout         # User logout
-POST   /api/v1/auth/register       # User registration
-POST   /api/v1/auth/forgot-password # Password reset request
-```
-
-### User Management
-```
-GET    /api/v1/users               # List users (paginated)
-POST   /api/v1/users               # Create new user
-GET    /api/v1/users/{id}          # Get user details
-PUT    /api/v1/users/{id}          # Update user
-DELETE /api/v1/users/{id}          # Delete user
-POST   /api/v1/users/{id}/avatar   # Upload user avatar
-```
-
-### Tenant Management
-```
-GET    /api/v1/tenants             # List tenants
-POST   /api/v1/tenants             # Create tenant
-GET    /api/v1/tenants/{id}        # Get tenant details
-PUT    /api/v1/tenants/{id}        # Update tenant
-DELETE /api/v1/tenants/{id}        # Delete tenant
-GET    /api/v1/tenants/search      # Search tenants by name
-```
-
-### Role & Permissions
-```
-GET    /api/v1/roles               # List roles
-POST   /api/v1/roles               # Create role
-PUT    /api/v1/roles/{id}          # Update role
-DELETE /api/v1/roles/{id}          # Delete role
-GET    /api/v1/permissions         # List all permissions
-```
-
-### AI Integration
-```
-GET    /api/v1/ai/models           # List available AI models
-POST   /api/v1/ai/ask              # Send AI query (streaming)
-GET    /api/v1/ai/history          # Get conversation history
-POST   /api/v1/ai/clear-history    # Clear conversation history
-```
-
-### Storage Management
-```
-GET    /api/v1/storage             # Get storage settings
-PUT    /api/v1/storage             # Update storage settings
-GET    /api/v1/storage/available   # List available providers
-POST   /api/v1/upload              # Upload file
-```
-
-### System
-```
-GET    /health                     # Health check endpoint
-GET    /docs                       # OpenAPI documentation
-GET    /redoc                      # ReDoc documentation
-```
-
-## 🐳 Docker Deployment
-
-### Build Image
-
-```dockerfile
-FROM python:3.13-slim
-
-# Install uv for fast dependency management
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-# Create non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-WORKDIR /api
-COPY . /api/
-RUN uv sync --frozen --no-cache
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y gcc g++ && rm -rf /var/lib/apt/lists/*
-
-USER appuser
-EXPOSE 8000
-
-CMD ["uv", "run", "fastapi", "run", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-### Docker Compose
-
-```yaml
-version: '3.9'
-services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017
-      - REDIS_HOST=redis
-      - JWT_SECRET=your-secret-key
-    depends_on:
-      - mongodb
-      - redis
-  
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-  
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-
-volumes:
-  mongodb_data:
-```
 
 ## ⚙️ Configuration
 
 ### Environment Variables
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `MONGO_URI` | MongoDB connection string | - | ✅ |
-| `MONGO_DB_NAME` | Database name | - | ✅ |
-| `JWT_SECRET` | JWT signing secret | - | ✅ |
-| `REFRESH_TOKEN_SECRET` | Refresh token secret | - | ✅ |
-| `REDIS_HOST` | Redis server host | localhost | ❌ |
-| `REDIS_PORT` | Redis server port | 6379 | ❌ |
-| `ADMIN_EMAIL` | Default admin email | admin@example.com | ❌ |
-| `ADMIN_PASSWORD` | Default admin password | - | ❌ |
-| `SMTP_HOST` | SMTP server host | - | ❌ |
-| `SMTP_PORT` | SMTP server port | 587 | ❌ |
-| `MULTI_TENANCY_STRATEGY` | Tenant strategy | header | ❌ |
-| `HOST_MAIN_DOMAIN` | Main domain for subdomains | - | ❌ |
-
-### Multi-Tenancy Configuration
-
 ```bash
-# Header-based tenancy (recommended for APIs)
-MULTI_TENANCY_STRATEGY=header
+  # MongoDB settings
+  MONGO_URI=mongodb://127.0.0.1:27012
+  MONGO_DB_NAME=full_stack_fastapi_react_template
 
-# Subdomain-based tenancy (for web applications)
-MULTI_TENANCY_STRATEGY=subdomain
-HOST_MAIN_DOMAIN=yourdomain.com
+  # JWT settings
+  JWT_SECRET=your_jwt_secret_key
+  REFRESH_TOKEN_SECRET=your_refresh_jwt_secret_key
 
-# Single tenant mode
-MULTI_TENANCY_STRATEGY=none
+  # Configure your default app admin credentials.
+  ADMIN_EMAIL=admin@example.com
+  ADMIN_PASSWORD=Test@123!
+
+  # SMTP Email settings
+  SMTP_HOST="localhost"
+  SMTP_PORT=1023
+  SMTP_USER=""
+  SMTP_PASSWORD=""
+  SMTP_MAIL_FROM="noreply@example.com"
+  SMTP_MAIL_FROM_NAME="Full-Stack Fast API"
+  SMTP_STARTTLS=False
+  SMTP_SSL_TLS=False
+
+  # Redis settings
+
+  REDIS_URI="redis://localhost:6372/0"
+
+  # App configuration
+  APP_TITLE="Full-Stack FastAPI React Template"
+  APP_VERSION="0.1.0"
+
+  API_ENDPOINT_BASE="http://localhost:8000/api"
+
+  # Configure Multi-Tenancy
+  MULTI_TENANCY_STRATEGY="header"  # Options: "header", "subdomain", "none"
+
+  # Host main domain name
+  HOST_MAIN_DOMAIN="fsrapp.com"
+
+  # Ollama settings
+  OLLAMA_HOST="http://localhost:11434"
 ```
 
-### AI Configuration
-
-```bash
-# Ollama Configuration (for local AI models)
-OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODELS=llama2,codellama,mistral
-
-# OpenAI Configuration (optional)
-OPENAI_API_KEY=your-openai-key
-```
-
-### Storage Configuration
-
-```bash
-# Azure Blob Storage
-AZURE_STORAGE_CONNECTION_STRING=your-connection-string
-AZURE_STORAGE_CONTAINER=your-container
-
-# AWS S3 Compatible
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-AWS_S3_BUCKET=your-bucket
-AWS_S3_REGION=us-east-1
-```
 
 ## 🚀 Development
 
@@ -366,12 +234,6 @@ uv run pytest tests/interfaces/test_user_endpoint.py
 # API Health
 GET /health
 
-# Database Health
-GET /health/db
-
-# Redis Health
-GET /health/cache
-```
 
 ### Logging
 
@@ -388,54 +250,6 @@ http://localhost:5555
 
 # Celery Status
 celery -A api.infrastructure.messaging.celery_worker status
-```
-
-## 🔒 Security Features
-
-### Authentication Security
-- **JWT with RS256** signing (configurable)
-- **Refresh Token Rotation** for enhanced security
-- **Password Hashing** with bcrypt
-- **Rate Limiting** on auth endpoints
-- **CORS Configuration** for cross-origin requests
-
-### Data Security
-- **SQL Injection Prevention** with parameterized queries
-- **Input Validation** with Pydantic models
-- **Output Sanitization** for API responses
-- **Secure Headers** with security middlewares
-- **Environment Variable Protection** for secrets
-
-### Multi-Tenant Security
-- **Data Isolation** between tenants
-- **Tenant-Scoped Queries** automatic filtering
-- **Permission Boundaries** preventing cross-tenant access
-- **Audit Logging** for tenant operations
-
-## 📚 API Documentation
-
-### Interactive Documentation
-
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI Spec**: http://localhost:8000/openapi.json
-
-### Authentication Examples
-
-```bash
-# Login
-curl -X POST "http://localhost:8000/api/v1/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "admin@example.com", "password": "password"}'
-
-# Use JWT Token
-curl -X GET "http://localhost:8000/api/v1/users" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-
-# Multi-tenant request with header
-curl -X GET "http://localhost:8000/api/v1/users" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "X-Tenant-ID: tenant-uuid"
 ```
 
 ## 🤝 Contributing
