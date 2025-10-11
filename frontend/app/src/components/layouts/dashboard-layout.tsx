@@ -21,6 +21,7 @@ export function DashboardLayout() {
     const auth = useAuthContext();
     const { current_tenant } = useAppConfig();
     const userImage = auth.user?.image_url ? auth.user?.image_url : "https://github.com/evilrabbit.png";
+    const isHost = current_tenant === null && auth.can("host:manage_tenants");
     return (
 
         <SidebarProvider>
@@ -42,6 +43,7 @@ export function DashboardLayout() {
 
                                     <span className="flex gap-2">
                                         <Badge variant="secondary">Role: {auth.user?.role?.name}</Badge>
+                                        {isHost && (<Badge variant="secondary">Host Access</Badge>)}
                                         {current_tenant && (<Badge variant="secondary">Tenant: {current_tenant?.name}</Badge>)}
                                     </span>
                                 </span>
