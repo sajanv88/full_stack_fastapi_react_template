@@ -20,11 +20,9 @@ import { PasswordResetRequest } from "@/components/features/auth/password-reset-
 import { PasswordResetConfirmation } from "@/components/features/auth/password_reset_confirmation";
 import { Activation } from "@/components/features/auth/activation";
 import { TenantSetting } from "@/components/features/tenant/tenant-setting";
-import { useAppConfig } from "./components/providers/app-config-provider";
 
 function App() {
   const { user } = useAuthContext();
-  const { current_tenant } = useAppConfig();
   return (
     <Routes>
       <Route element={<DefaultLayout />}>
@@ -65,15 +63,15 @@ function App() {
           </SettingsProvider>
         } />
 
-        {current_tenant && (
-          <Route path="settings/tenant" element={
-            <SettingsProvider>
-              <TenantsProvider>
-                <TenantSetting />
-              </TenantsProvider>
-            </SettingsProvider>
-          } />
-        )}
+
+        <Route path="settings/tenant" element={
+          <SettingsProvider>
+            <TenantsProvider>
+              <TenantSetting />
+            </TenantsProvider>
+          </SettingsProvider>
+        } />
+
 
         <Route path="profile" element={<Profile />} />
         <Route path="ai" element={

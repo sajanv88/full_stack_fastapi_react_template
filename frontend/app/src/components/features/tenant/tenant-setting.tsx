@@ -66,7 +66,12 @@ export function TenantSetting() {
                 tenantId: current_tenant.id
             });
 
-            toast.success(response.message || "Custom domain status checked successfully");
+            toast.success(
+                "Success!!", {
+                duration: 5000, richColors: true,
+                position: "top-center",
+                description: response.message || "The status may take a few minutes to update if DNS changes were recently made."
+            });
             setTimeout(async () => {
                 await reloadAppConfig();
             }, 2000); // Slight delay to ensure backend has processed the status update
@@ -126,10 +131,16 @@ export function TenantSetting() {
                 requestBody: updateData
             });
 
-            toast.success(response.message || "Custom domain update requested successfully");
+            toast.success("Success!!", {
+                richColors: true,
+                position: "top-center",
+                description: response.message || "The status may take a few minutes to update if DNS changes were recently made."
+            });
             setShowCustomDomainForm(false);
-            // Optionally refresh the page or update the app config
-            // window.location.reload();
+            setTimeout(async () => {
+                await reloadAppConfig();
+            }, 2000); // Slight delay to ensure backend has processed the status update
+
         } catch (error: any) {
             console.error("Error updating tenant DNS:", error);
             toast.error(error?.body?.detail || "Failed to update custom domain");
