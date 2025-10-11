@@ -1,5 +1,5 @@
 
-from typing import  List, Optional
+from typing import  List, Literal, Optional
 from pydantic import BaseModel, EmailStr
 
 from api.common.enums.gender import Gender
@@ -12,7 +12,7 @@ class TenantDto(BaseModel):
     subdomain: Optional[str] | None
     is_active: bool
     custom_domain: Optional[str] | None
-    custom_domain_status: Optional[str] | None
+    custom_domain_status: Literal["active", "failed", "activation-progress"] = "failed"
 
 class CreateTenantDto(BaseModel):
     name: str

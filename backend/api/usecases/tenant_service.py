@@ -25,6 +25,13 @@ class TenantService:
             raise TenantNotFoundException(name)
         return exisiting
 
+    async def find_by_custom_domain(self, custom_domain: str) -> Tenant | None:
+        """Get tenant by custom domain. Raises TenantNotFoundException if not found."""
+        existing = await self.tenant_repository.single_or_none(custom_domain=custom_domain)
+        if existing is None:
+            raise TenantNotFoundException(custom_domain)
+        return existing
+
     async def find_by_subdomain(self, subdomain: str) -> Tenant | None:
         """Get tenant by subdomain. Raises TenantNotFoundException if not found."""
         existing = await self.tenant_repository.single_or_none(subdomain=subdomain)

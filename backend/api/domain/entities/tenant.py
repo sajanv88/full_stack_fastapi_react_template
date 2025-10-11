@@ -75,6 +75,7 @@ CustomDomain = Annotated[str, AfterValidator(validate_custom_domain)]
 
 
 
+
 class Tenant(Document):
     name: str = Indexed(str, unique=True)
     subdomain: Subdomain | None = None

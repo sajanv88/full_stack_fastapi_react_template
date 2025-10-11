@@ -1,4 +1,4 @@
-import { AppConfigurationDto } from "@/api";
+import { AppConfigurationDto, TenantDto } from "@/api";
 import { getApiClient, setTenant } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useAuthContext } from "./auth-provider";
@@ -6,6 +6,7 @@ import { useAuthContext } from "./auth-provider";
 interface Configuration extends AppConfigurationDto {
     reloadAppConfig: () => Promise<void>;
     shouldShowTenantSelection?: boolean;
+    redirectToTenantDomain: (tenant: TenantDto) => void;
 }
 const appConfigContext = createContext<Configuration>({
     is_multi_tenant_enabled: false,
@@ -17,7 +18,9 @@ const appConfigContext = createContext<Configuration>({
         preferences: {},
         user_id: ""
     },
-    reloadAppConfig: async () => { }
+    reloadAppConfig: async () => { },
+    redirectToTenantDomain: () => { },
+    environment: "development"
 });
 
 
@@ -28,6 +31,7 @@ interface AppConfigProviderProps {
 export function AppConfigProvider({ children }: AppConfigProviderProps) {
     const { accessToken } = useAuthContext();
 
+
     const [appConfig, setAppConfig] = useState<AppConfigurationDto>({
         is_multi_tenant_enabled: false,
         multi_tenancy_strategy: "none",
@@ -37,7 +41,9 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
         user_preferences: {
             preferences: {},
             user_id: ""
-        }
+        },
+        current_tenant: null,
+        environment: "development"
     });
     const [shouldShowTenantSelection, setShouldShowTenantSelection] = useState(false);
 
@@ -54,8 +60,9 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
             setAppConfig(config)
             if (config.is_multi_tenant_enabled === false) {
                 setTenant(null);
-
             }
+
+
         };
         fetchConfig();
     }, [accessToken]);
@@ -66,12 +73,39 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
         }
         if (appConfig.current_tenant) {
             setTenant(appConfig.current_tenant);
+
         }
 
 
-    }, [appConfig, accessToken]);
+    }, [appConfig, accessToken, appConfig.current_tenant]);
+
+    const redirectToTenantDomain = useCallback((tenant: TenantDto) => {
+        const protocol = appConfig.environment === "development" ? "http" : "https";
+        const port = appConfig.environment === "development" ? ":3000" : "";
+        console.debug("Redirecting to tenant domain if needed:", tenant.custom_domain);
+        const url = `${protocol}://${tenant.custom_domain || tenant.subdomain}${port}`;
+        const currentHostname = window.location.hostname;
+        console.debug("Current hostname:", currentHostname);
+        console.debug("Target URL:", url);
+        if (tenant.custom_domain) {
+            if (currentHostname !== tenant.custom_domain) {
+                console.debug("Redirecting to custom domain:", url);
+                window.location.href = url;
+                return
+            }
+        } else {
+            if (currentHostname !== tenant.subdomain) {
+                console.debug("Redirecting to subdomain:", url);
+
+                window.location.href = url;
+            }
+        }
+
+    }, [])
+
+
     return (
-        <appConfigContext.Provider value={{ ...appConfig, reloadAppConfig, shouldShowTenantSelection }}>
+        <appConfigContext.Provider value={{ ...appConfig, reloadAppConfig, shouldShowTenantSelection, redirectToTenantDomain }}>
             {children}
         </appConfigContext.Provider>
     )

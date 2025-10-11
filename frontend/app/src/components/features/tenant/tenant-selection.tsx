@@ -5,6 +5,7 @@ import { X, Loader2 } from 'lucide-react'
 import { TenantDto } from '@/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn, getApiClient, getTenant, setTenant } from '@/lib/utils'
+import { useAppConfig } from '@/components/providers/app-config-provider'
 
 interface TenantSearchProps {
     onTenantSelect?: (tenant: TenantDto | null) => void
@@ -17,6 +18,7 @@ export function TenantSelection({
     placeholder = "Search tenant by name...",
     className
 }: TenantSearchProps) {
+    const { redirectToTenantDomain } = useAppConfig()
     const [isLoading, setIsLoading] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -69,6 +71,7 @@ export function TenantSelection({
                 setSearchQuery(response.name)
                 setTenant(response)
                 onTenantSelect?.(response)
+                redirectToTenantDomain(response)
             } else {
                 onTenantSelect?.(null)
                 setTenant(null)

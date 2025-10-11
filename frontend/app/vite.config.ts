@@ -20,7 +20,7 @@ export default defineConfig({
       }
 
     },
-    allowedHosts: ['demo.dev.xyz', 'netflix.demo.dev.xyz', 'localhost']
+    allowedHosts: ['demo.dev.xyz', 'netflix.demo.dev.xyz', 'fsrapp.netflix.com', 'localhost']
   },
   build: {
     outDir: "../../backend/api/ui",

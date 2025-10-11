@@ -15,6 +15,7 @@ export function setTenant(tenant: TenantDto | null) {
   }
   localStorage.setItem("_tenant", JSON.stringify(tenant));
   window.dispatchEvent(new Event("tenant_set"));
+
 }
 
 export function getTenant(): TenantDto | null {

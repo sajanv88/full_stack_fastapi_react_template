@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 
 from api.domain.dtos.ai_dto import AIModelInfoDto
 from api.domain.dtos.tenant_dto import TenantDto
@@ -14,5 +14,8 @@ class AppConfigurationDto(BaseModel):
     is_user_logged_in: Optional[bool] = False
     user_preferences: Optional[UserPreferenceDto] = None
     current_tenant: TenantDto | None = None
+    environment: str
 
+
+    
 

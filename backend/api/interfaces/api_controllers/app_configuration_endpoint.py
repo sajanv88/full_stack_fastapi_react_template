@@ -1,5 +1,4 @@
-from typing import Annotated
-from beanie import PydanticObjectId
+
 from fastapi import APIRouter, Depends, status
 
 from api.common.dtos.app_configuration_dto import AppConfigurationDto
@@ -12,6 +11,7 @@ from api.infrastructure.security.current_user import  CurrentUserOptional
 from api.interfaces.middlewares.tenant_middleware import get_tenant_id
 from api.usecases.tenant_service import TenantService
 from api.usecases.user_preference_service import UserPreferenceService
+from api.core.config import settings
 
 logger = get_logger(__name__)
 
@@ -56,9 +56,8 @@ async def get_app_configuration(
         available_ai_models=available_ai_models,
         is_user_logged_in=False,
         user_preferences=user_pref_doc,
-        current_tenant=current_tenant
+        current_tenant=current_tenant,
+        environment = settings.fastapi_env
+
     )
-
-
-
 
