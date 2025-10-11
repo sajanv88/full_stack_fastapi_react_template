@@ -13,5 +13,6 @@ export type AppConfigurationDto = {
   is_user_logged_in?: (boolean | null);
   user_preferences?: (UserPreferenceDto | null);
   current_tenant?: (TenantDto | null);
+  environment: string;
 };
 

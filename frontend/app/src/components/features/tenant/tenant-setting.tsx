@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { getApiClient } from "@/lib/utils";
-import { UpdateTenantDto } from "@/api";
+import { TenantDto, UpdateTenantDto } from "@/api";
 import { Building2, Globe, CheckCircle, Clock, XCircle, Plus, AlertTriangle } from "lucide-react";
 import { NavLink } from "react-router";
 
@@ -78,7 +78,7 @@ export function TenantSetting() {
             setIsLoading(false);
         }
     }
-    const getCustomDomainStatusBadge = (status: string | null) => {
+    const getCustomDomainStatusBadge = (status: TenantDto["custom_domain_status"]) => {
         switch (status) {
             case "active":
                 return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Active</Badge>;

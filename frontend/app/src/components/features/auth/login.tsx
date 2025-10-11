@@ -7,7 +7,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -65,6 +65,14 @@ export function Login() {
         });
 
     };
+
+    useEffect(() => {
+        if (appConfig.current_tenant) {
+            appConfig.redirectToTenantDomain(appConfig.current_tenant);
+        }
+    }, [
+        appConfig.current_tenant
+    ])
 
 
 

@@ -148,7 +148,7 @@ export class TenantsService {
    * Here is an example of how to set it up:
    * Type: CNAME
    * Name: app
-   * Value: demo.fsrapp.xyz
+   * Value: demo.dev.xyz
    * @returns UpdateTenantResponseDto Successful Response
    * @throws ApiError
    */

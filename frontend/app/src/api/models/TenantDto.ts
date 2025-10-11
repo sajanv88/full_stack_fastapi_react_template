@@ -8,6 +8,6 @@ export type TenantDto = {
   subdomain: (string | null);
   is_active: boolean;
   custom_domain: (string | null);
-  custom_domain_status: (string | null);
+  custom_domain_status?: 'active' | 'failed' | 'activation-progress';
 };
 

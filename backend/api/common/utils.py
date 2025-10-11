@@ -80,3 +80,9 @@ def format_bytes_to_human_readable_size(size_in_bytes: int) -> str:
         size_in_bytes /= 1024
     return f"{size_in_bytes:.2f} PB"
 
+
+def is_subdomain(host: str) -> bool:
+    """Check if the given host is a subdomain of the main domain."""
+    main_domain = get_host_main_domain_name().lower()
+    host = host.lower()
+    return host != main_domain and host.endswith(f".{main_domain}")
