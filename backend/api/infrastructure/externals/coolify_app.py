@@ -15,7 +15,7 @@ class CoolifyApp:
     def __init__(self):
         self.api_url = settings.coolify_api_url
         self.api_key = settings.coolify_api_key
-        self.application_id = settings.coolify_application_id
+        self.application_id = "ek4ckg0wokokgo8occ0gogsc"#settings.coolify_application_id
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",

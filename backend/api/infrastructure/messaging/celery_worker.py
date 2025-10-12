@@ -7,6 +7,7 @@ from api.common.utils import get_host_main_domain_name, get_logger
 from api.core.container import  get_dns_resolver, get_role_service, get_tenant_service, get_user_service, get_coolify_app_service
 from api.core.exceptions import CoolifyIntegrationException
 from api.domain.dtos.coolify_app_dto import UpdateDomainDto
+from api.domain.dtos.tenant_dto import TenantDto
 from api.domain.dtos.user_dto import CreateUserDto, UserDto
 from api.domain.entities.user import User
 from api.infrastructure.externals.dns_resolver import DnsResolver
@@ -71,9 +72,10 @@ async def _handle_post_tenant_creation_async(payload: str):
         )
         await post_tenant_creation_service.enqueue(admin_user=worker_payload.data)
         await db.close()
+        await _update_coolify_domain(data=UpdateDomainDto(domain=worker_payload.data.sub_domain, mode="add"))
 
 async def _handle_post_tenant_deletion_async(payload: str):
-    worker_payload = WorkerPayloadDto[None].model_validate_json(payload)
+    worker_payload = WorkerPayloadDto[TenantDto].model_validate_json(payload)
     logger.info(f"Handling task with label: {worker_payload.label}")
     if worker_payload.label == "post-tenant-deletion":
         logger.info(f"Starting post-tenant-deletion tasks for tenant_id: {worker_payload.tenant_id}")
@@ -81,6 +83,12 @@ async def _handle_post_tenant_deletion_async(payload: str):
         await db.drop()
         await db.close()
         logger.warning(f"Completed post-tenant-deletion tasks for tenant_id: {worker_payload.tenant_id} - Database dropped.")
+        if worker_payload.data.custom_domain:
+            await _update_coolify_domain(data=UpdateDomainDto(domain=worker_payload.data.custom_domain, mode="remove"))
+        elif worker_payload.data.subdomain:
+            await _update_coolify_domain(data=UpdateDomainDto(domain=worker_payload.data.subdomain, mode="remove"))
+        else:
+            logger.info("No custom domain or subdomain found for tenant. Skipping Coolify domain removal.")
 
 
 async def _handle_tenant_dns_update_async(payload: str):
@@ -141,10 +149,9 @@ async def _update_tenant_custom_domain_status(tenant_id: str, status: str):
     tenant.custom_domain_status = status
     await tenant.save()
     await db.close()
-    hostname = f"https://{tenant.custom_domain}"
     
     if status == "active":
-        await _update_coolify_domain(data=UpdateDomainDto(domain=hostname, mode="add"))
+        await _update_coolify_domain(data=UpdateDomainDto(domain=tenant.custom_domain, mode="add"))
 
     logger.info(f"Updated tenant {tenant_id} custom_domain_status to {status}")
 
@@ -155,7 +162,8 @@ async def _update_coolify_domain(data: UpdateDomainDto):
         return
     try:
         coolify_service: CoolifyAppService = get_coolify_app_service()
-        success = await coolify_service.update_domain(data=data)
+        hostname = f"https://{data.domain}"
+        success = await coolify_service.update_domain(data=UpdateDomainDto(domain=hostname, mode=data.mode))
         if success:
             logger.info(f"Successfully updated Coolify domain with data: {data.domain}, mode: {data.mode}")
             logger.info("Restarting Coolify application to apply domain changes.")
