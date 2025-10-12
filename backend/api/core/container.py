@@ -1,5 +1,6 @@
 import punq
 from api.domain.interfaces.email_service import IEmailService
+from api.infrastructure.externals.coolify_app import CoolifyApp
 from api.infrastructure.externals.dns_resolver import DnsResolver
 from api.infrastructure.externals.smtp_email import SmtpEmail
 from api.infrastructure.persistence.repositories.chat_history_ai_repository_impl import ChatHistoryAIRepository
@@ -11,6 +12,7 @@ from api.infrastructure.persistence.repositories.user_password_reset_repository_
 from api.infrastructure.persistence.repositories.user_preference_repository_impl import UserPreferenceRepository
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
 from api.infrastructure.security.jwt_token_service import JwtTokenService
+from api.usecases.coolify_app_service import CoolifyAppService
 from api.usecases.local_ai_service import LocalAIService
 from api.usecases.auth_service import AuthService
 from api.usecases.file_service import FileService
@@ -37,6 +39,11 @@ container.register(JwtTokenService, scope=punq.Scope.singleton)
 
 ## DNS Resolver
 container.register(DnsResolver, scope=punq.Scope.singleton)
+
+## Coolify Integration
+container.register(CoolifyApp, scope=punq.Scope.singleton)
+container.register(CoolifyAppService, scope=punq.Scope.singleton)
+
 
 # Register repositories and services
 
@@ -102,16 +109,18 @@ def get_storage_settings_repository() -> StorageSettingsRepository:
 def get_file_service() -> FileService:
     return container.resolve(FileService)
 
-
 def get_email_service() -> IEmailService:
     return container.resolve(IEmailService)
-
 
 def get_local_ai_service() -> LocalAIService:
     return container.resolve(LocalAIService)
 
-
 def get_dns_resolver() -> DnsResolver:
     return container.resolve(DnsResolver)
+
+
+
+def get_coolify_app_service() -> CoolifyAppService:
+    return container.resolve(CoolifyAppService)
 
 print("Dependency injection container configured.")

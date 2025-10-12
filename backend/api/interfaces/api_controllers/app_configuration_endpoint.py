@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, status
 
 from api.common.dtos.app_configuration_dto import AppConfigurationDto
 from api.common.utils import get_host_main_domain_name, get_logger, get_tenancy_strategy, is_tenancy_enabled
-from api.core.container import  get_tenant_service, get_user_preference_service
-from api.core.exceptions import TenantNotFoundException
+from api.core.container import   get_tenant_service, get_user_preference_service
+from api.core.exceptions import  TenantNotFoundException
 from api.domain.entities.tenant import Tenant
 from api.infrastructure.externals.local_ai_model import OllamaModels
 from api.infrastructure.security.current_user import  CurrentUserOptional
@@ -60,4 +60,5 @@ async def get_app_configuration(
         environment = settings.fastapi_env
 
     )
+
 

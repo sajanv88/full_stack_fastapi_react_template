@@ -4,19 +4,22 @@ from celery import Celery
 
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_host_main_domain_name, get_logger
-from api.core.container import  get_dns_resolver, get_role_service, get_tenant_service, get_user_service
+from api.core.container import  get_dns_resolver, get_role_service, get_tenant_service, get_user_service, get_coolify_app_service
+from api.core.exceptions import CoolifyIntegrationException
+from api.domain.dtos.coolify_app_dto import UpdateDomainDto
 from api.domain.dtos.user_dto import CreateUserDto, UserDto
 from api.domain.entities.user import User
 from api.infrastructure.externals.dns_resolver import DnsResolver
 from api.infrastructure.persistence.mongodb import Database, models
 from api.infrastructure.background.post_tenant_creation_task_service import PostTenantCreationTaskService
+from api.usecases.coolify_app_service import CoolifyAppService
 from api.usecases.tenant_service import TenantService
 
 broker_url = os.getenv("CELERY_BROKER_URL")
 backend_url = os.getenv("CELERY_RESULT_BACKEND")
 mongo_uri = os.getenv("MONGO_URI")
 mongo_db_default = os.getenv("MONGO_DB_NAME")
-
+coolify_enabled = os.getenv("COOLIFY_ENABLED", "false").lower() == "true"
 logger = get_logger(__name__)
 
 celery_app = Celery(
@@ -133,8 +136,30 @@ async def _update_tenant_custom_domain_status(tenant_id: str, status: str):
     db = Database(uri=mongo_uri, models=models)
     await db.init_db(db_name=mongo_db_default, is_tenant=False)
     tenant_service: TenantService = get_tenant_service()
+    
     tenant = await tenant_service.get_tenant_by_id(tenant_id=tenant_id)
     tenant.custom_domain_status = status
     await tenant.save()
     await db.close()
+    hostname = f"https://{tenant.custom_domain}"
+    
+    if status == "active":
+        await _update_coolify_domain(data=UpdateDomainDto(domain=hostname, mode="add"))
+
     logger.info(f"Updated tenant {tenant_id} custom_domain_status to {status}")
+
+
+async def _update_coolify_domain(data: UpdateDomainDto):
+    if coolify_enabled is False:
+        logger.info("Coolify integration is not enabled. Skipping domain update.")
+        return
+    try:
+        coolify_service: CoolifyAppService = get_coolify_app_service()
+        success = await coolify_service.update_domain(data=data)
+        if success:
+            logger.info(f"Successfully updated Coolify domain with data: {data.domain}, mode: {data.mode}")
+            logger.info("Restarting Coolify application to apply domain changes.")
+            if await coolify_service.restart_app():
+                logger.info("Coolify application restart initiated.")
+    except CoolifyIntegrationException as e:
+        logger.error(f"Caught error while updating Coolify domain: {str(e)}")

@@ -55,9 +55,13 @@ class Settings(BaseSettings):
 
     ollama_host: str = "http://localhost:11434"
 
-    cloudflare_zone_id: str
-    cloudflare_api_token: str
     
+    # Coolify settings for deployment integration only used for domain setup
+    coolify_enabled: bool = False
+    coolify_api_url: str
+    coolify_api_key: str
+    coolify_application_id: str
+
 # Instantiate settings once
 settings = Settings()
 

@@ -42,7 +42,7 @@ This full-stack template provides enterprise-ready features out of the box:
 ## Watch Demo
 
 ![DEMO](/demo.gif)
-
+![Multi-tenancy DNS Demo](/dns.gif)
 [Check out deployed DEMO Version](https://demo.fsrapp.xyz/)
 
 ### Login as Host
@@ -230,6 +230,7 @@ The frontend is built with modern React patterns and TypeScript for type safety:
    ```
    
    Edit `backend/.env` with your configuration:
+
    ```bash
         # MongoDB settings
         MONGO_URI=mongodb://127.0.0.1:27012
@@ -277,6 +278,14 @@ The frontend is built with modern React patterns and TypeScript for type safety:
 
         # Environment
         FASTAPI_ENV="development"  # Options: "development", "production"
+
+
+        # Coolify settings for deployment
+         COOLIFY_ENABLED="false" # Set to "true" to enable Coolify integration
+         COOLIFY_API_URL="https://{replace_with_your_coolify_instance_endpoint}/api/v1"
+         COOLIFY_API_KEY="{replace_with_your_coolify_api_key}" # Read here https://coolify.io/docs/api-reference/authorization
+         COOLIFY_APPLICATION_ID="{replace_with_your_coolify_application_id}" # Read here https://coolify.io/docs/api-reference/api/operations/get-application-by-uuid
+
    ```
 
 2. **Start Infrastructure Services**:
