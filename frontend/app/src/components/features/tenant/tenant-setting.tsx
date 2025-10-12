@@ -105,7 +105,22 @@ export function TenantSetting() {
                     </div>
                 )
             case "failed":
-                return <div className="flex items-center"><XCircle className="w-3 h-3 mr-1" /><Badge variant="destructive">Failed</Badge></div>;
+                return (
+                    <div className="flex items-center">
+                        <XCircle className="w-3 h-3 mr-1" />
+                        <Badge variant="destructive">Failed</Badge>
+                        {current_tenant?.custom_domain && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="ml-2"
+                                onClick={checkCustomDomainStatus}
+                            >
+                                Check Status
+                            </Button>
+                        )}
+                    </div>
+                );
             default:
                 return <Badge variant="secondary">Not Set</Badge>;
         }

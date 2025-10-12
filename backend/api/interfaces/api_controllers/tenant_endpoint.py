@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, status
 
 from api.common.dtos.worker_dto import WorkerPayloadDto
-from api.common.exceptions import InvalidOperationException
+from api.common.exceptions import ApiBaseException, InvalidOperationException
 from api.common.utils import get_host_main_domain_name, get_logger
 from api.core.container import    get_tenant_service
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
 from api.domain.dtos.tenant_dto import CreateTenantResponseDto, SubdomainAvailabilityDto, TenantDto, TenantListDto, CreateTenantDto, UpdateTenantDto, UpdateTenantResponseDto
 from api.domain.dtos.user_dto import CreateUserDto
-from api.domain.entities.tenant import Subdomain
+from api.domain.entities.tenant import Subdomain, Tenant
 from api.domain.enum.permission import Permission
 from api.infrastructure.security.current_user import CurrentUser
 from api.interfaces.security.role_checker import check_permissions_for_current_role
@@ -42,7 +42,8 @@ async def create_tenant(
         first_name=data.first_name,
         last_name=data.last_name,
         gender=data.gender,
-        tenant_id=response.id
+        tenant_id=response.id,
+        sub_domain=data.subdomain
     )
     payload=WorkerPayloadDto(
         label="post-tenant-creation",
@@ -61,14 +62,21 @@ async def delete_tenant(
     service: TenantService = Depends(get_tenant_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS]))
 ):
-    await service.delete_tenant(tenant_id=id)
-    payload=WorkerPayloadDto(
-        label="post-tenant-deletion",
-        data=None,
-        tenant_id=id
-    )
-    handle_post_tenant_deletion.delay(payload=payload.model_dump_json())
-    return status.HTTP_202_ACCEPTED
+    try:
+        tenant: Tenant = await service.get_tenant_by_id(tenant_id=id)
+        tenant_doc = await tenant.to_serializable_dict()
+        payload=WorkerPayloadDto(
+            label="post-tenant-deletion",
+            data=TenantDto(**tenant_doc),
+            tenant_id=id
+        )
+        await service.delete_tenant(tenant_id=id)
+        handle_post_tenant_deletion.delay(payload=payload.model_dump_json())
+        return status.HTTP_202_ACCEPTED
+    except TenantNotFoundException as e:
+        raise e
+    except Exception as e:
+        raise ApiBaseException(f"Failed to delete tenant: {str(e)}")
 
 
 @router.get("/search_by_name/{name}", response_model=TenantDto, status_code=status.HTTP_200_OK)
