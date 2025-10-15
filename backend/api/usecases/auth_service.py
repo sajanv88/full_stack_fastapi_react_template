@@ -10,6 +10,7 @@ from api.domain.dtos.role_dto import RoleDto
 from api.domain.dtos.tenant_dto import CreateTenantDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserResendActivationEmailRequestDto
 from api.domain.entities.tenant import validate_subdomain
+from api.domain.entities.user import User
 from api.domain.interfaces.email_service import IEmailService
 from api.infrastructure.security.jwt_token_service import JwtTokenService
 from api.interfaces.email_templates.password_reset_email_template_html import password_reset_email_template_html
@@ -40,12 +41,10 @@ class AuthService:
         logger.info("Initialized.")
         print(self.email_service, "email service in auth service")
 
-    async def login(self, req: LoginRequestDto) -> TokenSetDto:
-        user = await self.user_service.find_by_email(email=req.email)
-        if verify_password(req.password, user.password) is False:
-            raise UnauthorizedException("Authentication failed. Please check your credentials.")
-
-
+    async def _get_token_set(self, user: User) -> TokenSetDto:
+        """
+            Helper method to generate a TokenSetDto for the given user. Dont use this method outside this class.
+        """
         role = await self.role_service.get_role_by_id(role_id=user.role_id)
         role_doc = await role.to_serializable_dict()    
         payload = TokenPayloadDto(
@@ -57,6 +56,22 @@ class AuthService:
                 tenant_id=user.tenant_id
             )
         return await self.jwt_token_service.generate_tokens(payload)
+
+
+    async def login_with_passkey(self, email: str) -> TokenSetDto:
+        user = await self.user_service.find_by_email(email=email)
+        if user is None:
+            raise UnauthorizedException("Authentication failed. Please check your credentials.")
+        return await self._get_token_set(user)
+       
+
+        
+    async def login(self, req: LoginRequestDto) -> TokenSetDto:
+        user = await self.user_service.find_by_email(email=req.email)
+        if verify_password(req.password, user.password) is False:
+            raise UnauthorizedException("Authentication failed. Please check your credentials.")
+
+        return await self._get_token_set(user)
     
 
     async def register(self, new_user: CreateUserDto, cb: Callable) -> None:
@@ -279,3 +294,7 @@ class AuthService:
             body=html,
             type=MessageType.html
         )
+
+
+    async def get_user_service(self) -> UserService:
+        return self.user_service

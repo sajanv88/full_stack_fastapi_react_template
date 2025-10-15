@@ -8,10 +8,12 @@ from api.infrastructure.persistence.repositories.chat_session_ai_repository_impl
 from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
 from api.infrastructure.persistence.repositories.storage_settings_repository_impl import StorageSettingsRepository
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
+from api.infrastructure.persistence.repositories.user_passkey_repository_impl import UserPasskeyChallengesRepository, UserPasskeyRepository
 from api.infrastructure.persistence.repositories.user_password_reset_repository_impl import UserPasswordResetRepository
 from api.infrastructure.persistence.repositories.user_preference_repository_impl import UserPreferenceRepository
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
 from api.infrastructure.security.jwt_token_service import JwtTokenService
+from api.infrastructure.security.passkey_service import PasskeyService
 from api.usecases.coolify_app_service import CoolifyAppService
 from api.usecases.local_ai_service import LocalAIService
 from api.usecases.auth_service import AuthService
@@ -79,6 +81,12 @@ container.register(ChatSessionAIRepository)
 container.register(ChatHistoryAIRepository)
 container.register(LocalAIService, scope=punq.Scope.singleton)
 
+## Passkey Components
+container.register(UserPasskeyRepository, scope=punq.Scope.singleton)
+container.register(UserPasskeyChallengesRepository, scope=punq.Scope.singleton)
+container.register(PasskeyService, scope=punq.Scope.singleton)
+
+
 def get_database() -> Database:
     return container.resolve(Database)
 
@@ -118,9 +126,17 @@ def get_local_ai_service() -> LocalAIService:
 def get_dns_resolver() -> DnsResolver:
     return container.resolve(DnsResolver)
 
-
-
 def get_coolify_app_service() -> CoolifyAppService:
     return container.resolve(CoolifyAppService)
+
+
+def get_user_passkey_repository() -> UserPasskeyRepository:
+    return container.resolve(UserPasskeyRepository)
+
+def get_user_passkey_challenges_repository() -> UserPasskeyChallengesRepository:
+    return container.resolve(UserPasskeyChallengesRepository)
+
+def get_passkey_service() -> PasskeyService:
+    return container.resolve(PasskeyService)
 
 print("Dependency injection container configured.")

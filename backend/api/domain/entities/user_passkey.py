@@ -1,0 +1,30 @@
+
+from typing import Literal
+from pydantic import BaseModel, EmailStr
+from datetime import datetime
+
+from api.common.utils import get_utc_now
+from api.domain.entities.api_base_model import ApiBaseModel
+
+class Credential(BaseModel):
+    credential_id: str
+    public_key: str
+    sigin_count: int
+    transports: Literal["internal"] = "internal",
+    created_at: datetime
+
+class UserPasskey(ApiBaseModel):
+    user_email: EmailStr
+    credentials: list[Credential] = []
+    class Settings:
+        name = "user_passkeys"
+
+
+class Challenges(ApiBaseModel):
+    email: EmailStr
+    type: Literal["registration", "authentication"] = "registration"
+    challenge: str
+    expired_at: datetime = get_utc_now()
+
+    class Settings:
+        name = "user_passkey_challenges"

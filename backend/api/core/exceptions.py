@@ -58,3 +58,9 @@ class CoolifyIntegrationException(InvalidOperationException):
     def __init__(self, message: str):
         local_message = f"Coolify Integration Error: {message}"
         super().__init__(local_message)
+
+
+class PassKeyException(InvalidOperationException):
+    def __init__(self, message: str):
+        local_message = f"PassKey Error: {message}"
+        super().__init__(local_message)

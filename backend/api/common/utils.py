@@ -25,6 +25,9 @@ def get_host_main_domain_name() -> str:
 def get_app_environment() -> str:
     return settings.fastapi_env.lower()
 
+def get_app_title() -> str:
+    return settings.app_title or "Full-Stack FastAPI React"
+
 def is_production_environment() -> bool:
     return get_app_environment() == "production"
 

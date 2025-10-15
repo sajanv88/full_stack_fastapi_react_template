@@ -1,19 +1,22 @@
 from typing import Annotated
 from beanie import PydanticObjectId
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Response, status
 from fastapi.params import Query
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import EmailStr
 from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.exceptions import ForbiddenException, InvalidOperationException
 from api.common.utils import get_logger
-from api.core.container import get_auth_service, get_role_service
+from api.core.container import get_auth_service, get_passkey_service, get_role_service
+from api.core.exceptions import PassKeyException
 from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, MeResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserDto, UserResendActivationEmailRequestDto
 from api.domain.enum.permission import Permission
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation
 from api.infrastructure.security.current_user import CurrentUser
+from api.infrastructure.security.passkey_service import PasskeyService
 from api.interfaces.middlewares.tenant_middleware import FrontendHost, get_tenant_id
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.auth_service import AuthService
@@ -207,3 +210,67 @@ async def change_email_confirmation(
         raise HTTPException(status_code=400, detail="Email change confirmation failed.")
     
     return ChangeEmailResponseDto(message="Email changed successfully.")
+
+
+
+@router.post("/passkey/register_options", status_code=status.HTTP_200_OK)
+async def passkey_register_options(
+    email: EmailStr = Body(...),
+    passkey_service: PasskeyService = Depends(get_passkey_service),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    user_service = await auth_service.get_user_service()
+    user = await user_service.find_by_email(email=email)
+    user_dto = await user.to_serializable_dict()
+    return await passkey_service.registerOptions(user_dto=UserDto(**user_dto))
+
+
+@router.post("/passkey/register", status_code=status.HTTP_202_ACCEPTED)
+async def passkey_register(
+    email: EmailStr = Body(...),
+    credential: dict = Body(...),
+    passkey_service: PasskeyService = Depends(get_passkey_service)
+):
+    result = await passkey_service.completeRegistration(email, credential)
+    if result is False:
+        raise PassKeyException("Passkey registration failed.")
+    
+    return status.HTTP_202_ACCEPTED
+    
+
+@router.post("/passkey/login_options", status_code=status.HTTP_200_OK)
+async def passkey_login_options(
+    email: EmailStr = Body(...),
+    passkey_service: PasskeyService = Depends(get_passkey_service),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    user_service = await auth_service.get_user_service()
+    user = await user_service.find_by_email(email=email)
+    user_dto = await user.to_serializable_dict()
+    return await passkey_service.authLoginOptions(user_dto=UserDto(**user_dto))
+
+
+@router.post("/passkey/login", status_code=status.HTTP_200_OK, response_model=TokenSetDto)
+async def passkey_login(
+    response: Response,
+    email: EmailStr = Body(...),
+    credential: dict = Body(...),
+    passkey_service: PasskeyService = Depends(get_passkey_service),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    result = await passkey_service.completeAuthLogin(email, credential)
+    if result is False:
+        raise PassKeyException("Passkey authentication failed.")
+    
+    token_set: TokenSetDto = await auth_service.login_with_passkey(email=email)
+    
+    response.set_cookie(
+        key="refresh_token",
+        value=token_set.refresh_token,
+        httponly=True,
+        secure=settings.fastapi_env == "production",
+        samesite="lax",
+        max_age=settings.refresh_token_expire_days
+    )
+    return token_set
+    
