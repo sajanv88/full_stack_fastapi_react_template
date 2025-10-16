@@ -5,12 +5,14 @@ from datetime import datetime
 
 from api.common.utils import get_utc_now
 from api.domain.entities.api_base_model import ApiBaseModel
-
+from webauthn.helpers.structs import (
+    AuthenticatorTransport
+)
 class Credential(BaseModel):
     credential_id: str
     public_key: str
     sigin_count: int
-    transports: Literal["internal"] = "internal",
+    transports: list[AuthenticatorTransport] = []
     created_at: datetime
 
 class UserPasskey(ApiBaseModel):

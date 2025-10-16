@@ -16,7 +16,7 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: "https://api-demo.dev.xyz" //'http://localhost:8000',
       }
 
     },

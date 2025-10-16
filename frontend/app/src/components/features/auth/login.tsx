@@ -19,6 +19,7 @@ import { Logo } from "@/components/shared/logo";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { TenantSelection } from "../tenant/tenant-selection";
 import { useAuthContext } from "@/components/providers/auth-provider";
+import { OtherLoginOptions } from "@/components/features/auth/other-login-options";
 
 
 
@@ -77,7 +78,7 @@ export function Login() {
 
 
     return (
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+        <div className="flex flex-col items-center justify-center pt-10 pb-10">
             {appConfig.shouldShowTenantSelection && (
                 <TenantSelection />
             )}
@@ -134,8 +135,15 @@ export function Login() {
                             <Button type="submit" className="w-full" disabled={isLoading}>
                                 {isLoading ? "Signing in..." : "Login"}
                             </Button>
+
                         </form>
                     </Form>
+
+                    {/* Other Login Options */}
+                    <div className="mt-4">
+                        <OtherLoginOptions />
+                    </div>
+
                     <div className="mt-6 text-center text-sm text-muted-foreground border-t pt-4">
                         Don&apos;t have an account?{' '}
                         <NavLink to="/register" className="text-primary underline hover:text-primary/80">Register</NavLink>

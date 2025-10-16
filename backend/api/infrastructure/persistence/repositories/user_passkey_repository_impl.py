@@ -2,8 +2,11 @@ from typing import Literal, Optional
 
 from beanie import PydanticObjectId
 from api.common.base_repository import BaseRepository
+from api.common.utils import get_logger
 from api.domain.entities.user_passkey import Challenges, UserPasskey
 import base64
+
+logger = get_logger(__name__)
 
 class UserPasskeyRepository(BaseRepository[UserPasskey]):
     def __init__(self):
@@ -18,9 +21,11 @@ class UserPasskeyChallengesRepository(BaseRepository[Challenges]):
         """
             Save challenges with current user email, return challenge
         """
+        cv = base64.urlsafe_b64encode(challenge).decode("utf-8").rstrip("=")
+        logger.debug(f"challenge bytes to a string {cv}")
         data = Challenges(
             email=email,
-            challenge=base64.urlsafe_b64encode(challenge).decode(),
+            challenge=cv,
             type=type,
             tenant_id=tenant_id
         )

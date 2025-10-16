@@ -22,6 +22,17 @@ services:
     ports:
       - "1023:1025"
       - "1083:1080"
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
     # networks:
     #   - fastapi_network
   
@@ -29,6 +40,8 @@ services:
 volumes:
   mongodb_data:
   redis_data:
+  caddy_data:
+  caddy_config:
 
 # networks:
 #   fastapi_network:

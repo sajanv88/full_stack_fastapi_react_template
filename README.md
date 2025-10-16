@@ -296,6 +296,7 @@ The frontend is built with modern React patterns and TypeScript for type safety:
    - MongoDB (port 27012)
    - Redis (port 6372)
    - Fake SMTP Server (ports 1023, 1083)
+   - Caddy proxy for local development ssl. Useful for testing passkey login in local development.
 
 3. **Backend Development**:
    ```bash

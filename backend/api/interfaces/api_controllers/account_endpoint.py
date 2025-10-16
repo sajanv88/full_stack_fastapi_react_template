@@ -4,6 +4,7 @@ from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Response, s
 from fastapi.params import Query
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
+from api.common.dtos.passkey_rep_dto import HasPasskeysDto
 from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.exceptions import ForbiddenException, InvalidOperationException
@@ -222,7 +223,7 @@ async def passkey_register_options(
     user_service = await auth_service.get_user_service()
     user = await user_service.find_by_email(email=email)
     user_dto = await user.to_serializable_dict()
-    return await passkey_service.registerOptions(user_dto=UserDto(**user_dto))
+    return await passkey_service.register_options(user_dto=UserDto(**user_dto))
 
 
 @router.post("/passkey/register", status_code=status.HTTP_202_ACCEPTED)
@@ -231,7 +232,7 @@ async def passkey_register(
     credential: dict = Body(...),
     passkey_service: PasskeyService = Depends(get_passkey_service)
 ):
-    result = await passkey_service.completeRegistration(email, credential)
+    result = await passkey_service.complete_registration(email, credential)
     if result is False:
         raise PassKeyException("Passkey registration failed.")
     
@@ -246,8 +247,8 @@ async def passkey_login_options(
 ):
     user_service = await auth_service.get_user_service()
     user = await user_service.find_by_email(email=email)
-    user_dto = await user.to_serializable_dict()
-    return await passkey_service.authLoginOptions(user_dto=UserDto(**user_dto))
+    user_doc = await user.to_serializable_dict()
+    return await passkey_service.auth_login_options(user_dto=UserDto(**user_doc))
 
 
 @router.post("/passkey/login", status_code=status.HTTP_200_OK, response_model=TokenSetDto)
@@ -258,7 +259,7 @@ async def passkey_login(
     passkey_service: PasskeyService = Depends(get_passkey_service),
     auth_service: AuthService = Depends(get_auth_service)
 ):
-    result = await passkey_service.completeAuthLogin(email, credential)
+    result = await passkey_service.complete_auth_login(email, credential)
     if result is False:
         raise PassKeyException("Passkey authentication failed.")
     
@@ -274,3 +275,10 @@ async def passkey_login(
     )
     return token_set
     
+
+@router.post("/passkey/has_passkeys", response_model=HasPasskeysDto, status_code=status.HTTP_200_OK)
+async def has_passkeys(
+    email: EmailStr = Body(...),
+    passkey_service: PasskeyService = Depends(get_passkey_service)
+):
+    return HasPasskeysDto(has_passkeys=await passkey_service.has_passkeys(email=email))

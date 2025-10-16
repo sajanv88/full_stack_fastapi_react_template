@@ -1,0 +1,15 @@
+{
+	# Optional, to enable Caddy’s local CA
+	local_certs
+	email admin@example.com
+}
+
+demo.dev.xyz {
+	reverse_proxy host.docker.internal:8000
+}
+
+
+
+netflix.demo.dev.xyz {
+	reverse_proxy host.docker.internal:3000
+}
