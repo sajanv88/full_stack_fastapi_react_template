@@ -160,7 +160,7 @@ The backend follows **Clean Architecture** principles with clear layer separatio
 
 ### Key Features
 
-- **Authentication & Authorization**: JWT-based with refresh tokens
+- **Authentication & Authorization**: JWT-based with refresh tokens, Passkey and Magic Link
 - **Database**: MongoDB with Beanie ODM for async operations
 - **Caching**: Redis for performance optimization
 - **Background Tasks**: Celery with Redis broker

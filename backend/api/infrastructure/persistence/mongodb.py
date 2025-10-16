@@ -9,6 +9,7 @@ from api.domain.entities.role import Role
 from api.domain.entities.storage_settings import StorageSettings
 from api.domain.entities.tenant import Tenant
 from api.domain.entities.user import User
+from api.domain.entities.user_magic_link import UserMagicLink
 from api.domain.entities.user_passkey import UserPasskey, Challenges
 from api.domain.entities.user_password_reset import UserPasswordReset
 from api.domain.entities.user_preference import UserPreference
@@ -24,7 +25,8 @@ models = [
     ChatHistoryAI,
     ChatSessionAI,
     UserPasskey,
-    Challenges
+    Challenges,
+    UserMagicLink,
 ]
 class Database:
     def __init__(self, uri: str, models: Sequence[type[Document] | type[UnionDoc] | type[View] | str] | None = None) -> None:

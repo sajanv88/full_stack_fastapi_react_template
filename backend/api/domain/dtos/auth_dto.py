@@ -25,3 +25,7 @@ class ChangeEmailResponseDto(BaseModel):
 
 class MeResponseDto(UserDto):
     role: RoleDto
+
+
+class MagicLinkResponseDto(BaseModel):
+    message: str

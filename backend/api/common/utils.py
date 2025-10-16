@@ -48,11 +48,12 @@ def get_email_sharing_link(user_id: str, type: str, token: str, domain: str, ten
     Generate a complete email sharing link with token.
     """
     
-    sharing_link = f"{domain}/{type}?user_id={user_id}&token={token}"
+    sharing_link = f"https://{domain}/{type}?user_id={user_id}&token={token}"
 
-    if tenant_id is not None and is_tenancy_enabled():
+    if tenant_id not in (None, "None", ""):
         get_logger(__name__).info(f"tenant id in utils: {tenant_id}")
         sharing_link += f"&tenant_id={tenant_id}"
+    
     return sharing_link
 
 

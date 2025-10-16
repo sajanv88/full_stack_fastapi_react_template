@@ -7,15 +7,16 @@ from pydantic import EmailStr
 from api.common.dtos.passkey_rep_dto import HasPasskeysDto
 from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
-from api.common.exceptions import ForbiddenException, InvalidOperationException
+from api.common.exceptions import ApiBaseException, ForbiddenException, InvalidOperationException
 from api.common.utils import get_logger
-from api.core.container import get_auth_service, get_passkey_service, get_role_service
+from api.core.container import get_auth_service, get_email_magic_link_service, get_passkey_service, get_role_service, get_user_magic_link_repository
 from api.core.exceptions import PassKeyException
-from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, MeResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
+from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, MagicLinkResponseDto, MeResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserDto, UserResendActivationEmailRequestDto
 from api.domain.enum.permission import Permission
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation
+from api.infrastructure.persistence.repositories.user_magic_link_repository_impl import UserMagicLinkRepository
 from api.infrastructure.security.current_user import CurrentUser
 from api.infrastructure.security.passkey_service import PasskeyService
 from api.interfaces.middlewares.tenant_middleware import FrontendHost, get_tenant_id
@@ -23,6 +24,7 @@ from api.interfaces.security.role_checker import check_permissions_for_current_r
 from api.usecases.auth_service import AuthService
 from api.core.config import settings
 from api.common.dtos.cookies import Cookies
+from api.usecases.magic_link_service import EmailMagicLinkService
 from api.usecases.role_service import RoleService
 from api.domain.enum.role import RoleType
 
@@ -282,3 +284,26 @@ async def has_passkeys(
     passkey_service: PasskeyService = Depends(get_passkey_service)
 ):
     return HasPasskeysDto(has_passkeys=await passkey_service.has_passkeys(email=email))
+
+
+@router.post("/email_magic_link_login", response_model=MagicLinkResponseDto, status_code=status.HTTP_200_OK)
+async def email_magic_link_login(
+    email: EmailStr = Body(...),
+    magic_link_service: EmailMagicLinkService = Depends(get_email_magic_link_service),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    try:
+        user_service = await auth_service.get_user_service()
+        user = await user_service.find_by_email(email=email)
+        user_doc = await user.to_serializable_dict()
+        user_dto = UserDto(**user_doc)
+        await magic_link_service.create_magic_link(user_dto)
+        return MagicLinkResponseDto(message="If the email exists, a magic link has been sent.")
+    except ApiBaseException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Magic link login request for email: {email} wasn't successful: {e}")
+        return MagicLinkResponseDto(message="If the email exists, a magic link has been sent.")
+    
+       
+

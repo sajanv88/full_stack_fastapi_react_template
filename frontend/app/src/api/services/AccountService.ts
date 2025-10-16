@@ -10,6 +10,7 @@ import type { ChangeEmailRequestDto } from '../models/ChangeEmailRequestDto';
 import type { ChangeEmailResponseDto } from '../models/ChangeEmailResponseDto';
 import type { CreateUserDto } from '../models/CreateUserDto';
 import type { HasPasskeysDto } from '../models/HasPasskeysDto';
+import type { MagicLinkResponseDto } from '../models/MagicLinkResponseDto';
 import type { MeResponseDto } from '../models/MeResponseDto';
 import type { PasswordResetConfirmRequestDto } from '../models/PasswordResetConfirmRequestDto';
 import type { PasswordResetRequestDto } from '../models/PasswordResetRequestDto';
@@ -345,6 +346,26 @@ export class AccountService {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/account/passkey/has_passkeys',
+      body: requestBody,
+      mediaType: 'application/json',
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Email Magic Link Login
+   * @returns MagicLinkResponseDto Successful Response
+   * @throws ApiError
+   */
+  public emailMagicLinkLoginApiV1AccountEmailMagicLinkLoginPost({
+    requestBody,
+  }: {
+    requestBody: string,
+  }): CancelablePromise<MagicLinkResponseDto> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/api/v1/account/email_magic_link_login',
       body: requestBody,
       mediaType: 'application/json',
       errors: {

@@ -8,6 +8,7 @@ from api.infrastructure.persistence.repositories.chat_session_ai_repository_impl
 from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
 from api.infrastructure.persistence.repositories.storage_settings_repository_impl import StorageSettingsRepository
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
+from api.infrastructure.persistence.repositories.user_magic_link_repository_impl import UserMagicLinkRepository
 from api.infrastructure.persistence.repositories.user_passkey_repository_impl import UserPasskeyChallengesRepository, UserPasskeyRepository
 from api.infrastructure.persistence.repositories.user_password_reset_repository_impl import UserPasswordResetRepository
 from api.infrastructure.persistence.repositories.user_preference_repository_impl import UserPreferenceRepository
@@ -18,6 +19,7 @@ from api.usecases.coolify_app_service import CoolifyAppService
 from api.usecases.local_ai_service import LocalAIService
 from api.usecases.auth_service import AuthService
 from api.usecases.file_service import FileService
+from api.usecases.magic_link_service import EmailMagicLinkService
 from api.usecases.role_service import RoleService
 from api.usecases.storage_settings_service import StorageSettingsService
 from api.usecases.user_preference_service import UserPreferenceService
@@ -86,6 +88,9 @@ container.register(UserPasskeyRepository, scope=punq.Scope.singleton)
 container.register(UserPasskeyChallengesRepository, scope=punq.Scope.singleton)
 container.register(PasskeyService, scope=punq.Scope.singleton)
 
+## Email magic link user login
+container.register(UserMagicLinkRepository, scope=punq.Scope.singleton)
+container.register(EmailMagicLinkService, scope=punq.Scope.singleton)
 
 def get_database() -> Database:
     return container.resolve(Database)
@@ -138,5 +143,11 @@ def get_user_passkey_challenges_repository() -> UserPasskeyChallengesRepository:
 
 def get_passkey_service() -> PasskeyService:
     return container.resolve(PasskeyService)
+
+def get_user_magic_link_repository() -> UserMagicLinkRepository:
+    return container.resolve(UserMagicLinkRepository)
+
+def get_email_magic_link_service() -> EmailMagicLinkService:
+    return container.resolve(EmailMagicLinkService)
 
 print("Dependency injection container configured.")

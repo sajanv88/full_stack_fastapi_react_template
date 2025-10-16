@@ -3,6 +3,8 @@ from typing import Literal
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
+from pymongo import ASCENDING, IndexModel
+
 from api.common.utils import get_utc_now
 from api.domain.entities.api_base_model import ApiBaseModel
 from webauthn.helpers.structs import (
@@ -26,7 +28,14 @@ class Challenges(ApiBaseModel):
     email: EmailStr
     type: Literal["registration", "authentication"] = "registration"
     challenge: str
-    expired_at: datetime = get_utc_now()
+    expires_at: datetime = get_utc_now()
 
     class Settings:
         name = "user_passkey_challenges"
+        indexes = [
+            IndexModel(
+                [("expires_at", ASCENDING)],
+                expireAfterSeconds=300  # Document expires 5 minutes after 'expired_at'
+            )
+        ]
+    
