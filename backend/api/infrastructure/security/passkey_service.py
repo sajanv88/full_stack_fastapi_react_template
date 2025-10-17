@@ -15,7 +15,11 @@ from webauthn.helpers.structs import (
     AuthenticatorTransport,
     PublicKeyCredentialType,
     UserVerificationRequirement,
-    AttestationConveyancePreference
+    AttestationConveyancePreference,
+    AuthenticatorSelectionCriteria,
+    AuthenticatorAttachment,
+    ResidentKeyRequirement,
+    UserVerificationRequirement,
 )
 
 
@@ -84,6 +88,11 @@ class PasskeyService():
             user_name=user_dto.email,
             user_display_name=user_dto.first_name + " " + user_dto.last_name,
             attestation=AttestationConveyancePreference.NONE,
+            authenticator_selection=AuthenticatorSelectionCriteria(
+                authenticator_attachment=AuthenticatorAttachment.PLATFORM,
+                resident_key=ResidentKeyRequirement.REQUIRED,
+                user_verification=UserVerificationRequirement.REQUIRED
+            )
         )
 
         await self.challenges_repo.save_challenge(

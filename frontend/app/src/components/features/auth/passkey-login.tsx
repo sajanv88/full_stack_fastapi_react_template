@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { getApiClient } from "@/lib/utils";
-import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
+import { startRegistration, startAuthentication, WebAuthnError } from "@simplewebauthn/browser";
 import { useNavigate } from "react-router";
 import { useAuthContext } from "@/components/providers/auth-provider";
 
@@ -51,7 +51,6 @@ export function PasskeyLogin() {
             requestBody: email
         })
         const loginOptsRes = JSON.parse(loginOpts);
-        console.log(loginOptsRes, "Login Options");
         const authResp = await startAuthentication(loginOptsRes);
         await apiClient.account.passkeyLoginApiV1AccountPasskeyLoginPost({
             requestBody: {
@@ -72,16 +71,13 @@ export function PasskeyLogin() {
                 requestBody: email
             })
         const regOptsRes = JSON.parse(regOpts)
-        console.log({ regOptsRes }, "Registration Options");
         const attResp = await startRegistration(regOptsRes);
-        console.log("attResp", JSON.stringify(attResp, null, 2));
-        const regsComplete = await apiClient.account.passkeyRegisterApiV1AccountPasskeyRegisterPost({
+        await apiClient.account.passkeyRegisterApiV1AccountPasskeyRegisterPost({
             requestBody: {
                 credential: attResp,
                 email: email
             }
         })
-        console.log({ regsComplete }, "Registration Complete");
         toast.success("Passkey registered successfully!", {
             description: "You can now use your passkey for future logins.",
             richColors: true
@@ -105,8 +101,20 @@ export function PasskeyLogin() {
             toast.success("Passkey authentication successful!");
 
         } catch (error) {
+            if (error instanceof WebAuthnError) {
+                toast.error("Sorry!", {
+                    description: error.message,
+                    richColors: true,
+                    position: "top-center"
+                });
+                return;
+            }
+
             console.error("Passkey error:", error);
-            toast.error("Passkey authentication failed. Please ensure you have a registered passkey.");
+            toast.error("Passkey authentication failed. Please ensure you have a registered passkey.", {
+                richColors: true,
+                position: "top-center"
+            });
 
         }
         finally {

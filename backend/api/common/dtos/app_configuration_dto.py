@@ -15,6 +15,7 @@ class AppConfigurationDto(BaseModel):
     user_preferences: Optional[UserPreferenceDto] = None
     current_tenant: TenantDto | None = None
     environment: str
+    
 
 
     

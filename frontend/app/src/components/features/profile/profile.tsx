@@ -36,7 +36,8 @@ import {
     Shield,
     Calendar,
     Edit3,
-    X
+    X,
+    Trash2
 } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { toast } from 'sonner'
@@ -60,7 +61,7 @@ export function Profile() {
     const [uploadingImage, setUploadingImage] = useState(false)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const { is_multi_tenant_enabled } = useAppConfig()
+    const { is_multi_tenant_enabled, user_preferences } = useAppConfig()
     const tenantDetails = getTenant();
     const form = useForm<ProfileFormData>({
         resolver: zodResolver(profileSchema),
@@ -153,6 +154,10 @@ export function Profile() {
             imageUrl: imagePreview
         });
         setIsLoading(false);
+
+    }
+
+    async function onDeletePassKey() {
 
     }
 
@@ -465,6 +470,23 @@ export function Profile() {
                                     <span className="text-xs text-muted-foreground"> {user.tenant_id} (Tenant ID)</span>
                                     <span className="text-xs text-muted-foreground"> {tenantDetails?.name} (Tenant Name)</span>
                                 </p>
+                            </div>
+                        )}
+
+                        {user_preferences?.preferences?.passkey_enabled && (
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-muted-foreground">Passkeys</Label>
+                                <div className="flex items-center space-x-2">
+                                    <Shield className="w-5 h-5 text-green-400" />
+                                    <span>
+                                        <Badge variant="secondary">
+                                            Enabled
+                                        </Badge>
+                                    </span>
+                                    <Button variant="ghost" size="icon" onClick={onDeletePassKey}>
+                                        <Trash2 className="w-2 h-2 text-red-400" />
+                                    </Button>
+                                </div>
                             </div>
                         )}
 
