@@ -10,7 +10,7 @@ from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.exceptions import ApiBaseException, ForbiddenException, InvalidOperationException
 from api.common.utils import get_logger
 from api.core.container import get_auth_service, get_email_magic_link_service, get_passkey_service, get_role_service, get_user_magic_link_repository
-from api.core.exceptions import PassKeyException
+from api.core.exceptions import PassKeyException, UserNotFoundException
 from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, MagicLinkResponseDto, MeResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserDto, UserResendActivationEmailRequestDto
@@ -299,10 +299,13 @@ async def email_magic_link_login(
         user_dto = UserDto(**user_doc)
         await magic_link_service.create_magic_link(user_dto)
         return MagicLinkResponseDto(message="If the email exists, a magic link has been sent.")
-    except ApiBaseException as e:
-        raise e
+  
     except Exception as e:
-        logger.error(f"Magic link login request for email: {email} wasn't successful: {e}")
+        if isinstance(e, UserNotFoundException):
+            logger.error(f"Magic link login request for email: {email} wasn't successful: {e}")
+            return MagicLinkResponseDto(message="If the email exists, a magic link has been sent.")
+        elif isinstance(e, ApiBaseException):
+            raise e
         return MagicLinkResponseDto(message="If the email exists, a magic link has been sent.")
     
        

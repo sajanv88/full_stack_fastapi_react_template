@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -22,13 +21,13 @@ import { useAuthContext } from "@/components/providers/auth-provider";
 
 
 const passkeyEmailSchema = z.object({
-    email: z.string().email({ message: "Please enter a valid email address" })
+    email: z.email({ message: "Please enter a valid email address" })
 });
 
 type PasskeyEmailForm = z.infer<typeof passkeyEmailSchema>;
 
 
-export function OtherLoginOptions() {
+export function PasskeyLogin() {
     const navigate = useNavigate();
     const { refreshCurrentUser } = useAuthContext();
     const [isLoading, setIsLoading] = useState(false);
@@ -130,19 +129,7 @@ export function OtherLoginOptions() {
 
 
     return (
-        <div className="space-y-4">
-            {/* Separator */}
-            <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                    <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
-                    </span>
-                </div>
-            </div>
-
+        <div>
             {/* Passkey Authentication */}
             <Card className="border-2 border-dashed border-primary/20 hover:border-primary/40 transition-colors">
                 <CardContent className="p-4">
@@ -166,15 +153,11 @@ export function OtherLoginOptions() {
                 </CardContent>
             </Card>
 
-            {/* Security Notice */}
-            <div className="text-xs text-muted-foreground text-center mt-4 p-3 bg-muted/50 rounded-lg">
-                <Shield className="w-3 h-3 inline mr-1" />
-                All authentication methods are secured with industry-standard encryption
-            </div>
+
 
             {/* Email Dialog for Passkey */}
             <Dialog open={showEmailDialog} onOpenChange={handleDialogClose}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-md" isFullBlack>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Fingerprint className="w-5 h-5 text-primary" />

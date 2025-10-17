@@ -19,8 +19,12 @@ import { Logo } from "@/components/shared/logo";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { TenantSelection } from "../tenant/tenant-selection";
 import { useAuthContext } from "@/components/providers/auth-provider";
-import { OtherLoginOptions } from "@/components/features/auth/other-login-options";
-
+import { PasskeyLogin } from "@/components/features/auth/passkey-login";
+import { Separator } from "@/components/ui/separator";
+import {
+    Shield,
+} from "lucide-react";
+import { MagicLinkLogin } from "./magic-link-login";
 
 
 const loginSchema = z.object({
@@ -140,8 +144,28 @@ export function Login() {
                     </Form>
 
                     {/* Other Login Options */}
-                    <div className="mt-4">
-                        <OtherLoginOptions />
+                    <div className="space-y-2">
+                        <div className="mt-4">
+                            {/* Separator */}
+                            <div className="relative mb-4">
+                                <div className="absolute inset-0 flex items-center">
+                                    <Separator className="w-full" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-background px-2 text-muted-foreground">
+                                        Or continue with
+                                    </span>
+                                </div>
+                            </div>
+
+                            <PasskeyLogin />
+                            <MagicLinkLogin />
+                            {/* Security Notice */}
+                            <div className="text-xs text-muted-foreground text-center mt-4 p-3 bg-muted/50 rounded-lg">
+                                <Shield className="w-3 h-3 inline mr-1" />
+                                All authentication methods are secured with industry-standard encryption
+                            </div>
+                        </div>
                     </div>
 
                     <div className="mt-6 text-center text-sm text-muted-foreground border-t pt-4">

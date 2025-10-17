@@ -16,6 +16,6 @@ class UserMagicLink(ApiBaseModel):
         indexes = [
             IndexModel(
                 [("expires_at", ASCENDING)],
-                expireAfterSeconds=300
+                expireAfterSeconds=900 # 15 minutes
             )
         ]
