@@ -373,4 +373,40 @@ export class AccountService {
       },
     });
   }
+  /**
+   * Email Magic Link Validate
+   * @returns TokenSetDto Successful Response
+   * @throws ApiError
+   */
+  public emailMagicLinkValidateApiV1AccountEmailMagicLinkValidateGet({
+    token,
+    userId,
+    tenantId,
+  }: {
+    /**
+     * The magic link token
+     */
+    token: string,
+    /**
+     * The user ID associated with the token
+     */
+    userId: string,
+    /**
+     * The tenant ID associated with the user, if applicable
+     */
+    tenantId?: (string | null),
+  }): CancelablePromise<TokenSetDto> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/account/email_magic_link_validate',
+      query: {
+        'token': token,
+        'user_id': userId,
+        'tenant_id': tenantId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

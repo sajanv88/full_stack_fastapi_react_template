@@ -8,7 +8,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 
-const notProtectedRoutes = ["/password_reset_confirmation", "/password-reset-request", "/register", "/forgot-password"];
+const notProtectedRoutes = ["/password_reset_confirmation", "/password-reset-request", "/register", "/forgot-password", "/magic_link_login"];
 export type UpdateProfileType = {
     firstName: string;
     lastName: string;

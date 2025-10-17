@@ -20,6 +20,7 @@ import { PasswordResetRequest } from "@/components/features/auth/password-reset-
 import { PasswordResetConfirmation } from "@/components/features/auth/password_reset_confirmation";
 import { Activation } from "@/components/features/auth/activation";
 import { TenantSetting } from "@/components/features/tenant/tenant-setting";
+import { MagicLinkLoginValidate } from "@/components/features/auth/magic-link-login-validate";
 
 function App() {
   const { user } = useAuthContext();
@@ -31,6 +32,7 @@ function App() {
         <Route path="forgot-password" element={<PasswordResetRequest />} />
         <Route path="password_reset_confirmation" element={<PasswordResetConfirmation />} />
         <Route path="activation" element={<Activation />} />
+        <Route path="magic_link_login" element={<MagicLinkLoginValidate />} />
       </Route>
 
       <Route element={<DashboardLayout />}>

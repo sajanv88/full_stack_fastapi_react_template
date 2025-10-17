@@ -4,7 +4,7 @@ from api.common.dtos.token_dto import ActivationTokenPayloadDto, RefreshTokenPay
 from api.common.exceptions import ForbiddenException, InvalidOperationException, UnauthorizedException
 from api.common.security import verify_password
 from api.common.utils import get_logger, get_utc_now, is_tenancy_enabled, get_email_sharing_link
-from api.core.exceptions import TenantNotFoundException
+from api.core.exceptions import TenantNotFoundException, UserNotFoundException
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.role_dto import RoleDto
 from api.domain.dtos.tenant_dto import CreateTenantDto
@@ -58,14 +58,22 @@ class AuthService:
         return await self.jwt_token_service.generate_tokens(payload)
 
 
-    async def login_with_passkey(self, email: str) -> TokenSetDto:
-        user = await self.user_service.find_by_email(email=email)
-        if user is None:
-            raise UnauthorizedException("Authentication failed. Please check your credentials.")
-        return await self._get_token_set(user)
-       
-
+    async def login_with_magic_link(self, user_id: str) -> TokenSetDto:
+        try:
+            user = await self.user_service.get_user_by_id(user_id=user_id)
+            return await self._get_token_set(user)
+        except UserNotFoundException or Exception:
+            raise UnauthorizedException("Authentication failed. Please check your credentials.")    
         
+
+    async def login_with_passkey(self, email: str) -> TokenSetDto:
+        try:
+            user = await self.user_service.find_by_email(email=email)
+            return await self._get_token_set(user)
+        except UserNotFoundException or Exception:
+            raise UnauthorizedException("Authentication failed. Please check your credentials.")
+
+
     async def login(self, req: LoginRequestDto) -> TokenSetDto:
         user = await self.user_service.find_by_email(email=req.email)
         if verify_password(req.password, user.password) is False:

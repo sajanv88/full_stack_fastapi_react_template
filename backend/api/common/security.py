@@ -27,3 +27,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def hash_it(password: str) -> str:
     return pbkdf2_sha256.hash(password)
 
+
+# Utility function to hash and validate values (like tokens) with secret. Don't use for passwords.
+def validate_hashed_value(value: str, hashed_value: str) -> bool:
+    """Validate a value against its hashed version. Returns True if they match, False otherwise."""
+    v = value + JWT_SECRET
+    return pbkdf2_sha256.verify(v, hashed_value)

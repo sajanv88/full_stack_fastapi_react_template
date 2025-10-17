@@ -310,3 +310,30 @@ async def email_magic_link_login(
     
        
 
+@router.get("/email_magic_link_validate", response_model=TokenSetDto, status_code=status.HTTP_200_OK)
+async def email_magic_link_validate(
+    response: Response,
+    token: str = Query(..., description="The magic link token"),
+    user_id: str = Query(..., description="The user ID associated with the token"),
+    tenant_id: str | None = Query(None, description="The tenant ID associated with the user, if applicable"),
+    auth_service: AuthService = Depends(get_auth_service),
+    magic_link_service: EmailMagicLinkService = Depends(get_email_magic_link_service),
+):
+    from urllib.parse import unquote
+    token = unquote(token)
+    logger.info(f"Magic link validation attempt for user_id: {user_id} with tenant_id: {tenant_id}")
+    is_valid = await magic_link_service.validate_magic_link(user_id=user_id, token=token)
+    if is_valid is False:
+        raise ForbiddenException("Invalid or expired magic link.")
+    
+    token_set: TokenSetDto = await auth_service.login_with_magic_link(user_id=user_id)
+    
+    response.set_cookie(
+        key="refresh_token",
+        value=token_set.refresh_token,
+        httponly=True,
+        secure=settings.fastapi_env == "production",
+        samesite="lax",
+        max_age=settings.refresh_token_expire_days
+    )
+    return token_set

@@ -13,6 +13,7 @@ import { SimpleFooter } from "@/components/shared/simple-footer";
 import { DashboardSidebar } from "@/components/layouts/dashboard-sidebar-layout";
 import { useAppConfig } from "../providers/app-config-provider";
 import { Badge } from "@/components/ui/badge";
+import { useEffect } from "react";
 
 
 
@@ -22,6 +23,14 @@ export function DashboardLayout() {
     const { current_tenant } = useAppConfig();
     const userImage = auth.user?.image_url ? auth.user?.image_url : "https://github.com/evilrabbit.png";
     const isHost = current_tenant === null && auth.can("host:manage_tenants");
+    useEffect(() => {
+        if (!auth.user) {
+            async function init() {
+                await auth.refreshCurrentUser();
+            }
+            init();
+        }
+    }, [auth.user])
     return (
 
         <SidebarProvider>
