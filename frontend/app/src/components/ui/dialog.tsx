@@ -48,13 +48,17 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  isFullBlack = false,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
-  showCloseButton?: boolean
+  showCloseButton?: boolean,
+  isFullBlack?: boolean
 }) {
   return (
     <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
+      <DialogOverlay className={cn({
+        "bg-black": isFullBlack
+      })} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(

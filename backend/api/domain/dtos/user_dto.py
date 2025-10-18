@@ -70,3 +70,4 @@ class UserProfileImageUpdateDto(BaseModel):
 
 class UserRoleUpdateRequestDto(BaseModel):
     role_id: str
+

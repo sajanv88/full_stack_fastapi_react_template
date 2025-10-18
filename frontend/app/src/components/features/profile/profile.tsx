@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,12 +36,13 @@ import {
     Shield,
     Calendar,
     Edit3,
-    X
+    X,
 } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { toast } from 'sonner'
 import { getApiClient, getTenant } from '@/lib/utils'
 import { useAppConfig } from '@/components/providers/app-config-provider'
+import { ManageSecurity } from '@/components/shared/manage-security'
 
 // Form validation schema
 const profileSchema = z.object({
@@ -155,6 +156,7 @@ export function Profile() {
         setIsLoading(false);
 
     }
+
 
     const getGenderDisplay = (gender: string) => {
         const genderMap = {
@@ -468,10 +470,13 @@ export function Profile() {
                             </div>
                         )}
 
-
                     </div>
                 </CardContent>
+                <CardFooter className="justify-end border-t">
+                    <ManageSecurity />
+                </CardFooter>
             </Card>
+
         </div>
     )
 }

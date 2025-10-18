@@ -1,24 +1,30 @@
 from typing import Annotated
 from beanie import PydanticObjectId
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Response, status
 from fastapi.params import Query
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import EmailStr
+from api.common.dtos.passkey_rep_dto import HasPasskeysDto
 from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
-from api.common.exceptions import ForbiddenException, InvalidOperationException
+from api.common.exceptions import ApiBaseException, ForbiddenException, InvalidOperationException
 from api.common.utils import get_logger
-from api.core.container import get_auth_service, get_role_service
-from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, MeResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
+from api.core.container import get_auth_service, get_email_magic_link_service, get_passkey_service, get_role_service, get_user_magic_link_repository
+from api.core.exceptions import PassKeyException, UserNotFoundException
+from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, MagicLinkResponseDto, MeResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserDto, UserResendActivationEmailRequestDto
 from api.domain.enum.permission import Permission
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation
+from api.infrastructure.persistence.repositories.user_magic_link_repository_impl import UserMagicLinkRepository
 from api.infrastructure.security.current_user import CurrentUser
+from api.infrastructure.security.passkey_service import PasskeyService
 from api.interfaces.middlewares.tenant_middleware import FrontendHost, get_tenant_id
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.auth_service import AuthService
 from api.core.config import settings
 from api.common.dtos.cookies import Cookies
+from api.usecases.magic_link_service import EmailMagicLinkService
 from api.usecases.role_service import RoleService
 from api.domain.enum.role import RoleType
 
@@ -207,3 +213,127 @@ async def change_email_confirmation(
         raise HTTPException(status_code=400, detail="Email change confirmation failed.")
     
     return ChangeEmailResponseDto(message="Email changed successfully.")
+
+
+
+@router.post("/passkey/register_options", status_code=status.HTTP_200_OK)
+async def passkey_register_options(
+    email: EmailStr = Body(...),
+    passkey_service: PasskeyService = Depends(get_passkey_service),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    user_service = await auth_service.get_user_service()
+    user = await user_service.find_by_email(email=email)
+    user_dto = await user.to_serializable_dict()
+    return await passkey_service.register_options(user_dto=UserDto(**user_dto))
+
+
+@router.post("/passkey/register", status_code=status.HTTP_202_ACCEPTED)
+async def passkey_register(
+    email: EmailStr = Body(...),
+    credential: dict = Body(...),
+    passkey_service: PasskeyService = Depends(get_passkey_service)
+):
+    result = await passkey_service.complete_registration(email, credential)
+    if result is False:
+        raise PassKeyException("Passkey registration failed.")
+    
+    return status.HTTP_202_ACCEPTED
+    
+
+@router.post("/passkey/login_options", status_code=status.HTTP_200_OK)
+async def passkey_login_options(
+    email: EmailStr = Body(...),
+    passkey_service: PasskeyService = Depends(get_passkey_service),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    user_service = await auth_service.get_user_service()
+    user = await user_service.find_by_email(email=email)
+    user_doc = await user.to_serializable_dict()
+    return await passkey_service.auth_login_options(user_dto=UserDto(**user_doc))
+
+
+@router.post("/passkey/login", status_code=status.HTTP_200_OK, response_model=TokenSetDto)
+async def passkey_login(
+    response: Response,
+    email: EmailStr = Body(...),
+    credential: dict = Body(...),
+    passkey_service: PasskeyService = Depends(get_passkey_service),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    result = await passkey_service.complete_auth_login(email, credential)
+    if result is False:
+        raise PassKeyException("Passkey authentication failed.")
+    
+    token_set: TokenSetDto = await auth_service.login_with_passkey(email=email)
+    
+    response.set_cookie(
+        key="refresh_token",
+        value=token_set.refresh_token,
+        httponly=True,
+        secure=settings.fastapi_env == "production",
+        samesite="lax",
+        max_age=settings.refresh_token_expire_days
+    )
+    return token_set
+    
+
+@router.post("/passkey/has_passkeys", response_model=HasPasskeysDto, status_code=status.HTTP_200_OK)
+async def has_passkeys(
+    email: EmailStr = Body(...),
+    passkey_service: PasskeyService = Depends(get_passkey_service)
+):
+    return HasPasskeysDto(has_passkeys=await passkey_service.has_passkeys(email=email))
+
+
+@router.post("/email_magic_link_login", response_model=MagicLinkResponseDto, status_code=status.HTTP_200_OK)
+async def email_magic_link_login(
+    email: EmailStr = Body(...),
+    magic_link_service: EmailMagicLinkService = Depends(get_email_magic_link_service),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    try:
+        user_service = await auth_service.get_user_service()
+        user = await user_service.find_by_email(email=email)
+        user_doc = await user.to_serializable_dict()
+        user_dto = UserDto(**user_doc)
+        await magic_link_service.create_magic_link(user_dto)
+        return MagicLinkResponseDto(message="If the email exists, a magic link has been sent.")
+  
+    except Exception as e:
+        if isinstance(e, UserNotFoundException):
+            logger.error(f"Magic link login request for email: {email} wasn't successful: {e}")
+            return MagicLinkResponseDto(message="If the email exists, a magic link has been sent.")
+        elif isinstance(e, ApiBaseException):
+            raise e
+        return MagicLinkResponseDto(message="If the email exists, a magic link has been sent.")
+    
+       
+
+@router.get("/email_magic_link_validate", response_model=TokenSetDto, status_code=status.HTTP_200_OK)
+async def email_magic_link_validate(
+    response: Response,
+    token: str = Query(..., description="The magic link token"),
+    user_id: str = Query(..., description="The user ID associated with the token"),
+    tenant_id: str | None = Query(None, description="The tenant ID associated with the user, if applicable"),
+    auth_service: AuthService = Depends(get_auth_service),
+    magic_link_service: EmailMagicLinkService = Depends(get_email_magic_link_service),
+):
+    from urllib.parse import unquote
+    token = unquote(token)
+    logger.info(f"Magic link validation attempt for user_id: {user_id} with tenant_id: {tenant_id}")
+    is_valid = await magic_link_service.validate_magic_link(user_id=user_id, token=token)
+    if is_valid is False:
+        raise ForbiddenException("Invalid or expired magic link.")
+    
+    token_set: TokenSetDto = await auth_service.login_with_magic_link(user_id=user_id)
+    
+    response.set_cookie(
+        key="refresh_token",
+        value=token_set.refresh_token,
+        httponly=True,
+        secure=settings.fastapi_env == "production",
+        samesite="lax",
+        max_age=settings.refresh_token_expire_days
+    )
+    return token_set

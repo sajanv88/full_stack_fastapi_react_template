@@ -160,7 +160,7 @@ The backend follows **Clean Architecture** principles with clear layer separatio
 
 ### Key Features
 
-- **Authentication & Authorization**: JWT-based with refresh tokens
+- **Authentication & Authorization**: JWT-based with refresh tokens, Passkey and Magic Link
 - **Database**: MongoDB with Beanie ODM for async operations
 - **Caching**: Redis for performance optimization
 - **Background Tasks**: Celery with Redis broker
@@ -296,6 +296,7 @@ The frontend is built with modern React patterns and TypeScript for type safety:
    - MongoDB (port 27012)
    - Redis (port 6372)
    - Fake SMTP Server (ports 1023, 1083)
+   - Caddy proxy for local development ssl. Useful for testing passkey login in local development.
 
 3. **Backend Development**:
    ```bash
