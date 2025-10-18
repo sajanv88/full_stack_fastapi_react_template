@@ -215,9 +215,11 @@ class PasskeyService():
         # Update sign-in count
         for cred in user_credentials:
             if  cred.credential_id == base64.urlsafe_b64encode(verified.credential_id).decode():
-                cred.sigin_count = verified.new_sign_count
+                if verified.new_sign_count > cred.sigin_count:
+                    cred.sigin_count = verified.new_sign_count
+                cred.last_used_at = get_utc_now().isoformat()
                 break
-        
+
         await user_passkey.save()
         await self.challenges_repo.delete_challenge(email=email, type="authentication")
         logger.info(f"Passkey Authentication verified for user {email}.")
@@ -230,3 +232,30 @@ class PasskeyService():
         """
         user = await self.user_passkey_repo.single_or_none(user_email=email)
         return user is not None and len(user.credentials) > 0
+    
+    async def get_registered_passkeys(self, email: EmailStr) -> List[Credential]:
+        """
+        Retrieve registered passkeys for a user.
+        """
+        user = await self.user_passkey_repo.single_or_none(user_email=email)
+        if not user:
+            return []
+
+        return user.credentials
+
+
+    async def delete_registered_passkey(self, email: EmailStr, credential_id: str) -> None:
+        """
+        Delete a registered passkey for a user by credential ID.
+        """
+        user_passkey = await self.user_passkey_repo.single_or_none(user_email=email)
+        if not user_passkey:
+            raise PassKeyException("User passkey record not found.")
+
+        original_count = len(user_passkey.credentials)
+        user_passkey.credentials = [cred for cred in user_passkey.credentials if cred.credential_id != credential_id]
+        if len(user_passkey.credentials) == original_count:
+            raise PassKeyException("Credential ID not found.")
+
+        await user_passkey.save()
+        logger.info(f"Deleted passkey with credential ID {credential_id} for user {email}.")

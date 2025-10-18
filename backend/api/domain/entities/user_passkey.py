@@ -1,5 +1,5 @@
 
-from typing import Literal
+from typing import Literal, Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
@@ -16,6 +16,8 @@ class Credential(BaseModel):
     sigin_count: int
     transports: list[AuthenticatorTransport] = []
     created_at: datetime
+    last_used_at: Optional[datetime] = None
+    
 
 class UserPasskey(ApiBaseModel):
     user_email: EmailStr

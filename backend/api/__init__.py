@@ -21,6 +21,8 @@ from api.interfaces.api_controllers.permissions_endpoint import router as permis
 from api.interfaces.api_controllers.dashboard_endpoint import router as dashboard_router
 from api.interfaces.api_controllers.ai_endpoint import router as ai_router
 from api.interfaces.api_controllers.health_endpoint import router as health_router
+from api.interfaces.api_controllers.manage_security_endpoint import router as manage_security_router
+
 from api.common.logging import configure_logging
 from api.core.config import settings
 from api.infrastructure.persistence.seeder import seed_initial_data
@@ -97,6 +99,7 @@ if is_tenancy_enabled():
 
 router.include_router(app_configuration_router)
 router.include_router(account_router)
+router.include_router(manage_security_router)
 router.include_router(dashboard_router)
 
 router.include_router(user_router)

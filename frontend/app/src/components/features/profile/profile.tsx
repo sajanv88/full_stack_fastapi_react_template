@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -37,12 +37,12 @@ import {
     Calendar,
     Edit3,
     X,
-    Trash2
 } from 'lucide-react'
 import { useAuthContext } from '@/components/providers/auth-provider'
 import { toast } from 'sonner'
 import { getApiClient, getTenant } from '@/lib/utils'
 import { useAppConfig } from '@/components/providers/app-config-provider'
+import { ManageSecurity } from '@/components/shared/manage-security'
 
 // Form validation schema
 const profileSchema = z.object({
@@ -61,7 +61,7 @@ export function Profile() {
     const [uploadingImage, setUploadingImage] = useState(false)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const { is_multi_tenant_enabled, user_preferences } = useAppConfig()
+    const { is_multi_tenant_enabled } = useAppConfig()
     const tenantDetails = getTenant();
     const form = useForm<ProfileFormData>({
         resolver: zodResolver(profileSchema),
@@ -157,9 +157,6 @@ export function Profile() {
 
     }
 
-    async function onDeletePassKey() {
-
-    }
 
     const getGenderDisplay = (gender: string) => {
         const genderMap = {
@@ -473,27 +470,13 @@ export function Profile() {
                             </div>
                         )}
 
-                        {user_preferences?.preferences?.passkey_enabled && (
-                            <div className="space-y-2">
-                                <Label className="text-sm font-medium text-muted-foreground">Passkeys</Label>
-                                <div className="flex items-center space-x-2">
-                                    <Shield className="w-5 h-5 text-green-400" />
-                                    <span>
-                                        <Badge variant="secondary">
-                                            Enabled
-                                        </Badge>
-                                    </span>
-                                    <Button variant="ghost" size="icon" onClick={onDeletePassKey}>
-                                        <Trash2 className="w-2 h-2 text-red-400" />
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-
                     </div>
                 </CardContent>
+                <CardFooter className="justify-end border-t">
+                    <ManageSecurity />
+                </CardFooter>
             </Card>
+
         </div>
     )
 }
