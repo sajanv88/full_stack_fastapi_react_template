@@ -74,6 +74,7 @@ async def update_user(
 @router.get("/profile/{image_key:path}", response_model=UserProfileImageUpdateDto)
 async def get_profile_image(
     image_key: str,
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.USER_VIEW_ONLY])),
     file_service: FileService = Depends(get_file_service)
 ):
     image_url = await file_service.get_file_url(image_key)

@@ -76,7 +76,7 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
             toast.error("Failed to fetch tenants", {
                 richColors: true,
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 description: !isHost ? "You do not have permission to view this resource." : undefined
             });
         } finally {
@@ -100,14 +100,14 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
             });
             toast.success("Tenant created successfully", {
                 richColors: true,
-                position: "top-center"
+                position: "top-right"
             });
             await fetchTenants();
         } catch (error) {
             console.error("Failed to create tenant", error);
             toast.error("Failed to create tenant", {
                 richColors: true,
-                position: "top-center"
+                position: "top-right"
             });
         }
     }
@@ -120,7 +120,7 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
             });
             toast.success("Tenant deleted successfully", {
                 richColors: true,
-                position: "top-center"
+                position: "top-right"
             });
             setSelectedTenant(undefined);
             await fetchTenants();
@@ -128,7 +128,7 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
             console.error("Failed to delete tenant", error);
             toast.error("Failed to delete tenant", {
                 richColors: true,
-                position: "top-center"
+                position: "top-right"
             });
         }
     }

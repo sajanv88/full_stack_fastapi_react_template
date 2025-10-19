@@ -67,11 +67,11 @@ export function ManageUserRoles({ open, onDismiss, userId }: ManageUserRolesProp
                     role_id: selectedRole.id
                 }
             });
-            toast.success("Role assigned successfully", { richColors: true, position: "top-center" });
+            toast.success("Role assigned successfully", { richColors: true, position: "top-right" });
             onDismiss();
         } catch (error) {
             console.error('Failed to assign role:', error);
-            toast.error("Failed to assign role", { richColors: true, position: "top-center" });
+            toast.error("Failed to assign role", { richColors: true, position: "top-right" });
         } finally {
             setIsLoading(false);
         }

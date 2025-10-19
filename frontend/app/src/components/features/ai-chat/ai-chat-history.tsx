@@ -34,7 +34,7 @@ export function AIChatHistory({ mobile }: AIChatHistoryProps) {
             await onDeleteSession(sessionId)
             toast.success("Session deleted successfully.", {
                 richColors: true,
-                position: "top-center",
+                position: "top-right",
                 description: "The chat session has been deleted. All associated messages have been removed."
             })
             setSearchParams({})
@@ -42,7 +42,7 @@ export function AIChatHistory({ mobile }: AIChatHistoryProps) {
             console.error("Error deleting session:", error)
             toast.error("Failed to delete session.", {
                 richColors: true,
-                position: "top-center",
+                position: "top-right",
                 description: "An error occurred while trying to delete the chat session. Please try again."
             })
         }

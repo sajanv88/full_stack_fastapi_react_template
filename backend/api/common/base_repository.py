@@ -44,16 +44,7 @@ class BaseRepository(Generic[T], CacheBaseRepository):
         return result
 
     async def list(self) -> List[T]:
-        key = self.cache_key("list")
-        cached = await self.redis.get(key)
-        if cached:
-            logger.info(f"Cache hit for key: {key}")
-            data = json.loads(cached)
-            return [self.model(**item) for item in data]
-        logger.info(f"Cache miss for key: {key}. Querying database.")
         results = await self.model.find_all().to_list()
-        if results:
-            await self.set_cache(key, json.dumps([item.model_dump() for item in results]))
         return results
     
     async def search(self, query: Dict[str, Any], limit: int = 100) -> List[T]:
@@ -63,6 +54,7 @@ class BaseRepository(Generic[T], CacheBaseRepository):
             logger.info(f"Cache hit for key: {key}")
             data = json.loads(cached)
             return [self.model(**item) for item in data]
+        
         logger.info(f"Cache miss for key: {key}. Querying database.")
         results = await self.model.find(query).to_list(length=limit)
         await self.set_cache(key, json.dumps([item.model_dump() for item in results]))

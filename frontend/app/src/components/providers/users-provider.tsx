@@ -126,13 +126,13 @@ export function UsersProvider({ children }: UsersProviderProps) {
                 });
                 toast.success("User email resent successfully", {
                     richColors: true,
-                    position: "top-center",
+                    position: "top-right",
                 });
             } catch (e) {
                 console.error("Failed to resend user email", e);
                 toast.error("Failed to resend user email", {
                     richColors: true,
-                    position: "top-center",
+                    position: "top-right",
                 });
             }
             return;
@@ -150,14 +150,14 @@ export function UsersProvider({ children }: UsersProviderProps) {
             onSelectUser(undefined);
             toast.success("User deleted successfully", {
                 richColors: true,
-                position: "top-center",
+                position: "top-right",
             });
             await refreshUsers();
         } catch (error) {
             console.error("Error deleting user:", error);
             toast.error("Failed to delete user", {
                 richColors: true,
-                position: "top-center",
+                position: "top-right",
             });
         }
     }

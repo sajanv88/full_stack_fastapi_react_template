@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type AvailableStorageProviderDTO = {
+export type AvailableStorageProviderDto = {
   provider: 's3' | 'azure_blob';
   is_enabled: boolean;
   region: string;

@@ -2,17 +2,18 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AvailableStorageProviderDTO } from '../models/AvailableStorageProviderDTO';
+import type { AvailableStorageProviderDto } from '../models/AvailableStorageProviderDto';
+import type { StorageSettingsDto } from '../models/StorageSettingsDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class StorageSettingsService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
   /**
    * Get Storage Settings
-   * @returns AvailableStorageProviderDTO Successful Response
+   * @returns AvailableStorageProviderDto Successful Response
    * @throws ApiError
    */
-  public getStorageSettingsApiV1StorageGet(): CancelablePromise<Array<AvailableStorageProviderDTO>> {
+  public getStorageSettingsApiV1StorageGet(): CancelablePromise<Array<AvailableStorageProviderDto>> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/storage/',
@@ -37,7 +38,7 @@ export class StorageSettingsService {
   public configureStorageApiV1StorageConfigurePost({
     requestBody,
   }: {
-    requestBody: AvailableStorageProviderDTO,
+    requestBody: StorageSettingsDto,
   }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'POST',

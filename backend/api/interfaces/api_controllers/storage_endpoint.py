@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 from api.common.utils import get_logger
 from api.core.container import get_storage_settings_service
-from api.domain.dtos.storage_settings_dto import AvailableStorageProviderDTO
+from api.domain.dtos.storage_settings_dto import AvailableStorageProviderDto, StorageSettingsDto
 from api.domain.entities.storage_settings import StorageProvider
 from api.domain.enum.permission import Permission
 from api.interfaces.security.role_checker import check_permissions_for_current_role
@@ -15,7 +15,8 @@ router = APIRouter(prefix="/storage")
 router.tags = ["Storage Settings"]
 
 
-@router.get("/", response_model=List[AvailableStorageProviderDTO])
+
+@router.get("/", response_model=List[AvailableStorageProviderDto])
 async def get_storage_settings(
     setting_service: StorageSettingsService = Depends(get_storage_settings_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.MANAGE_STORAGE_SETTINGS]))
@@ -32,11 +33,12 @@ async def get_available_providers(
 
 @router.post("/configure", status_code=status.HTTP_201_CREATED)
 async def configure_storage(
-    configuration: AvailableStorageProviderDTO,
+    configuration: StorageSettingsDto,
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.MANAGE_STORAGE_SETTINGS])),
-    setting_service: StorageSettingsService = Depends(get_storage_settings_service
-)):
+    setting_service: StorageSettingsService = Depends(get_storage_settings_service)
+):
 
+    logger.debug(f"Received storage configuration: {configuration}")
     try:
         await setting_service.configure_storage(setting=configuration)
         return status.HTTP_201_CREATED

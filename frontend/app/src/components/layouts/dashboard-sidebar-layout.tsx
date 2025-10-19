@@ -72,10 +72,10 @@ export function DashboardSidebar() {
         try {
             await getApiClient(accessToken).account.logoutApiV1AccountLogoutGet();
             toast.success("Logged out successfully.",
-                { richColors: true, position: "top-center", description: "Redirecting to login..." });
+                { richColors: true, position: "top-right", description: "Redirecting to login..." });
         } catch (error) {
             console.error("Logout failed:", error);
-            toast.error("Logout failed. Please try again.", { richColors: true, position: "top-center" });
+            toast.error("Logout failed. Please try again.", { richColors: true, position: "top-right" });
         } finally {
             setTimeout(() => {
                 navigate("/login");

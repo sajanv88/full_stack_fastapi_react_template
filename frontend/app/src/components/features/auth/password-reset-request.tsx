@@ -52,7 +52,7 @@ export function PasswordResetRequest() {
                     email: data.email
                 }
             })
-            toast.success("If the email is registered, you will receive password reset instructions.", { duration: 5000, position: "top-center", richColors: true });
+            toast.success("If the email is registered, you will receive password reset instructions.", { duration: 5000, position: "top-right", richColors: true });
         } catch (error) {
             setError("Invalid email");
         }

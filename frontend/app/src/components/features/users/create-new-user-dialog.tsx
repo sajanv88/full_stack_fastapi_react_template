@@ -66,7 +66,7 @@ export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProp
             });
             toast.success("User created successfully! Please check your email for verification.", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true,
             });
             form.reset();
@@ -76,7 +76,7 @@ export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProp
         } catch (error) {
             toast.error("User creation failed. Please try again.", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true,
             });
         } finally {

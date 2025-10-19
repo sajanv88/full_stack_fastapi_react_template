@@ -50,14 +50,14 @@ export function MagicLinkLogin() {
             toast.success("Magic link sent successfully!", {
                 description: "If you have account with us, You should receive it shortly.",
                 richColors: true,
-                position: "top-center"
+                position: "top-right"
 
             });
         } catch (error) {
             console.error("Error sending magic link:", error);
             toast.error("Failed to send magic link. Please try again.", {
                 richColors: true,
-                position: "top-center"
+                position: "top-right"
             });
 
         }

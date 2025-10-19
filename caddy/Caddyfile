@@ -11,5 +11,10 @@ demo.dev.xyz {
 
 
 netflix.demo.dev.xyz {
-	reverse_proxy host.docker.internal:3000
+	reverse_proxy host.docker.internal:8000
+}
+
+fsrapp.netflix.com {
+	reverse_proxy host.docker.internal:8000
+
 }

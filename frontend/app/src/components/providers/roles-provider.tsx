@@ -120,14 +120,14 @@ export function RolesProvider({ children }: RolesProviderProps) {
                 });
                 toast.success("Role cloned successfully", {
                     richColors: true,
-                    position: "top-center",
+                    position: "top-right",
                 });
                 await refreshRoles();
             } catch (error) {
                 console.error("Error cloning role:", error);
                 toast.error("Failed to clone role", {
                     richColors: true,
-                    position: "top-center",
+                    position: "top-right",
                 });
             }
             return;
@@ -145,14 +145,14 @@ export function RolesProvider({ children }: RolesProviderProps) {
             onSelectRole(undefined);
             toast.success("Role deleted successfully", {
                 richColors: true,
-                position: "top-center",
+                position: "top-right",
             });
             await refreshRoles();
         } catch (error) {
             console.error("Error deleting role:", error);
             toast.error("Failed to delete role", {
                 richColors: true,
-                position: "top-center",
+                position: "top-right",
             });
         }
 

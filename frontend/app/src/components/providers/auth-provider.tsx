@@ -1,5 +1,5 @@
 import { CreateUserDto, Gender, Permission, TokenSetDto, type MeResponseDto } from "@/api";
-import { getUserImageUrl } from "@/lib/image-utils";
+import { useProfileImage } from "@/hooks/use-profile-image";
 import {
     getApiClient,
     getTenant,
@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const navigate = useNavigate();
     const { pathname } = useLocation();
+    const { getProfileImage } = useProfileImage(accessToken);
 
     const refreshToken = useCallback(async function refreshToken() {
         const auth = getApiClient().account;
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const user = await auth.readUsersMeApiV1AccountMeGet();
             let imageUrl = user.image_url
             if (user.image_url) {
-                imageUrl = await getUserImageUrl(user.image_url);
+                imageUrl = await getProfileImage(user.image_url);
             }
             setIsLoggedInState(true);
             setUser({ ...user, image_url: imageUrl });
@@ -92,7 +93,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     first_name: data.firstName,
                     last_name: data.lastName,
                     gender: data.gender,
-                    image_url: data.imageUrl,
                 }
             })
             toast.success("Profile updated successfully", {
@@ -147,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             toast.success("Registration successful! Please check your email to verify your account.", {
                 richColors: true,
-                position: "top-center",
+                position: "top-right",
                 description: "Redirecting to login..."
             });
             setTimeout(() => {

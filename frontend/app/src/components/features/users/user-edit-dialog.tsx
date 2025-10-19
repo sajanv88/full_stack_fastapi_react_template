@@ -61,7 +61,7 @@ export function UserEditDialog({ open, onDismiss }: UserEditDialogProps) {
             form.reset();
             toast.success("User updated successfully!", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true,
             });
             onDismiss();
@@ -69,7 +69,7 @@ export function UserEditDialog({ open, onDismiss }: UserEditDialogProps) {
         } catch (error) {
             toast.error("User update failed. Please try again.", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true,
             });
         } finally {

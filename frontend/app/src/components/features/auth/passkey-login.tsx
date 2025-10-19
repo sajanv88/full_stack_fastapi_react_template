@@ -105,7 +105,7 @@ export function PasskeyLogin() {
                 toast.error("Sorry!", {
                     description: error.message,
                     richColors: true,
-                    position: "top-center"
+                    position: "top-right"
                 });
                 return;
             }
@@ -113,7 +113,7 @@ export function PasskeyLogin() {
             console.error("Passkey error:", error);
             toast.error("Passkey authentication failed. Please ensure you have a registered passkey.", {
                 richColors: true,
-                position: "top-center"
+                position: "top-right"
             });
 
         }

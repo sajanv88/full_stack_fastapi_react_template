@@ -56,13 +56,13 @@ export function RoleEditDialog({ open, onDismiss }: RoleEditDialogProps) {
             form.reset();
             toast.success("Role updated successfully!", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true,
             });
             form.reset();
             toast.success("Role updated successfully!", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true,
             });
             onDismiss();
@@ -70,7 +70,7 @@ export function RoleEditDialog({ open, onDismiss }: RoleEditDialogProps) {
         } catch (error) {
             toast.error("User update failed. Please try again.", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true,
             });
         } finally {

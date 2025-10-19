@@ -3,7 +3,7 @@ from enum import Enum
 
 from typing import  Optional
 
-from api.domain.dtos.storage_settings_dto import AvailableStorageProviderDTO
+from api.domain.dtos.storage_settings_dto import AvailableStorageProviderDto
 from api.domain.entities.api_base_model import ApiBaseModel
 
 class StorageProvider(str, Enum):
@@ -22,7 +22,7 @@ class StorageSettings(ApiBaseModel):
     azure_container_name: Optional[str] | None = None
 
 
-    async def to_serializable_dict(self) -> AvailableStorageProviderDTO:
+    async def to_serializable_dict(self) -> AvailableStorageProviderDto:
         base_doc = await super().to_serializable_dict()
         result = {
             **base_doc,
@@ -35,7 +35,7 @@ class StorageSettings(ApiBaseModel):
             "azure_connection_string": self.azure_connection_string,
             "azure_container_name": self.azure_container_name
         }
-        return AvailableStorageProviderDTO(**result)
+        return AvailableStorageProviderDto(**result)
        
     class Settings:
         name = "settings"
