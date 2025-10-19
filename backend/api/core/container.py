@@ -27,11 +27,12 @@ from api.usecases.user_service import UserService
 from api.usecases.tenant_service import TenantService
 from api.infrastructure.persistence.mongodb import Database, mongo_client
 
-
 container = punq.Container()
 
 # Register database
 container.register(Database, instance=mongo_client)
+
+
 
 # Register security components
 
@@ -40,6 +41,19 @@ container.register(IEmailService, SmtpEmail, scope=punq.Scope.singleton)
 
 ## JWT Token Service
 container.register(JwtTokenService, scope=punq.Scope.singleton)
+
+
+## Passkey Components
+container.register(UserPasskeyRepository, scope=punq.Scope.singleton)
+container.register(UserPasskeyChallengesRepository, scope=punq.Scope.singleton)
+container.register(PasskeyService, scope=punq.Scope.singleton)
+
+## Email magic link user login
+container.register(UserMagicLinkRepository, scope=punq.Scope.singleton)
+container.register(EmailMagicLinkService, scope=punq.Scope.singleton)
+
+
+# Register infra components
 
 ## DNS Resolver
 container.register(DnsResolver, scope=punq.Scope.singleton)
@@ -83,14 +97,7 @@ container.register(ChatSessionAIRepository)
 container.register(ChatHistoryAIRepository)
 container.register(LocalAIService, scope=punq.Scope.singleton)
 
-## Passkey Components
-container.register(UserPasskeyRepository, scope=punq.Scope.singleton)
-container.register(UserPasskeyChallengesRepository, scope=punq.Scope.singleton)
-container.register(PasskeyService, scope=punq.Scope.singleton)
 
-## Email magic link user login
-container.register(UserMagicLinkRepository, scope=punq.Scope.singleton)
-container.register(EmailMagicLinkService, scope=punq.Scope.singleton)
 
 def get_database() -> Database:
     return container.resolve(Database)
@@ -149,5 +156,8 @@ def get_user_magic_link_repository() -> UserMagicLinkRepository:
 
 def get_email_magic_link_service() -> EmailMagicLinkService:
     return container.resolve(EmailMagicLinkService)
+
+
+
 
 print("Dependency injection container configured.")
