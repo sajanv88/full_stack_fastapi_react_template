@@ -15,7 +15,7 @@ export function Activation() {
         async function activate() {
             if (!userId && !token) {
                 navigate('/login');
-                toast.error("Invalid activation link", { duration: 5000, position: "top-center", richColors: true });
+                toast.error("Invalid activation link", { duration: 5000, position: "top-right", richColors: true });
                 return;
             }
             const apiClient = getApiClient();
@@ -28,10 +28,10 @@ export function Activation() {
 
                 });
 
-                toast.success("Account activated successfully. Please login.", { duration: 5000, position: "top-center", richColors: true });
+                toast.success("Account activated successfully. Please login.", { duration: 5000, position: "top-right", richColors: true });
             } catch (error) {
 
-                toast.error("Account activation failed. Please try again.", { duration: 5000, position: "top-center", richColors: true });
+                toast.error("Account activation failed. Please try again.", { duration: 5000, position: "top-right", richColors: true });
             }
             finally {
                 navigate('/login');

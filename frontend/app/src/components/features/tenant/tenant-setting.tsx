@@ -69,7 +69,7 @@ export function TenantSetting() {
             toast.success(
                 "Success!!", {
                 duration: 5000, richColors: true,
-                position: "top-center",
+                position: "top-right",
                 description: response.message || "The status may take a few minutes to update if DNS changes were recently made."
             });
             setTimeout(async () => {
@@ -148,7 +148,7 @@ export function TenantSetting() {
 
             toast.success("Success!!", {
                 richColors: true,
-                position: "top-center",
+                position: "top-right",
                 description: response.message || "The status may take a few minutes to update if DNS changes were recently made."
             });
             setShowCustomDomainForm(false);

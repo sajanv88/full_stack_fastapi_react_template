@@ -1,8 +1,8 @@
 from typing import Literal, Optional
-from pydantic import BaseModel, ConfigDict, field_serializer, Field
+from pydantic import BaseModel, Field
 
 
-class StorageSettingsDTO(BaseModel):
+class StorageSettingsDto(BaseModel):
     provider: Literal["s3", "azure_blob"]
     is_enabled: bool
     region: str
@@ -13,7 +13,7 @@ class StorageSettingsDTO(BaseModel):
     azure_container_name: Optional[str] | None = Field(None, exclude=False)  # For Azure Blob
 
 
-class AvailableStorageProviderDTO(StorageSettingsDTO):
+class AvailableStorageProviderDto(StorageSettingsDto):
     id: str
     created_at: str
     updated_at: str

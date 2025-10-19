@@ -3,8 +3,9 @@ import { UsersType, useUsers } from "@/components/providers/users-provider";
 import AdvanceTable from "@/components/shared/advance-table";
 import { IResponseData } from "@/components/shared/iresponse-data.inteface";
 import { ActionOption, TableActions } from "@/components/shared/table-actions";
-import { userProfileImageUrl } from "@/lib/utils";
+import { useProfileImage } from "@/hooks/use-profile-image";
 import { createColumnHelper } from "@tanstack/react-table";
+import { useEffect, useState } from "react";
 
 
 
@@ -82,8 +83,16 @@ const columns = [
         header: "Image",
         cell: (c) => {
             const fullName = c.row.original.first_name + ' ' + c.row.original.last_name;
+            const { accessToken } = useAuthContext();
+            const { getProfileImage } = useProfileImage(accessToken);
+            const [imageUrl, setImageUrl] = useState<string>("");
+            useEffect(() => {
+                getProfileImage(c.row.original.image_url).then(url => {
+                    setImageUrl(url);
+                });
+            }, [c.row.original.image_url, getProfileImage]);
             return (
-                <img src={userProfileImageUrl(c.row.original.image_url)} alt={fullName} className="w-10 h-10 rounded-full" />
+                <img src={imageUrl} alt={fullName} className="w-10 h-10 rounded-full" />
             )
         }
     }),

@@ -45,7 +45,7 @@ export function AIChatProvider({ children }: AIChatProviderProps) {
             return response.session_id;
         } catch (error) {
             console.error("Failed to create new AI session:", error);
-            toast.error("Failed to create new AI session", { richColors: true, position: "top-center" });
+            toast.error("Failed to create new AI session", { richColors: true, position: "top-right" });
             throw new Error("Failed to create new AI session");
         }
     }

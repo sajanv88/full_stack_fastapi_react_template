@@ -58,7 +58,7 @@ export function CreateNewRoleDialog({ open, onDismiss }: CreateNewRoleDialogProp
             form.reset();
             toast.success("Role created successfully!", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true,
             });
             onDismiss();
@@ -66,7 +66,7 @@ export function CreateNewRoleDialog({ open, onDismiss }: CreateNewRoleDialogProp
         } catch (error) {
             toast.error("Role creation failed. Please try again.", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true,
             });
         } finally {

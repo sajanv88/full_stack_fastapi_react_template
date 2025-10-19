@@ -1,5 +1,5 @@
 
-from typing import List
+from typing import Any, List
 from beanie import PydanticObjectId
 from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.responses import StreamingResponse
@@ -64,7 +64,9 @@ async def set_preferred_model(
     if model_name is None or model_name.strip() == "":
         raise InvalidOperationException("Model name cannot be empty")
 
-    await user_preference.set_preferences(user_id=current_user.id, preferences={"model_name": model_name})
+    payload: dict[str, Any] = {}
+    payload["model_name"] = model_name
+    await user_preference.set_preferences(user_id=current_user.id, payload=payload)
     return status.HTTP_204_NO_CONTENT
 
 

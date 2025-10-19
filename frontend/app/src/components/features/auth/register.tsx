@@ -97,14 +97,14 @@ export default function Register() {
             });
             toast.success("Registration successful! Please check your email for verification.", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true
             });
 
         } catch (error) {
             toast.error("Registration failed. Please try again.", {
                 duration: 5000,
-                position: "top-center",
+                position: "top-right",
                 richColors: true
             });
         } finally {

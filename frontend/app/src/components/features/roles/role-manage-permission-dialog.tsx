@@ -31,6 +31,7 @@ export function RoleManagePermissionDialog({ open, onDismiss }: RoleManagePermis
             });
             toast.success("Role updated successfully", {
                 description: "The role has been updated with the new permissions.",
+                position: "top-right",
                 richColors: true,
             });
             onDismiss();
@@ -40,6 +41,7 @@ export function RoleManagePermissionDialog({ open, onDismiss }: RoleManagePermis
             toast.error("Failed to update role", {
                 description: "There was an error updating the permissions.",
                 richColors: true,
+                position: "top-right"
             });
         }
 

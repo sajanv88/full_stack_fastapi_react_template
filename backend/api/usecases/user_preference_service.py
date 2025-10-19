@@ -15,6 +15,7 @@ class UserPreferenceService:
         return user_pref
         
 
-    async def set_preferences(self, user_id: str, preferences: dict[str, Any]) -> None:
-        await self.user_preference_repository.set_preferences(user_id=user_id, preferences=preferences)
-        logger.info(f"Set preferences for user {user_id}")
+    async def set_preferences(self, user_id: str, payload: dict[str, Any]) -> None:
+        logger.info(f"Setting preferences for user {user_id}: {payload}")
+        await self.user_preference_repository.update_preferences(user_id=user_id, preferences=payload)
+

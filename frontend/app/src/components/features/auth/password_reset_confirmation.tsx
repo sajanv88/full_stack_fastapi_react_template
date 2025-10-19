@@ -74,7 +74,7 @@ export function PasswordResetConfirmation() {
                 }
             });
             toast.success(response.message || "Password has been reset successfully.",
-                { duration: 5000, position: "top-center", richColors: true, description: "Redirecting to login..." });
+                { duration: 5000, position: "top-right", richColors: true, description: "Redirecting to login..." });
             setTimeout(() => {
                 navigate("/login");
             }, 1000);

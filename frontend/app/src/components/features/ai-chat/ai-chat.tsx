@@ -325,10 +325,10 @@ export function AIChat() {
             const apiClient = getApiClient(accessToken)
             await apiClient.ai.setPreferredModelApiV1AiSetModelPreferenceModelNamePut({ modelName: model.name })
             setSelectedModel(model)
-            toast.success(`Model set to ${model.name}`, { richColors: true, position: "top-center" })
+            toast.success(`Model set to ${model.name}`, { richColors: true, position: "top-right" })
         } catch (error) {
             console.error("Failed to set model preference:", error)
-            toast.error("Failed to set model preference", { richColors: true, position: "top-center" })
+            toast.error("Failed to set model preference", { richColors: true, position: "top-right" })
         }
     }
 
