@@ -4,6 +4,6 @@
 /* eslint-disable */
 export type UpdateTenantDto = {
   is_active: (boolean | null);
-  custom_domain: (string | null);
+  custom_domain?: (string | null);
 };
 

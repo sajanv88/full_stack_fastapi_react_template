@@ -115,7 +115,7 @@ async def check_subdomain_availability(
     return SubdomainAvailabilityDto(is_available=is_available)
 
 
-@router.post("/update_dns/{tenant_id}", 
+@router.post("/{tenant_id}/update_dns", 
             response_model=UpdateTenantResponseDto,
             description=
             f"""
@@ -165,7 +165,7 @@ async def update_tenant_dns_record(
         message="We have received your request. The changes will reflect in a few minutes. And email notification will be sent."
     )
 
-@router.get("/check_dns/{tenant_id}", response_model=UpdateTenantResponseDto, status_code=status.HTTP_200_OK)
+@router.get("/{tenant_id}/check_dns", response_model=UpdateTenantResponseDto, status_code=status.HTTP_200_OK)
 async def check_dns_status(
     tenant_id: str,
     current_user: CurrentUser,
@@ -210,6 +210,15 @@ async def check_dns_status(
         message="DNS status check completed successfully."
     )
 
+@router.put("/{tenant_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
+async def update_tenant(
+    tenant_id: str,
+    data: UpdateTenantDto,
+    tenant_service: TenantService = Depends(get_tenant_service),
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS]))
+):
+    await tenant_service.update_tenant(tenant_id, data)
+    return None
 
 @router.get("/{tenant_id}/features", response_model=list[FeatureDto], status_code=status.HTTP_200_OK)
 async def get_tenant_features(

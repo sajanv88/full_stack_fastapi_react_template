@@ -153,7 +153,7 @@ export class TenantsService {
    * @returns UpdateTenantResponseDto Successful Response
    * @throws ApiError
    */
-  public updateTenantDnsRecordApiV1TenantsUpdateDnsTenantIdPost({
+  public updateTenantDnsRecordApiV1TenantsTenantIdUpdateDnsPost({
     tenantId,
     requestBody,
   }: {
@@ -162,7 +162,7 @@ export class TenantsService {
   }): CancelablePromise<UpdateTenantResponseDto> {
     return this.httpRequest.request({
       method: 'POST',
-      url: '/api/v1/tenants/update_dns/{tenant_id}',
+      url: '/api/v1/tenants/{tenant_id}/update_dns',
       path: {
         'tenant_id': tenantId,
       },
@@ -178,17 +178,42 @@ export class TenantsService {
    * @returns UpdateTenantResponseDto Successful Response
    * @throws ApiError
    */
-  public checkDnsStatusApiV1TenantsCheckDnsTenantIdGet({
+  public checkDnsStatusApiV1TenantsTenantIdCheckDnsGet({
     tenantId,
   }: {
     tenantId: string,
   }): CancelablePromise<UpdateTenantResponseDto> {
     return this.httpRequest.request({
       method: 'GET',
-      url: '/api/v1/tenants/check_dns/{tenant_id}',
+      url: '/api/v1/tenants/{tenant_id}/check_dns',
       path: {
         'tenant_id': tenantId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Update Tenant
+   * @returns void
+   * @throws ApiError
+   */
+  public updateTenantApiV1TenantsTenantIdPut({
+    tenantId,
+    requestBody,
+  }: {
+    tenantId: string,
+    requestBody: UpdateTenantDto,
+  }): CancelablePromise<void> {
+    return this.httpRequest.request({
+      method: 'PUT',
+      url: '/api/v1/tenants/{tenant_id}',
+      path: {
+        'tenant_id': tenantId,
+      },
+      body: requestBody,
+      mediaType: 'application/json',
       errors: {
         422: `Validation Error`,
       },

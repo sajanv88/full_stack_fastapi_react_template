@@ -29,7 +29,7 @@ const columns = [
     columHelper.accessor("id", {
         header: "Actions",
         cell: (c) => {
-            const { onSelectTenant } = useTenants()
+            const { onSelectTenant, onUpdateTenant } = useTenants()
             const { can } = useAuthContext()
             const isHostManageTenants = can("host:manage_tenants");
             const baseOptions: ActionOption<typeof c.row.original>[] = [
@@ -51,6 +51,17 @@ const columns = [
                         type: 'manage_features',
                         tenant: data
                     }),
+                    disabled: isHostManageTenants
+                },
+                {
+                    label: c.row.original.is_active ? "Deactivate" : "Activate",
+                    data: c.row.original,
+                    onClick: async (data) => {
+                        onUpdateTenant(data.id!, {
+                            is_active: !data.is_active,
+                            custom_domain: data.custom_domain
+                        })
+                    },
                     disabled: isHostManageTenants
                 }
             ];

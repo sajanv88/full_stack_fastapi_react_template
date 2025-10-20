@@ -62,7 +62,7 @@ export function TenantSetting() {
         setIsLoading(true);
         try {
             const apiClient = getApiClient(accessToken);
-            const response = await apiClient.tenants.checkDnsStatusApiV1TenantsCheckDnsTenantIdGet({
+            const response = await apiClient.tenants.checkDnsStatusApiV1TenantsTenantIdCheckDnsGet({
                 tenantId: current_tenant.id
             });
 
@@ -141,7 +141,7 @@ export function TenantSetting() {
                 is_active: current_tenant.is_active
             };
 
-            const response = await apiClient.tenants.updateTenantDnsRecordApiV1TenantsUpdateDnsTenantIdPost({
+            const response = await apiClient.tenants.updateTenantDnsRecordApiV1TenantsTenantIdUpdateDnsPost({
                 tenantId: current_tenant.id,
                 requestBody: updateData
             });
