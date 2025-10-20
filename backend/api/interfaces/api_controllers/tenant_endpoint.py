@@ -5,7 +5,7 @@ from api.common.exceptions import ApiBaseException, InvalidOperationException
 from api.common.utils import get_host_main_domain_name, get_logger
 from api.core.container import    get_tenant_service
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
-from api.domain.dtos.tenant_dto import CreateTenantResponseDto, SubdomainAvailabilityDto, TenantDto, TenantListDto, CreateTenantDto, UpdateTenantDto, UpdateTenantResponseDto
+from api.domain.dtos.tenant_dto import CreateTenantResponseDto, FeatureDto, SubdomainAvailabilityDto, TenantDto, TenantListDto, CreateTenantDto, UpdateTenantDto, UpdateTenantResponseDto
 from api.domain.dtos.user_dto import CreateUserDto
 from api.domain.entities.tenant import Subdomain, Tenant
 from api.domain.enum.permission import Permission
@@ -13,6 +13,7 @@ from api.infrastructure.security.current_user import CurrentUser
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.tenant_service import TenantService
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation, handle_post_tenant_deletion, handle_tenant_dns_update
+from api.domain.enum.feature import Feature as FeatureEnum
 
 logger = get_logger(__name__)
 
@@ -64,10 +65,10 @@ async def delete_tenant(
 ):
     try:
         tenant: Tenant = await service.get_tenant_by_id(tenant_id=id)
-        tenant_doc = await tenant.to_serializable_dict()
+        tenant_doc = TenantDto(**tenant.model_dump())
         payload=WorkerPayloadDto(
             label="post-tenant-deletion",
-            data=TenantDto(**tenant_doc),
+            data=tenant_doc,
             tenant_id=id
         )
         await service.delete_tenant(tenant_id=id)
@@ -86,8 +87,7 @@ async def search_by_name(
 ):
 
     tenant = await service.find_by_name(name)
-    tenant_doc = await tenant.to_serializable_dict()
-    return TenantDto(**tenant_doc)
+    return TenantDto(**tenant.model_dump())
 
 
 @router.get("/search_by_subdomain/{subdomain}", response_model=TenantDto, status_code=status.HTTP_200_OK)
@@ -96,8 +96,7 @@ async def search_by_subdomain(
     service: TenantService = Depends(get_tenant_service)
 ):
     tenant = await service.find_by_subdomain(subdomain)
-    tenant_doc = await tenant.to_serializable_dict()
-    return TenantDto(**tenant_doc)
+    return TenantDto(**tenant.model_dump())
 
 
 @router.get("/check_subdomain/{subdomain}", response_model=SubdomainAvailabilityDto, status_code=status.HTTP_200_OK)
@@ -209,4 +208,30 @@ async def check_dns_status(
 
     return UpdateTenantResponseDto(
         message="DNS status check completed successfully."
+    )
+
+
+@router.get("/{tenant_id}/features", response_model=list[FeatureDto], status_code=status.HTTP_200_OK)
+async def get_tenant_features(
+    tenant_id: str,
+    tenant_service: TenantService = Depends(get_tenant_service),
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS]))
+):
+    tenant = await tenant_service.get_tenant_by_id(tenant_id)
+    if len(tenant.features) == 0:
+        return [FeatureDto(name=name, enabled=False) for name in FeatureEnum]
+    
+    return [FeatureDto(name=feature.name, enabled=feature.enabled) for feature in tenant.features]
+
+
+@router.patch("/{tenant_id}/update_feature", response_model=UpdateTenantResponseDto, status_code=status.HTTP_200_OK)
+async def update_tenant_feature(
+    tenant_id: str,
+    feature: FeatureDto,
+    tenant_service: TenantService = Depends(get_tenant_service),
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS]))
+):
+    await tenant_service.update_feature(tenant_id, feature)
+    return UpdateTenantResponseDto(
+        message=f"Feature '{feature.name.value}' updated successfully for tenant."
     )

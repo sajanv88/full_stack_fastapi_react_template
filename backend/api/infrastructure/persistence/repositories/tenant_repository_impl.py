@@ -4,9 +4,11 @@ from api.common.base_repository import BaseRepository
 from api.common.cache_base_repository import CacheBaseRepository
 from api.common.exceptions import ConflictException
 from api.common.utils import get_logger
-from api.domain.dtos.tenant_dto import CreateTenantDto, TenantListDto
+from api.domain.dtos.tenant_dto import CreateTenantDto, TenantDto, TenantListDto
 from api.domain.entities.tenant import Tenant
 from pymongo.errors import DuplicateKeyError
+from api.domain.enum.feature import Feature as FeatureEnum
+from api.domain.entities.tenant import Feature
 
 logger = get_logger(__name__)
 
@@ -25,7 +27,7 @@ class TenantRepository(BaseRepository[Tenant], CacheBaseRepository):
         logger.info(f"Cache miss for key: {key}. Querying database.")
         docs = await self.model.find_all().skip(skip).limit(limit).to_list()
         total = await self.model.count()
-        tenant_dto = [await doc.to_serializable_dict() for doc in docs]
+        tenant_dto = [TenantDto(**doc.model_dump()) for doc in docs]
         result = TenantListDto(
             tenants=tenant_dto,
             skip=skip,
@@ -39,11 +41,14 @@ class TenantRepository(BaseRepository[Tenant], CacheBaseRepository):
     
     async def create(self, data: CreateTenantDto) -> PydanticObjectId | None:
         try:
+            # Initialize features to disabled by default for new tenants
+            features = [Feature(name=fname, enabled=False) for fname in FeatureEnum]
             new_tenant = Tenant(
                 name=data.name,
-                subdomain=data.subdomain
+                subdomain=data.subdomain,
+                features=features
             )
-            result = await super().create(new_tenant.model_dump())
+            result = await super().create(new_tenant.model_dump(exclude_none=True))
             return result.id
         except DuplicateKeyError as ex:
             logger.error(f"Error creating tenant: {str(ex)}")

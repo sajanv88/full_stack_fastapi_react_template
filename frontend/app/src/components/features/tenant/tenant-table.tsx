@@ -43,6 +43,15 @@ const columns = [
                     }),
                     disabled: isHostManageTenants
 
+                },
+                {
+                    label: "Manage Features",
+                    data: c.row.original,
+                    onClick: (data) => onSelectTenant({
+                        type: 'manage_features',
+                        tenant: data
+                    }),
+                    disabled: isHostManageTenants
                 }
             ];
             return (

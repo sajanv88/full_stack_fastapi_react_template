@@ -49,6 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { getProfileImage } = useProfileImage(accessToken);
 
     const refreshToken = useCallback(async function refreshToken() {
+        setIsLoggedInState(false)
         const auth = getApiClient().account;
         try {
             const authWithRefresh = await auth.refreshTokenApiV1AccountRefreshPost({})

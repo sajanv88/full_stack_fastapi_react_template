@@ -1,11 +1,12 @@
 from datetime import datetime
 import re
-from typing import Annotated, Literal, Optional
+from typing import Annotated, List, Literal, Optional
 from urllib.parse import urlparse
 from beanie import Document, Indexed, PydanticObjectId
-from pydantic import AfterValidator, ConfigDict
+from pydantic import AfterValidator, BaseModel, field_serializer
 from api.common.utils import get_host_main_domain_name, get_utc_now
 from api.core.exceptions import InvalidCustomDomainException, InvalidSubdomainException
+from api.domain.enum.feature import Feature as FeatureEnum
 
 SUBDOMAIN_REGEX = re.compile(r"^(?!-)[A-Za-z0-9-]{3,63}(?<!-)$")
 CUSTOM_DOMAIN_REGEX = re.compile(r"^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$")
@@ -76,6 +77,12 @@ CustomDomain = Annotated[str, AfterValidator(validate_custom_domain)]
 
 
 
+class Feature(BaseModel):
+    name: FeatureEnum
+    enabled: bool
+
+
+
 class Tenant(Document):
     name: str = Indexed(str, unique=True)
     subdomain: Subdomain | None = None
@@ -84,24 +91,14 @@ class Tenant(Document):
     is_active: bool = False
     custom_domain: Optional[CustomDomain] | None = None
     custom_domain_status: Literal["active", "failed", "activation-progress"] = "failed"
+    features: List[Feature] = []
 
-    model_config = ConfigDict(
-        json_encoders={
-            PydanticObjectId: str
-        }
-    )
 
-    async def to_serializable_dict(self):
-        data = self.model_dump()
-        data["id"] = str(self.id)
-        data["created_at"] = str(self.created_at)
-        data["updated_at"] = str(self.updated_at)
-        data["subdomain"] = str(self.subdomain) if self.subdomain else None
-        data["is_active"] = self.is_active 
-        data["custom_domain"] = str(self.custom_domain) if self.custom_domain else None
-        data["custom_domain_status"] = str(self.custom_domain_status) if self.custom_domain_status else None
-        return data
+    @field_serializer("created_at", "updated_at", "id")
+    def serialize_datetime(self, value: datetime | PydanticObjectId) -> str:
+        return str(value)
     
+
     class Settings:
         name = "tenants"
     

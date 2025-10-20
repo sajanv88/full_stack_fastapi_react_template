@@ -14,6 +14,7 @@ import { DashboardSidebar } from "@/components/layouts/dashboard-sidebar-layout"
 import { useAppConfig } from "../providers/app-config-provider";
 import { Badge } from "@/components/ui/badge";
 import { useEffect } from "react";
+import { Loading } from "../shared/loading";
 
 
 
@@ -31,6 +32,15 @@ export function DashboardLayout() {
             init();
         }
     }, [auth.user])
+
+
+    if (!auth.isLoggedIn) {
+        return (
+            <main className="h-screen flex items-center justify-center">
+                <Loading variant="pulse" size="md" />
+            </main>
+        )
+    }
     return (
 
         <SidebarProvider>

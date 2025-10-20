@@ -2,8 +2,8 @@ from beanie import PydanticObjectId
 
 from api.common.utils import get_logger, validate_password
 from api.core.exceptions import TenantNotFoundException
-from api.domain.dtos.tenant_dto import CreateTenantDto, TenantListDto
-from api.domain.entities.tenant import Tenant
+from api.domain.dtos.tenant_dto import CreateTenantDto, FeatureDto, TenantListDto
+from api.domain.entities.tenant import Feature, Tenant
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
 
 logger = get_logger(__name__)
@@ -61,3 +61,23 @@ class TenantService:
     async def total_count(self) -> int:
         """Get total count of tenants. Returns an integer."""
         return await self.tenant_repository.count()
+    
+    async def update_feature(self, tenant_id: str, feature: FeatureDto):
+        """
+            Update a feature for a tenant. If the feature does not exist, it will be added to the tenant's features.
+            Raises TenantNotFoundException if tenant not found.
+        """
+        tenant = await self.get_tenant_by_id(tenant_id)
+        feature_found = False
+        for existing_feature in tenant.features:
+            if existing_feature.name == feature.name:
+                existing_feature.enabled = feature.enabled
+                feature_found = True
+                break
+        if not feature_found:
+            tenant.features.append(Feature(name=feature.name, enabled=feature.enabled))
+        
+        # Save the updated tenant.. 
+        await tenant.save()
+        await self.tenant_repository.clear_cache()
+        logger.debug(f"Feature '{feature.name}' updated to '{feature.enabled}' for tenant '{tenant_id}'")
