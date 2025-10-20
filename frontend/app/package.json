@@ -49,7 +49,7 @@
     "next-themes": "^0.4.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-hook-form": "^7.62.0",
+    "react-hook-form": "^7.65.0",
     "react-resizable-panels": "^3.0.5",
     "react-router": "^7.8.2",
     "recharts": "2.15.4",
