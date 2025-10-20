@@ -1,7 +1,7 @@
 import {
     SidebarTrigger, SidebarProvider,
 } from "@/components/ui/sidebar";
-import { Outlet } from 'react-router';
+import { Outlet, useNavigate } from 'react-router';
 
 import { DarkMode } from "@/components/features/dark-mode/dark-mode";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -11,7 +11,7 @@ import { SimpleFooter } from "@/components/shared/simple-footer";
 import { DashboardSidebar } from "@/components/layouts/dashboard-sidebar-layout";
 import { useAppConfig } from "../providers/app-config-provider";
 import { Badge } from "@/components/ui/badge";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Loading } from "../shared/loading";
 import { Button } from "../ui/button";
 
@@ -19,10 +19,9 @@ import { Button } from "../ui/button";
 
 
 export function DashboardLayout() {
+    const navigate = useNavigate();
     const auth = useAuthContext();
     const { current_tenant } = useAppConfig();
-    const userImage = auth.user?.image_url ? auth.user?.image_url : "https://github.com/evilrabbit.png";
-    const isHost = current_tenant === null && auth.can("host:manage_tenants");
 
     useEffect(() => {
         if (!auth.user) {
@@ -33,6 +32,18 @@ export function DashboardLayout() {
         }
     }, [auth.user])
 
+    const userImage = auth.user?.image_url ? auth.user?.image_url : "https://github.com/evilrabbit.png";
+    const isHost = useMemo(() => auth.can("host:manage_tenants"), [auth]);
+
+    useEffect(() => {
+        if (!auth.isLoggedIn) {
+            return;
+        }
+        if (!current_tenant?.is_active && !isHost) {
+            // Redirect to NonActiveTenantView
+            navigate("/non-active");
+        }
+    }, [current_tenant, auth])
 
     if (!auth.isLoggedIn) {
         return (

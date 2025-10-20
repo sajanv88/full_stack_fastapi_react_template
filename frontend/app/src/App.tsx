@@ -21,6 +21,7 @@ import { PasswordResetConfirmation } from "@/components/features/auth/password_r
 import { Activation } from "@/components/features/auth/activation";
 import { TenantSetting } from "@/components/features/tenant/tenant-setting";
 import { MagicLinkLoginValidate } from "@/components/features/auth/magic-link-login-validate";
+import { NonActiveTenantView } from "@/components/shared/non-active-tenant-view";
 
 function App() {
   const { user } = useAuthContext();
@@ -33,6 +34,7 @@ function App() {
         <Route path="password_reset_confirmation" element={<PasswordResetConfirmation />} />
         <Route path="activation" element={<Activation />} />
         <Route path="magic_link_login" element={<MagicLinkLoginValidate />} />
+        <Route path="non-active" element={<NonActiveTenantView />} />
       </Route>
 
       <Route element={<DashboardLayout />}>
@@ -81,6 +83,7 @@ function App() {
             <AIChat />
           </AIChatProvider>
         } />
+
 
         <Route path="*" element={<Navigate to="/dashboard" />} />
       </Route>

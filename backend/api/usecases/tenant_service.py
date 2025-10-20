@@ -2,7 +2,7 @@ from beanie import PydanticObjectId
 
 from api.common.utils import get_logger, validate_password
 from api.core.exceptions import TenantNotFoundException
-from api.domain.dtos.tenant_dto import CreateTenantDto, FeatureDto, TenantListDto
+from api.domain.dtos.tenant_dto import CreateTenantDto, FeatureDto, TenantListDto, UpdateTenantDto
 from api.domain.entities.tenant import Feature, Tenant
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
 
@@ -82,6 +82,12 @@ class TenantService:
         await self.tenant_repository.clear_cache()
         logger.debug(f"Feature '{feature.name}' updated to '{feature.enabled}' for tenant '{tenant_id}'")
 
+
+    async def update_tenant(self, tenant_id: str, data: UpdateTenantDto) -> None:
+        """Update tenant details. Raises TenantNotFoundException if tenant not found."""
+        tenant = await self.get_tenant_by_id(tenant_id)
+        tenant.is_active = data.is_active
+        await self.tenant_repository.update(tenant_id, tenant.model_dump(exclude_none=True))
 
     async def refresh(self):
         """Refresh the tenant repository cache."""

@@ -53,6 +53,7 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
         setAppConfig(config)
 
     }, [accessToken]);
+
     useEffect(() => {
 
         const fetchConfig = async () => {

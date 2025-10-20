@@ -1,4 +1,4 @@
-import { CreateTenantDto, TenantListDto } from '@/api';
+import { CreateTenantDto, TenantListDto, UpdateTenantDto } from '@/api';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { IResponseData } from '../shared/iresponse-data.inteface';
 import { getApiClient } from '@/lib/utils';
@@ -23,6 +23,7 @@ interface TenantsProviderState {
     onSelectTenant: (action?: Action) => void;
     onCreateNewTenant: (newTenant: CreateTenantDto) => Promise<void>;
     onDeleteTenant: () => Promise<void>;
+    onUpdateTenant: (tenantId: string, updatedTenant: UpdateTenantDto) => Promise<void>;
 
 }
 
@@ -40,7 +41,8 @@ const initialState: TenantsProviderState = {
     selectedTenant: undefined,
     onSelectTenant: () => { },
     onCreateNewTenant: async () => { },
-    onDeleteTenant: async () => { }
+    onDeleteTenant: async () => { },
+    onUpdateTenant: async () => { },
 }
 
 const TenantsContext = createContext<TenantsProviderState>(initialState);
@@ -84,6 +86,7 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
         }
     }
 
+
     const refreshTenants = async () => {
         setPending(true);
         await fetchTenants();
@@ -91,6 +94,26 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
 
     const onSelectTenant = (action?: Action) => {
         setSelectedTenant(action);
+    }
+
+    async function onUpdateTenant(tenantId: string, updatedTenant: UpdateTenantDto) {
+        try {
+            await apiClient.tenants.updateTenantApiV1TenantsTenantIdPut({
+                tenantId,
+                requestBody: updatedTenant
+            });
+            toast.success("Tenant updated successfully", {
+                richColors: true,
+                position: "top-right"
+            });
+            await fetchTenants();
+        } catch (error) {
+            console.error("Failed to update tenant", error);
+            toast.error("Failed to update tenant", {
+                richColors: true,
+                position: "top-right"
+            });
+        }
     }
 
     const onCreateNewTenant = async (newTenant: CreateTenantDto) => {
@@ -137,6 +160,8 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
         fetchTenants();
     }, [searchParams, accessToken]);
 
+
+
     return (
         <TenantsContext.Provider value={{
             tenantResponse,
@@ -145,7 +170,8 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
             selectedTenant,
             onSelectTenant,
             onCreateNewTenant,
-            onDeleteTenant
+            onDeleteTenant,
+            onUpdateTenant
         }}>
             {children}
         </TenantsContext.Provider>
