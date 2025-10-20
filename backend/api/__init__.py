@@ -9,7 +9,6 @@ from api.common.utils import get_logger, is_tenancy_enabled
 from api.core.container import container
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
 from api.infrastructure.persistence.mongodb import Database
-from api.interfaces.middlewares.known_domain_middleware import KnownDomainMiddleware
 from api.interfaces.middlewares.tenant_middleware import TenantMiddleware
 from api.interfaces.api_controllers.account_endpoint import router as account_router
 from api.interfaces.api_controllers.user_endpoint import router as user_router
@@ -22,6 +21,7 @@ from api.interfaces.api_controllers.dashboard_endpoint import router as dashboar
 from api.interfaces.api_controllers.ai_endpoint import router as ai_router
 from api.interfaces.api_controllers.health_endpoint import router as health_router
 from api.interfaces.api_controllers.manage_security_endpoint import router as manage_security_router
+from api.interfaces.api_controllers.features_endpoint import router as features_router
 
 from api.common.logging import configure_logging
 from api.core.config import settings
@@ -73,10 +73,8 @@ async def api_exception_handler(req: Request, ex: ApiBaseException) -> JSONRespo
         content={"error": ex.message, "code": status_code}
     )
 
-# Todo: After fixing the bug. Uncomment the following line to enable KnownDomainMiddleware   
-#app.add_middleware(KnownDomainMiddleware)
 
-if is_tenancy_enabled():
+if is_tenancy_enabled(): 
     app.add_middleware(TenantMiddleware)
     logger.info("Multi-tenancy is enabled.")
 
@@ -96,6 +94,7 @@ router.include_router(health_router)
 
 if is_tenancy_enabled():
     router.include_router(tenant_router)
+    router.include_router(features_router)
 
 router.include_router(app_configuration_router)
 router.include_router(account_router)

@@ -23,7 +23,8 @@ type AuthProviderState = {
     refreshCurrentUser: () => Promise<void>;
     accessToken: string,
     login: (data: { email: string; password: string }) => Promise<void>
-    register: (data: CreateUserDto) => Promise<any>
+    register: (data: CreateUserDto) => Promise<any>,
+    resendActivationEmail: () => Promise<void>;
 }
 
 const authContext = createContext<AuthProviderState>({
@@ -34,7 +35,8 @@ const authContext = createContext<AuthProviderState>({
     refreshCurrentUser: async () => { },
     accessToken: "",
     login: async () => { },
-    register: async () => { }
+    register: async () => { },
+    resendActivationEmail: async () => { },
 });
 
 
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { getProfileImage } = useProfileImage(accessToken);
 
     const refreshToken = useCallback(async function refreshToken() {
+        setIsLoggedInState(false)
         const auth = getApiClient().account;
         try {
             const authWithRefresh = await auth.refreshTokenApiV1AccountRefreshPost({})
@@ -77,6 +80,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
     }, [accessToken]);
+
+
+    async function resendActivationEmail() {
+        if (!user) return;
+        try {
+            const auth = getApiClient(accessToken).account;
+            await auth.resendActivationEmailApiV1AccountResendActivationEmailPost({
+                requestBody: {
+                    email: user.email,
+                    id: user.id,
+                    first_name: user.first_name,
+                    tenant_id: user.tenant_id
+                }
+            });
+            toast.success("Activation email resent successfully. Please check your email.", {
+                richColors: true,
+                position: "top-right"
+            });
+        } catch (error) {
+            console.error("Failed to resend activation email:", error);
+            toast.error("Failed to resend activation email", {
+                richColors: true,
+                position: "top-right"
+            });
+        }
+
+    }
 
     function can(action: Permission) {
         return user?.role?.permissions?.includes(action) ?? false;
@@ -218,7 +248,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             onUpdateProfile,
             refreshCurrentUser,
             login,
-            register
+            register,
+            resendActivationEmail
         }}>
             {children}
         </authContext.Provider>

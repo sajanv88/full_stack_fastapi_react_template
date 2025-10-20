@@ -13,8 +13,10 @@ from api.infrastructure.externals.local_ai_model import OllamaChat, OllamaModels
 from api.usecases.local_ai_service import LocalAIService
 from api.domain.dtos.ai_dto import AISessionByUserIdDto
 from api.usecases.user_preference_service import UserPreferenceService
+from api.domain.security.feature_access_management import check_feature_access
+from api.domain.enum.feature import Feature as FeatureEnum
 
-router = APIRouter(prefix="/ai")
+router = APIRouter(prefix="/ai", dependencies=[Depends(check_feature_access(FeatureEnum.CHAT))])
 router.tags = ["AI"]
 
 @router.get("/models", response_model=List[AIModelInfoDto])

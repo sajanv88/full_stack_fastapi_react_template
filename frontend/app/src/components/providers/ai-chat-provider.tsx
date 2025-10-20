@@ -3,6 +3,9 @@ import { getApiClient } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
 import { useAuthContext } from "./auth-provider";
 import { toast } from "sonner";
+import { useFeatureCheck } from "@/hooks/use-feature-check";
+import { FeatureDisabledNotice } from "@/components/shared/feature-disabled";
+
 
 type AIChatProviderState = {
     fetchAllSessions: () => Promise<void>;
@@ -23,10 +26,11 @@ interface AIChatProviderProps {
 }
 
 export function AIChatProvider({ children }: AIChatProviderProps) {
+    const featureCheck = useFeatureCheck();
     const [sessions, setSessions] = useState<AISessionByUserIdDto[]>([]);
     const { accessToken } = useAuthContext();
     const apiClient = getApiClient(accessToken)
-
+    const isChatFeatureEnabled = featureCheck.requireFeature("chat");
     async function fetchAllSessions() {
         const response = await apiClient.ai.getHistoryApiV1AiHistoryGet();
         setSessions(response);
@@ -51,9 +55,15 @@ export function AIChatProvider({ children }: AIChatProviderProps) {
     }
 
     useEffect(() => {
+        if (!isChatFeatureEnabled) {
+            return;
+        }
         fetchAllSessions();
-    }, [accessToken])
+    }, [accessToken, isChatFeatureEnabled])
 
+    if (!isChatFeatureEnabled) {
+        return <FeatureDisabledNotice featureName="AI Chat" />;
+    }
     return (
         <AIChatContext.Provider value={{ fetchAllSessions, sessions, onDeleteSession, getAIChatNewSession }}>
             {children}

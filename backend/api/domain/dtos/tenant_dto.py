@@ -4,7 +4,11 @@ from pydantic import BaseModel, EmailStr
 
 from api.common.enums.gender import Gender
 from api.domain.entities.tenant import CustomDomain, Subdomain
+from api.domain.enum.feature import Feature as FeatureEnum
 
+class FeatureDto(BaseModel):
+    name: FeatureEnum
+    enabled: bool
 
 class TenantDto(BaseModel):
     id: Optional[str]
@@ -13,6 +17,8 @@ class TenantDto(BaseModel):
     is_active: bool
     custom_domain: Optional[str] | None
     custom_domain_status: Literal["active", "failed", "activation-progress"] = "failed"
+    features: List[FeatureDto] = []
+
 
 class CreateTenantDto(BaseModel):
     name: str

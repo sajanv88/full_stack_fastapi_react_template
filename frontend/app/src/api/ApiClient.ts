@@ -9,6 +9,7 @@ import { AccountService } from './services/AccountService';
 import { AiService } from './services/AiService';
 import { AppConfigurationService } from './services/AppConfigurationService';
 import { DashboardService } from './services/DashboardService';
+import { FeaturesService } from './services/FeaturesService';
 import { HealthService } from './services/HealthService';
 import { ManageSecurityService } from './services/ManageSecurityService';
 import { PermissionsService } from './services/PermissionsService';
@@ -22,6 +23,7 @@ export class ApiClient {
   public readonly ai: AiService;
   public readonly appConfiguration: AppConfigurationService;
   public readonly dashboard: DashboardService;
+  public readonly features: FeaturesService;
   public readonly health: HealthService;
   public readonly manageSecurity: ManageSecurityService;
   public readonly permissions: PermissionsService;
@@ -46,6 +48,7 @@ export class ApiClient {
     this.ai = new AiService(this.request);
     this.appConfiguration = new AppConfigurationService(this.request);
     this.dashboard = new DashboardService(this.request);
+    this.features = new FeaturesService(this.request);
     this.health = new HealthService(this.request);
     this.manageSecurity = new ManageSecurityService(this.request);
     this.permissions = new PermissionsService(this.request);

@@ -225,7 +225,9 @@ async def passkey_register_options(
     user_service = await auth_service.get_user_service()
     user = await user_service.find_by_email(email=email)
     user_dto = await user.to_serializable_dict()
-    return await passkey_service.register_options(user_dto=UserDto(**user_dto))
+    result = await passkey_service.register_options(user_dto=UserDto(**user_dto))
+    
+    return result
 
 
 @router.post("/passkey/register", status_code=status.HTTP_202_ACCEPTED)
@@ -235,6 +237,7 @@ async def passkey_register(
     passkey_service: PasskeyService = Depends(get_passkey_service)
 ):
     result = await passkey_service.complete_registration(email, credential)
+    
     if result is False:
         raise PassKeyException("Passkey registration failed.")
     

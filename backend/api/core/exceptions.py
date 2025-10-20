@@ -1,6 +1,6 @@
 # Keep only domain-specific exceptions here
 
-from api.common.exceptions import AwsException, AzureException, InvalidOperationException, NotFoundException, ConflictException
+from api.common.exceptions import AwsException, AzureException, InvalidOperationException, NotFoundException, ConflictException, ForbiddenException
 
 class UserNotFoundException(NotFoundException):
     def __init__(self, user_id: str):
@@ -64,3 +64,10 @@ class PassKeyException(InvalidOperationException):
     def __init__(self, message: str):
         local_message = f"PassKey Error: {message}"
         super().__init__(local_message)
+
+
+class FeatureNotEnabledException(ForbiddenException):
+    def __init__(self, feature: str):
+        message = f"Feature '{feature}' is not enabled."
+        super().__init__(message)
+    

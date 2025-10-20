@@ -8,7 +8,7 @@ import { useAuthContext } from './auth-provider';
 
 export type TenantResponse = TenantListDto
 export type TenantsType = TenantResponse["tenants"][0]
-type ActionType = 'edit' | 'delete'
+type ActionType = 'edit' | 'delete' | 'manage_features';
 type Action = {
     type: ActionType;
     tenant: TenantsType;

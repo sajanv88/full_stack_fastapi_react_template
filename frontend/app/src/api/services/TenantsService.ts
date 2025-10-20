@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { CreateTenantDto } from '../models/CreateTenantDto';
 import type { CreateTenantResponseDto } from '../models/CreateTenantResponseDto';
+import type { FeatureDto } from '../models/FeatureDto';
 import type { SubdomainAvailabilityDto } from '../models/SubdomainAvailabilityDto';
 import type { TenantDto } from '../models/TenantDto';
 import type { TenantListDto } from '../models/TenantListDto';
@@ -188,6 +189,52 @@ export class TenantsService {
       path: {
         'tenant_id': tenantId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Get Tenant Features
+   * @returns FeatureDto Successful Response
+   * @throws ApiError
+   */
+  public getTenantFeaturesApiV1TenantsTenantIdFeaturesGet({
+    tenantId,
+  }: {
+    tenantId: string,
+  }): CancelablePromise<Array<FeatureDto>> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/tenants/{tenant_id}/features',
+      path: {
+        'tenant_id': tenantId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Update Tenant Feature
+   * @returns UpdateTenantResponseDto Successful Response
+   * @throws ApiError
+   */
+  public updateTenantFeatureApiV1TenantsTenantIdUpdateFeaturePatch({
+    tenantId,
+    requestBody,
+  }: {
+    tenantId: string,
+    requestBody: FeatureDto,
+  }): CancelablePromise<UpdateTenantResponseDto> {
+    return this.httpRequest.request({
+      method: 'PATCH',
+      url: '/api/v1/tenants/{tenant_id}/update_feature',
+      path: {
+        'tenant_id': tenantId,
+      },
+      body: requestBody,
+      mediaType: 'application/json',
       errors: {
         422: `Validation Error`,
       },

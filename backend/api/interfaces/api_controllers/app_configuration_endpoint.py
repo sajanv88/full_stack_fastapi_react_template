@@ -5,6 +5,7 @@ from api.common.dtos.app_configuration_dto import AppConfigurationDto
 from api.common.utils import get_host_main_domain_name, get_logger, get_tenancy_strategy, is_tenancy_enabled
 from api.core.container import   get_passkey_service, get_tenant_service, get_user_preference_service
 from api.core.exceptions import  TenantNotFoundException
+from api.domain.dtos.tenant_dto import TenantDto
 from api.domain.entities.tenant import Tenant
 from api.infrastructure.externals.local_ai_model import OllamaModels
 from api.infrastructure.security.current_user import  CurrentUserOptional
@@ -23,8 +24,8 @@ async def get_tenant(service: TenantService, tenant_id: str | None) -> Tenant | 
     current_tenant = None
     logger.debug(f"Fetching tenant with ID: {tenant_id}")
     try:
-        tenant = await service.get_tenant_by_id(tenant_id)
-        current_tenant = await tenant.to_serializable_dict()
+        t = await service.get_tenant_by_id(tenant_id)
+        current_tenant = Tenant(**t.model_dump())
     except TenantNotFoundException:
         logger.warning(f"Tenant with ID {tenant_id} not found for current user.")
         current_tenant = None
@@ -50,7 +51,8 @@ async def get_app_configuration(
         user_pref_doc.setdefault("preferences", {})["passkey_enabled"] = passkey_enabled
 
     tenant_id = str(current_user.tenant_id) if current_user and current_user.tenant_id else str(tenant_id) if tenant_id else None
-    current_tenant = await get_tenant(tenant_service, str(tenant_id))
+    t = await get_tenant(tenant_service, str(tenant_id))
+    current_tenant = TenantDto(**t.model_dump()) if t else None
 
 
 
