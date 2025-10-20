@@ -42,7 +42,7 @@ export function ManageFeature({ open, onDismiss }: ManageFeatureTenantDialogProp
             setFeatures(tenantFeatures);
         } catch (error) {
             console.error("Error fetching features:", error);
-            toast.error("Failed to load features");
+            toast.error("Failed to load features", { richColors: true, position: "top-right" });
         } finally {
             setIsLoading(false);
         }

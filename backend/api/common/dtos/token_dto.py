@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 from beanie import PydanticObjectId
-from pydantic import BaseModel, EmailStr, ConfigDict, field_serializer
+from pydantic import BaseModel, EmailStr, field_serializer
 
 from api.common.utils import get_logger
 from api.domain.dtos.role_dto import RoleDto
@@ -17,10 +17,12 @@ class TokenPayloadDto(BaseModel):
     role: RoleDto | None = None
     tenant_id: PydanticObjectId | None = None
 
-    @field_serializer('sub', 'tenant_id')
-    def serialize_object_id(self, v: PydanticObjectId | None) -> str | None:
+    @field_serializer('sub', 'tenant_id', "activated_at")
+    def serialize_object_id(self, v: PydanticObjectId | datetime | None) -> str | None:
         if v is None:
             return None
+        if isinstance(v, datetime) and v is not None:
+            return str(v)
         return str(v)
 
 

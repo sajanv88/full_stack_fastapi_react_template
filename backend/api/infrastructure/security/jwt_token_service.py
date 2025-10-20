@@ -13,29 +13,40 @@ class JwtTokenService:
         logger.info("Initialized.")
 
     async def get_access_token(self, payload: TokenPayloadDto, expires_delta: timedelta | None = None) -> AccessTokenDto:
-        to_encode = payload.model_dump()
-        if expires_delta:
-            expire = get_utc_now() + expires_delta
-        else:
-            expire = get_utc_now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
-        return AccessTokenDto(access_token=encoded_jwt, token_type="bearer", expires_in=expire)
+        try:
+            to_encode = payload.model_dump()
+            if expires_delta:
+                expire = get_utc_now() + expires_delta
+            else:
+                expire = get_utc_now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            to_encode.update({"exp": expire})
+
+            encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
+            logger.debug(f"Encoded JWT: {encoded_jwt}")
+            return AccessTokenDto(access_token=encoded_jwt, token_type="bearer", expires_in=expire)
+        except Exception as e:
+            logger.error(f"Error generating access token: {str(e)}")
+            raise InvalidOperationException("Failed to generate access token.") from e
 
     async def get_refresh_token(self, payload: TokenPayloadDto, expires_delta: timedelta | None = None) -> RefreshTokenDto:
-        to_encode = {"sub": str(payload.sub), "tenant_id": str(payload.tenant_id) if payload.tenant_id else None, "type": "refresh"}
-        if expires_delta:
-            expire = get_utc_now() + expires_delta
-        else:
-            expire = get_utc_now() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-        to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, REFRESH_TOKEN_SECRET, algorithm=REFRESH_ALGORITHM)
-        return RefreshTokenDto(refresh_token=encoded_jwt, refresh_token_expires_in=expire)
+        try:
+            to_encode = {"sub": str(payload.sub), "tenant_id": str(payload.tenant_id) if payload.tenant_id else None, "type": "refresh"}
+            if expires_delta:
+                expire = get_utc_now() + expires_delta
+            else:
+                expire = get_utc_now() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+            to_encode.update({"exp": expire})
+            encoded_jwt = jwt.encode(to_encode, REFRESH_TOKEN_SECRET, algorithm=REFRESH_ALGORITHM)
+            return RefreshTokenDto(refresh_token=encoded_jwt, refresh_token_expires_in=expire)
+        except Exception as e:
+            logger.error(f"Error generating refresh token: {str(e)}")
+            raise InvalidOperationException("Failed to generate refresh token.") from e
     
     async def generate_tokens(self, payload: TokenPayloadDto) -> TokenSetDto:
         """
             Generate access and refresh tokens.
         """
+        logger.debug(f"Generating tokens for payload: {payload}")
         access_token = await self.get_access_token(payload)
         refresh_token = await self.get_refresh_token(payload)
         return TokenSetDto(

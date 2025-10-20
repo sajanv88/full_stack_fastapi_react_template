@@ -81,3 +81,9 @@ class TenantService:
         await tenant.save()
         await self.tenant_repository.clear_cache()
         logger.debug(f"Feature '{feature.name}' updated to '{feature.enabled}' for tenant '{tenant_id}'")
+
+
+    async def refresh(self):
+        """Refresh the tenant repository cache."""
+        await self.tenant_repository.clear_cache()
+        logger.info("Tenant repository cache cleared.")
