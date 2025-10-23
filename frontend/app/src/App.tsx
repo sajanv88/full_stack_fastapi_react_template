@@ -68,7 +68,7 @@ function App() {
         } />
 
 
-        <Route path="settings/tenant" element={
+        <Route path="settings/general" element={
           <SettingsProvider>
             <TenantsProvider>
               <TenantSetting />

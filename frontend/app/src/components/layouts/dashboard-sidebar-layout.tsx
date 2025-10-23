@@ -39,7 +39,7 @@ const navLinks = [
         label: "Settings",
         icon: Cog,
         children: [
-            { href: "/settings/tenant", label: "Tenant Settings", icon: Tent },
+            { href: "/settings/general", label: "General", icon: Tent },
         ]
     },
 ];

@@ -180,7 +180,7 @@ export function TenantSetting() {
                 <Alert>
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
-                        Tenant information is not available. Please contact support.
+                        General information is not available. Please contact support.
                     </AlertDescription>
                 </Alert>
             </div>
@@ -191,8 +191,8 @@ export function TenantSetting() {
         <div className="px-4 py-6 w-full xl:container xl:mx-auto xl:w-5xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold">Tenant Settings</h1>
-                    <p className="text-muted-foreground">Manage your tenant information here.</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold">General Settings</h1>
+                    <p className="text-muted-foreground">Manage your General information here.</p>
                 </div>
             </div>
 
