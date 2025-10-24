@@ -31,7 +31,6 @@ class EmailMagicLinkService:
         try:
             token = hash_it(user_dto.id + JWT_SECRET)
             record = await self.user_magic_link_repo.create_magic_link(user_id=user_dto.id, token=token)
-            await self.tenant_service.refresh()
             domain = get_host_main_domain_name()
             if user_dto.tenant_id:
                 tenant = await self.tenant_service.get_tenant_by_id(tenant_id=user_dto.tenant_id)

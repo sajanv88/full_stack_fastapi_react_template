@@ -89,7 +89,3 @@ class TenantService:
         tenant.is_active = data.is_active
         await self.tenant_repository.update(tenant_id, tenant.model_dump(exclude_none=True))
 
-    async def refresh(self):
-        """Refresh the tenant repository cache."""
-        await self.tenant_repository.clear_cache()
-        logger.info("Tenant repository cache cleared.")

@@ -74,7 +74,6 @@ class PasskeyService():
         """
         Generate registration options for a user. If the user does not have a passkey record, create one. Add a challenge to the challenges collection with an expiration time.
         """
-        await self.refresh()
         user = await self.user_passkey_repo.single_or_none(user_email=user_dto.email)
         if not user:
             user_passkey = UserPasskey(user_email=user_dto.email, credentials=[], tenant_id=user_dto.tenant_id)
@@ -111,7 +110,6 @@ class PasskeyService():
         If successful, store the new credential in the user's passkey record and remove the used challenge.
         Raises PassKeyException on failure.
         """
-        await self.refresh()
         expected_challenge = await self.challenges_repo.get_challenge(email=email, type="registration")
         if expected_challenge is None:
             raise PassKeyException("No expected challenge found or challenge expired.")
@@ -151,7 +149,6 @@ class PasskeyService():
         """
         Generate authentication options for a user. Raises PassKeyException if no credentials are found.
         """
-        await self.refresh()
         user = await self.user_passkey_repo.single_or_none(user_email=user_dto.email)
         if not user or len(user.credentials) == 0:
             raise PassKeyException("No credentials found for the user. Please register first.")
@@ -188,7 +185,6 @@ class PasskeyService():
         If successful, update the sign-in count for the credential and remove the used challenge.
         Raises PassKeyException on failure.
         """
-        await self.refresh()
         expected_challenge = await self.challenges_repo.get_challenge(email=email, type="authentication")
         if expected_challenge is None:
             raise PassKeyException("No expected challenge found or challenge expired.")
@@ -234,7 +230,6 @@ class PasskeyService():
         """
         Check if a user has any registered passkeys.
         """
-        await self.refresh()
         user = await self.user_passkey_repo.single_or_none(user_email=email)
         return user is not None and len(user.credentials) > 0
     
@@ -254,7 +249,6 @@ class PasskeyService():
         """
         Delete a registered passkey for a user by credential ID.
         """
-        await self.refresh()
         user_passkey = await self.user_passkey_repo.single_or_none(user_email=email)
         if not user_passkey:
             raise PassKeyException("User passkey record not found.")
@@ -267,9 +261,4 @@ class PasskeyService():
         await user_passkey.save()
         logger.info(f"Deleted passkey with credential ID {credential_id} for user {email}.")
 
-    async def refresh(self):
-        """Refresh the user passkey repository cache and challenges repository cache."""
-        await self.user_passkey_repo.clear_cache()
-        await self.challenges_repo.clear_cache()
-        logger.info("UserPasskey repository cache cleared.")    
-        logger.info("UserPasskeyChallenges repository cache cleared.")
+ 

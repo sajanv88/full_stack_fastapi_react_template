@@ -1,4 +1,3 @@
-import json
 from beanie import PydanticObjectId
 from api.common.base_repository import BaseRepository
 from api.common.utils import get_logger

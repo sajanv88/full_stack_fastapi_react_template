@@ -1,7 +1,5 @@
-import json
 from beanie import PydanticObjectId
 from api.common.base_repository import BaseRepository
-from api.common.cache_base_repository import CacheBaseRepository
 from api.common.exceptions import ConflictException
 from api.common.utils import get_logger
 from api.domain.dtos.tenant_dto import CreateTenantDto, TenantDto, TenantListDto
@@ -12,19 +10,11 @@ from api.domain.entities.tenant import Feature
 
 logger = get_logger(__name__)
 
-class TenantRepository(BaseRepository[Tenant], CacheBaseRepository):
+class TenantRepository(BaseRepository[Tenant]):
     def __init__(self):
         super().__init__(Tenant)
 
     async def list(self, skip: int = 0, limit: int = 10) -> TenantListDto:
-        key = self.cache_key("list", skip=skip, limit=limit)
-        cached = await self.redis.get(key)
-        if cached:
-            logger.info(f"Cache hit for key: {key}")
-            data = json.loads(cached)
-            return TenantListDto(**data)
-
-        logger.info(f"Cache miss for key: {key}. Querying database.")
         docs = await self.model.find_all().skip(skip).limit(limit).to_list()
         total = await self.model.count()
         tenant_dto = [TenantDto(**doc.model_dump()) for doc in docs]
@@ -36,7 +26,6 @@ class TenantRepository(BaseRepository[Tenant], CacheBaseRepository):
             hasPrevious=skip > 0,
             hasNext=skip + limit < total
         )
-        await self.set_cache(key, result.model_dump_json())
         return result
     
     async def create(self, data: CreateTenantDto) -> PydanticObjectId | None:
