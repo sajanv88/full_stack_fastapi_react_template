@@ -48,7 +48,8 @@ async def get_app_configuration(
         user_pref_doc = await user_preferences.to_serializable_dict() if user_preferences is not None else None
         is_user_logged_in = True
         passkey_enabled = await passkey_service.has_passkeys(email=current_user.email)
-        user_pref_doc.setdefault("preferences", {})["passkey_enabled"] = passkey_enabled
+        if user_pref_doc is not None:
+            user_pref_doc.setdefault("preferences", {})["passkey_enabled"] = passkey_enabled
 
     tenant_id = str(current_user.tenant_id) if current_user and current_user.tenant_id else str(tenant_id) if tenant_id else None
     t = await get_tenant(tenant_service, str(tenant_id))
