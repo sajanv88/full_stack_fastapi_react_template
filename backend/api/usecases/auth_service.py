@@ -60,7 +60,6 @@ class AuthService:
 
     async def login_with_magic_link(self, user_id: str) -> TokenSetDto:
         try:
-            await self.user_service.refresh()
             user = await self.user_service.get_user_by_id(user_id=user_id)
             return await self._get_token_set(user)
         except UserNotFoundException or Exception:
@@ -69,7 +68,6 @@ class AuthService:
 
     async def login_with_passkey(self, email: str) -> TokenSetDto:
         try:
-            await self.user_service.refresh()
             user = await self.user_service.find_by_email(email=email)
             return await self._get_token_set(user)
         except UserNotFoundException or Exception:
@@ -77,7 +75,6 @@ class AuthService:
 
 
     async def login(self, req: LoginRequestDto) -> TokenSetDto:
-        await self.user_service.refresh()
         user = await self.user_service.find_by_email(email=req.email)
         if verify_password(req.password, user.password) is False:
             raise UnauthorizedException("Authentication failed. Please check your credentials.")
@@ -250,7 +247,6 @@ class AuthService:
         user.activated_at = get_utc_now()
         await user.save()
         logger.info(f"User {user.id} ({user.email}) has been activated.")
-        await self.user_service.refresh()
         
 
     async def change_email_request(self, current_email: EmailStr, new_email: EmailStr, domain: str) -> None:
@@ -299,7 +295,6 @@ class AuthService:
         user.email = payload.email
         logger.info(f"User {user.id} changed email to {payload.email}.")
         await user.save()
-        await self.user_service.refresh()
         html = notify_email_change_template_html(user_first_name=user.first_name)
         await self.email_service.send_email(
             to=user.email,

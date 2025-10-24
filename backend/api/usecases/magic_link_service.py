@@ -31,7 +31,6 @@ class EmailMagicLinkService:
         try:
             token = hash_it(user_dto.id + JWT_SECRET)
             record = await self.user_magic_link_repo.create_magic_link(user_id=user_dto.id, token=token)
-            await self.tenant_service.refresh()
             domain = get_host_main_domain_name()
             if user_dto.tenant_id:
                 tenant = await self.tenant_service.get_tenant_by_id(tenant_id=user_dto.tenant_id)
@@ -58,7 +57,6 @@ class EmailMagicLinkService:
         Returns:
             bool: True if the token is valid, False otherwise.
         """
-        await self.user_magic_link_repo.clear_cache()
         record = await self.user_magic_link_repo.single_or_none(user_id=PydanticObjectId(user_id), token=token)
         print("Record:", record)
         if record is None:
@@ -67,9 +65,7 @@ class EmailMagicLinkService:
         result = validate_hashed_value(value=user_id, hashed_value=token)
         if result:
             # Optionally, you can delete the magic link after successful validation to prevent reuse
-            await self.user_magic_link_repo.clear_cache()
             await self.user_magic_link_repo.delete(id=str(record.id))
 
-        await self.user_magic_link_repo.clear_cache()
         return result
         

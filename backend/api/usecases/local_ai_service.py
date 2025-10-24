@@ -81,7 +81,6 @@ class LocalAIService:
             logger.debug(f"Deleting history for session_id: {session_id}, user_id: {user_id} and history_id: {session.history_id}")
             await history.delete()
         await session.delete()
-        await self.chat_history_repository.clear_cache()
         
     
 
@@ -124,4 +123,3 @@ class LocalAIService:
             exisiting_history.updated_at = get_utc_now()
             await exisiting_history.save()
             logger.debug(f"Chat history updated for user: {user_id}, session: {session.id} and history: {session.history_id}")
-        await self.chat_history_repository.clear_cache()

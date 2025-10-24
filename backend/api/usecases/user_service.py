@@ -121,7 +121,3 @@ class UserService:
         """Aggregate users based on the provided pipeline. Returns an async list[TimeSeriesDto]."""
         return await self.user_repository.aggregate(pipeline, projection_model=TimeSeriesDto)
     
-    async def refresh(self):
-        """Refresh the user repository cache."""
-        await self.user_repository.clear_cache()
-        logger.info("User repository cache cleared.")
