@@ -62,7 +62,6 @@ class PasskeyService():
         from api.usecases.tenant_service import TenantService
         from api.core.container import get_tenant_service
         tenant_service: TenantService = get_tenant_service()
-        await tenant_service.refresh()
         if tenant_id is not None:
             tenant = await tenant_service.get_tenant_by_id(tenant_id=str(tenant_id))
             rp_id = tenant.custom_domain if tenant.custom_domain else tenant.subdomain
@@ -237,7 +236,6 @@ class PasskeyService():
         """
         Retrieve registered passkeys for a user.
         """
-        await self.refresh()
         user = await self.user_passkey_repo.single_or_none(user_email=email)
         if not user:
             return []

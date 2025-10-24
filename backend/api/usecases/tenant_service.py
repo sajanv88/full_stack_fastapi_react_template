@@ -79,7 +79,6 @@ class TenantService:
         
         # Save the updated tenant.. 
         await tenant.save()
-        await self.tenant_repository.clear_cache()
         logger.debug(f"Feature '{feature.name}' updated to '{feature.enabled}' for tenant '{tenant_id}'")
 
 

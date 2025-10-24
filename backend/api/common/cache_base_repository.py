@@ -2,7 +2,6 @@ import json
 from redis.asyncio import Redis, from_url
 from api.common.utils import get_logger
 from api.core.config import settings
-from api.infrastructure.security import current_user
 
 
 logger = get_logger(__name__)

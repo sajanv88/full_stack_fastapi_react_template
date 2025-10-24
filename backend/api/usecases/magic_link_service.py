@@ -57,7 +57,6 @@ class EmailMagicLinkService:
         Returns:
             bool: True if the token is valid, False otherwise.
         """
-        await self.user_magic_link_repo.clear_cache()
         record = await self.user_magic_link_repo.single_or_none(user_id=PydanticObjectId(user_id), token=token)
         print("Record:", record)
         if record is None:
@@ -66,9 +65,7 @@ class EmailMagicLinkService:
         result = validate_hashed_value(value=user_id, hashed_value=token)
         if result:
             # Optionally, you can delete the magic link after successful validation to prevent reuse
-            await self.user_magic_link_repo.clear_cache()
             await self.user_magic_link_repo.delete(id=str(record.id))
 
-        await self.user_magic_link_repo.clear_cache()
         return result
         
