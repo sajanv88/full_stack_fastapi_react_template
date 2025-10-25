@@ -30,5 +30,6 @@ dependencies = [
     "redis>=6.4.0",
     "starlette>=0.48.0",
     "streamlit>=1.49.1",
+    "stripe>=13.0.1",
     "webauthn>=2.7.0",
 ]

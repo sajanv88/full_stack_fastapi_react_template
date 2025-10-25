@@ -7,6 +7,7 @@ from api.core.config import settings
 from api.domain.entities.ai import ChatHistoryAI, ChatSessionAI
 from api.domain.entities.role import Role
 from api.domain.entities.storage_settings import StorageSettings
+from api.domain.entities.stripe_settings import BillingRecord, StripeSettings
 from api.domain.entities.tenant import Tenant
 from api.domain.entities.user import User
 from api.domain.entities.user_magic_link import UserMagicLink
@@ -27,6 +28,8 @@ models = [
     UserPasskey,
     Challenges,
     UserMagicLink,
+    StripeSettings,
+    BillingRecord
 ]
 class Database:
     def __init__(self, uri: str, models: Sequence[type[Document] | type[UnionDoc] | type[View] | str] | None = None) -> None:
