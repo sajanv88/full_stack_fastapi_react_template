@@ -62,6 +62,13 @@ class Settings(BaseSettings):
     coolify_api_key: str
     coolify_application_id: str
 
+
+    # AWS S3 settings for file uploads this belongs to the Host
+    aws_region: str = "eu-central-1"
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    aws_s3_bucket_name: str = "fsrapptest"
+
 # Instantiate settings once
 settings = Settings()
 
