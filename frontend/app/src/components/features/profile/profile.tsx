@@ -123,7 +123,6 @@ export function Profile() {
             const formData = new FormData()
             formData.append('file', file)
 
-            // TODO: Implement image upload API endpoint
             const apiClient = getApiClient(accessToken);
             await apiClient.users.updateProfilePictureApiV1UsersUserIdUpdateProfilePicturePut({
                 formData: {
