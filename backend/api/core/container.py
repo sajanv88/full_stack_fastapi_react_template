@@ -3,8 +3,10 @@ from api.domain.interfaces.email_service import IEmailService
 from api.infrastructure.externals.coolify_app import CoolifyApp
 from api.infrastructure.externals.dns_resolver import DnsResolver
 from api.infrastructure.externals.smtp_email import SmtpEmail
+from api.infrastructure.externals.stripe_resolver import StripeResolver
 from api.infrastructure.persistence.repositories.chat_history_ai_repository_impl import ChatHistoryAIRepository
 from api.infrastructure.persistence.repositories.chat_session_ai_repository_impl import ChatSessionAIRepository
+from api.infrastructure.persistence.repositories.payment_repository_impl import BillingRecordRepository, PaymentRepository, StripeSettingsRepository
 from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
 from api.infrastructure.persistence.repositories.storage_settings_repository_impl import StorageSettingsRepository
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
@@ -15,11 +17,14 @@ from api.infrastructure.persistence.repositories.user_preference_repository_impl
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
 from api.infrastructure.security.jwt_token_service import JwtTokenService
 from api.infrastructure.security.passkey_service import PasskeyService
+from api.usecases.billing_record_service import BillingRecordService
 from api.usecases.coolify_app_service import CoolifyAppService
 from api.usecases.local_ai_service import LocalAIService
 from api.usecases.auth_service import AuthService
 from api.usecases.file_service import FileService
 from api.usecases.magic_link_service import EmailMagicLinkService
+from api.usecases.pricing_service import PricingService
+from api.usecases.product_service import ProductService
 from api.usecases.role_service import RoleService
 from api.usecases.storage_settings_service import StorageSettingsService
 from api.usecases.user_preference_service import UserPreferenceService
@@ -98,6 +103,18 @@ container.register(ChatHistoryAIRepository)
 container.register(LocalAIService, scope=punq.Scope.singleton)
 
 
+## Stripe and Payment Components
+container.register(StripeSettingsRepository, scope=punq.Scope.singleton)
+container.register(BillingRecordRepository, scope=punq.Scope.singleton)
+container.register(PaymentRepository, scope=punq.Scope.singleton)
+container.register(StripeResolver, scope=punq.Scope.singleton)
+
+container.register(BillingRecordService, scope=punq.Scope.singleton)
+container.register(ProductService, scope=punq.Scope.singleton)
+container.register(PricingService, scope=punq.Scope.singleton)
+
+
+
 
 def get_database() -> Database:
     return container.resolve(Database)
@@ -141,7 +158,6 @@ def get_dns_resolver() -> DnsResolver:
 def get_coolify_app_service() -> CoolifyAppService:
     return container.resolve(CoolifyAppService)
 
-
 def get_user_passkey_repository() -> UserPasskeyRepository:
     return container.resolve(UserPasskeyRepository)
 
@@ -157,7 +173,17 @@ def get_user_magic_link_repository() -> UserMagicLinkRepository:
 def get_email_magic_link_service() -> EmailMagicLinkService:
     return container.resolve(EmailMagicLinkService)
 
+def get_billing_record_service() -> BillingRecordService:
+    return container.resolve(BillingRecordService)
 
+def get_product_service() -> ProductService:
+    return container.resolve(ProductService)
+
+def get_pricing_service() -> PricingService:
+    return container.resolve(PricingService)
+
+def get_stripe_resolver() -> StripeResolver:
+    return container.resolve(StripeResolver)
 
 
 print("Dependency injection container configured.")

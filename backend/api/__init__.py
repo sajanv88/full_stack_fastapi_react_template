@@ -22,6 +22,7 @@ from api.interfaces.api_controllers.ai_endpoint import router as ai_router
 from api.interfaces.api_controllers.health_endpoint import router as health_router
 from api.interfaces.api_controllers.manage_security_endpoint import router as manage_security_router
 from api.interfaces.api_controllers.features_endpoint import router as features_router
+from api.interfaces.api_controllers.product_endpoint import router as product_router
 
 from api.common.logging import configure_logging
 from api.core.config import settings
@@ -106,6 +107,7 @@ router.include_router(role_router)
 router.include_router(permissions_router)
 router.include_router(storage_router)
 router.include_router(ai_router)
+router.include_router(product_router)
 
 app.include_router(router)
 

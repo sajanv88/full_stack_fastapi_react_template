@@ -70,4 +70,27 @@ class FeatureNotEnabledException(ForbiddenException):
     def __init__(self, feature: str):
         message = f"Feature '{feature}' is not enabled."
         super().__init__(message)
-    
+
+class StripeSettingsNotFoundException(NotFoundException):
+    def __init__(self, message: str):
+        super().__init__("StripeSettings", message)
+
+
+class ProductException(InvalidOperationException):
+    def __init__(self, message: str):
+        local_message = f"Product Error: {message}"
+        super().__init__(local_message)
+        
+class ProductNotFoundException(NotFoundException):
+    def __init__(self, product_id: str):
+        super().__init__("Product", product_id)
+
+
+class PricingNotFoundException(NotFoundException):
+    def __init__(self, pricing_id: str):
+        super().__init__("Pricing", pricing_id)
+
+
+class BillingRecordNotFoundException(NotFoundException):
+    def __init__(self, record_id: str):
+        super().__init__("BillingRecord", record_id)
