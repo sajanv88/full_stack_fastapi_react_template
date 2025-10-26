@@ -3,6 +3,8 @@ import { CreateStripeSettingDto, StripeSettingDto } from "@/api"
 import { useAuthContext } from "./auth-provider";
 import { getApiClient } from "@/lib/utils";
 import { toast } from "sonner";
+import { FeatureDisabledNotice } from "../shared/feature-disabled";
+import { useFeatureCheck } from "@/hooks/use-feature-check";
 
 
 interface StripeProviderState {
@@ -32,7 +34,10 @@ export function StripeProvider({ children }: StripeProviderProps) {
     const [configuredStripeSetting, setConfiguredStripeSetting] = useState<StripeSettingDto | null>(null);
     const [loading, setLoading] = useState(true);
     const [showConfigureStripe, setShowConfigureStripe] = useState(false);
+    const featureCheck = useFeatureCheck();
 
+
+    const isStripePaymentsFeatureEnabled = featureCheck.requireFeature("stripe_payments");
     async function fetchConfiguredStripeSetting() {
         try {
             const setting = await getApiClient(accessToken).stripe.getStripeSettingsApiV1StripeGet();
@@ -47,13 +52,13 @@ export function StripeProvider({ children }: StripeProviderProps) {
 
 
     useEffect(() => {
-        if (accessToken) {
+        if (accessToken && isStripePaymentsFeatureEnabled) {
             fetchConfiguredStripeSetting();
         }
-    }, [accessToken]);
+    }, [accessToken, isStripePaymentsFeatureEnabled]);
 
     const onConfigureStripe = useCallback(async (data: CreateStripeSettingDto) => {
-        if (!accessToken) return;
+        if (!accessToken || !isStripePaymentsFeatureEnabled) return;
         try {
             setLoading(true);
             await getApiClient(accessToken).stripe.configureStripeSettingApiV1StripeConfigurePost({
@@ -67,13 +72,16 @@ export function StripeProvider({ children }: StripeProviderProps) {
         } finally {
             setLoading(false);
         }
-    }, [accessToken]);
+    }, [accessToken, isStripePaymentsFeatureEnabled]);
 
     const onRefreshStripeSetting = useCallback(async () => {
         await fetchConfiguredStripeSetting();
-    }, [accessToken]);
+    }, [accessToken, isStripePaymentsFeatureEnabled]);
 
 
+    if (!isStripePaymentsFeatureEnabled) {
+        return <FeatureDisabledNotice featureName="Stripe Payments" />;
+    }
     return (
         <StripeContext.Provider value={{
             onConfigureStripe,

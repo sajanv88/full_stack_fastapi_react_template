@@ -26,6 +26,7 @@ import {
 import { IconExternalLink } from "@tabler/icons-react";
 import { useState } from "react";
 import { useAppConfig } from "@/components/providers/app-config-provider";
+import { useAuthContext } from "@/components/providers/auth-provider";
 
 const stripeConfigSchema = z.object({
     stripe_secret_key: z.string().min(1, "Stripe secret key is required"),
@@ -42,6 +43,9 @@ export function ConfigureStripe() {
     const { loading, showConfigureStripe, onConfigureStripe, configuredStripeSetting, onRefreshStripeSetting } = useStripeProvider();
     const [showSecretKey, setShowSecretKey] = useState(false);
     const [showWebhookSecret, setShowWebhookSecret] = useState(false);
+    const { can } = useAuthContext();
+    const isPaymentManager = can("manage:payments_settings") || can("full:access");
+
 
     const {
         register,
@@ -71,6 +75,17 @@ export function ConfigureStripe() {
             trial_period_days: data.trial_period_days,
         });
     };
+
+    if (!isPaymentManager) {
+        return (
+            <div className="grid place-items-center place-content-center h-40">
+                <p>
+                    You do not have permission to view this page.
+                </p>
+            </div>
+        );
+
+    }
 
     if (loading) {
         return (

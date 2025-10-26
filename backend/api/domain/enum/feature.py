@@ -6,4 +6,5 @@ class Feature(str, Enum):
     REPORT = "report"
     ANALYTICS = "analytics"
     ORGANIZATION = "organization"
-    TEAMS = "teams"
+    TEAMS = "teams",
+    STRIPE_PAYMENTS = "stripe_payments"

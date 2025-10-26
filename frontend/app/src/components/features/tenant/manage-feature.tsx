@@ -17,7 +17,8 @@ import {
     Users,
     Loader2,
     CheckCircle,
-    XCircle
+    XCircle,
+    Currency
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -36,10 +37,23 @@ export function ManageFeature({ open, onDismiss }: ManageFeatureTenantDialogProp
         setIsLoading(true);
         try {
             const apiClient = getApiClient(accessToken);
-            const tenantFeatures = await apiClient.tenants.getTenantFeaturesApiV1TenantsTenantIdFeaturesGet({
+            const featureList = apiClient.features.listFeaturesApiV1FeaturesGet();
+            const tenantFeatures = apiClient.tenants.getTenantFeaturesApiV1TenantsTenantIdFeaturesGet({
                 tenantId: selectedTenant!.tenant.id!
             });
-            setFeatures(tenantFeatures);
+            const [featureListResponse, tenantFeaturesResponse] = await Promise.all([featureList, tenantFeatures]);
+            console.log("Fetched featureListResponse:", featureListResponse);
+            console.log("Fetched tenantFeaturesResponse:", tenantFeaturesResponse);
+            const allFeatures = featureListResponse.filter(f => !tenantFeaturesResponse.some(tf => tf.name == f));
+            console.log("Merged allFeatures:", allFeatures);
+            for (const feature of allFeatures) {
+                tenantFeaturesResponse.push({
+                    name: feature,
+                    enabled: false
+                });
+            }
+
+            setFeatures(tenantFeaturesResponse);
         } catch (error) {
             console.error("Error fetching features:", error);
             toast.error("Failed to load features", { richColors: true, position: "top-right" });
@@ -97,6 +111,8 @@ export function ManageFeature({ open, onDismiss }: ManageFeatureTenantDialogProp
             case 'users':
             case 'user_management':
                 return <Users className="w-5 h-5" />;
+            case 'stripe_payments':
+                return <Currency className="w-5 h-5" />;
             default:
                 return <CheckCircle className="w-5 h-5" />;
         }
@@ -124,6 +140,8 @@ export function ManageFeature({ open, onDismiss }: ManageFeatureTenantDialogProp
                 return 'User management and administration';
             case 'user_management':
                 return 'Advanced user management capabilities';
+            case 'stripe_payments':
+                return 'Stripe payment processing and management';
             default:
                 return `Manage ${featureName} functionality`;
         }
