@@ -43,7 +43,10 @@ class StripeSettingsRepository(BaseRepository[StripeSettings]):
             StripeSettingsNotFoundException: If no settings are found.
         """
         try:
-            return await self.single_or_none()
+            result = await self.single_or_none()
+            if result is None:
+                raise StripeSettingsNotFoundException("Stripe settings not found.")
+            return result
         except Exception as e:
             logger.error(f"Error fetching stored Stripe settings: {e}")
             raise StripeSettingsNotFoundException("Stripe settings not found.")

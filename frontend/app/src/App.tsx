@@ -22,6 +22,8 @@ import { Activation } from "@/components/features/auth/activation";
 import { TenantSetting } from "@/components/features/tenant/tenant-setting";
 import { MagicLinkLoginValidate } from "@/components/features/auth/magic-link-login-validate";
 import { NonActiveTenantView } from "@/components/shared/non-active-tenant-view";
+import { StripeProvider } from "./components/providers/stripe-provider";
+import { ConfigureStripe } from "./components/features/billings/stripe/configure-stripe";
 
 function App() {
   const { user } = useAuthContext();
@@ -76,6 +78,11 @@ function App() {
           </SettingsProvider>
         } />
 
+        <Route path="settings/payment" element={
+          <StripeProvider>
+            <ConfigureStripe />
+          </StripeProvider>
+        } />
 
         <Route path="profile" element={<Profile />} />
         <Route path="ai" element={

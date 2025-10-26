@@ -64,6 +64,7 @@ export type { RegisteredPasskeyCredentialsDto } from './models/RegisteredPasskey
 export type { RoleDto } from './models/RoleDto';
 export type { RoleListDto } from './models/RoleListDto';
 export type { StorageSettingsDto } from './models/StorageSettingsDto';
+export type { StripeSettingDto } from './models/StripeSettingDto';
 export type { SubdomainAvailabilityDto } from './models/SubdomainAvailabilityDto';
 export type { TenantDto } from './models/TenantDto';
 export type { TenantListDto } from './models/TenantListDto';
@@ -94,6 +95,7 @@ export { ManageSecurityService } from './services/ManageSecurityService';
 export { PermissionsService } from './services/PermissionsService';
 export { RolesService } from './services/RolesService';
 export { StorageSettingsService } from './services/StorageSettingsService';
+export { StripeService } from './services/StripeService';
 export { StripeBillingService } from './services/StripeBillingService';
 export { StripePricingService } from './services/StripePricingService';
 export { StripeProductsService } from './services/StripeProductsService';

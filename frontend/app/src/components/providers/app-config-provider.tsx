@@ -20,7 +20,7 @@ const appConfigContext = createContext<Configuration>({
     },
     reloadAppConfig: async () => { },
     redirectToTenantDomain: () => { },
-    environment: "development"
+    environment: "development",
 });
 
 
@@ -54,6 +54,9 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
 
     }, [accessToken]);
 
+
+
+
     useEffect(() => {
 
         const fetchConfig = async () => {
@@ -79,6 +82,9 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
 
 
     }, [appConfig, accessToken, appConfig.current_tenant]);
+
+
+
 
     const redirectToTenantDomain = useCallback((tenant: TenantDto) => {
         const protocol = appConfig.environment === "development" ? "http" : "https";
@@ -106,7 +112,12 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
 
 
     return (
-        <appConfigContext.Provider value={{ ...appConfig, reloadAppConfig, shouldShowTenantSelection, redirectToTenantDomain }}>
+        <appConfigContext.Provider value={{
+            ...appConfig,
+            reloadAppConfig,
+            shouldShowTenantSelection,
+            redirectToTenantDomain
+        }}>
             {children}
         </appConfigContext.Provider>
     )

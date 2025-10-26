@@ -1,4 +1,4 @@
-from api.domain.dtos.stripe_setting_dto import CreateStripeSettingDto
+from api.domain.dtos.stripe_setting_dto import CreateStripeSettingDto, StripeSettingDto
 from api.infrastructure.externals.stripe_resolver import StripeResolver
 from api.infrastructure.persistence.repositories.payment_repository_impl import PaymentRepository
 from api.usecases.tenant_service import TenantService
@@ -22,4 +22,19 @@ class StripeSettingService:
         await self.tenant_service.get_tenant_by_id(tenant_id)
         await self.payment_repository.store_stripe_settings(stripe_config=settings)
         
-        
+    async def get_stripe_settings(self) -> StripeSettingDto:
+        """
+        Get the Stripe settings for the application.
+        Returns:
+            StripeSettingDto: The Stripe settings.
+        Raises:
+            StripeSettingsNotFoundException: If there is an error retrieving the settings.
+        """
+        result = await self.payment_repository.get_stored_stripe_settings()
+        return StripeSettingDto(
+            id=str(result.id),
+            tenant_id=str(result.tenant_id),
+            default_currency=result.default_currency,
+            mode=result.mode,
+            trial_period_days=result.trial_period_days
+        )

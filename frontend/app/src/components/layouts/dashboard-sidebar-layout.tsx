@@ -23,11 +23,11 @@ import {
     Tent,
     Cog
 } from 'lucide-react';
+import { IconMoneybag, IconSettingsBolt } from "@tabler/icons-react"
 import { useAuthContext } from '../providers/auth-provider';
 import { useMemo } from 'react';
-import { getApiClient } from '@/lib/utils';
+import { cn, getApiClient } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useAppConfig } from '../providers/app-config-provider';
 
 const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -39,7 +39,8 @@ const navLinks = [
         label: "Settings",
         icon: Cog,
         children: [
-            { href: "/settings/general", label: "General", icon: Tent },
+            { href: "/settings/general", label: "General", icon: IconSettingsBolt },
+            { href: "/settings/payment", label: "Payment", icon: IconMoneybag },
         ]
     },
 ];
@@ -56,7 +57,6 @@ export function DashboardSidebar() {
     const location = useLocation();
     const pathname = location.pathname;
     const navigate = useNavigate();
-    const { current_tenant } = useAppConfig();
     const { user, accessToken } = useAuthContext();
     const isTenant = user?.tenant_id;
 
@@ -102,14 +102,14 @@ export function DashboardSidebar() {
                         )}
                     </NavLink>
                 </SidebarMenuButton>
-                {(link.children && link.children.length > 0 && current_tenant) && (
+                {(link.children && link.children.length > 0 && isTenant) && (
                     <SidebarMenu className='pl-8 mt-1'>
                         {link.children.map((child) => (
                             <SidebarMenuItem key={child.href}>
                                 <SidebarMenuButton
                                     asChild
                                     isActive={isLinkActive(child.href)}
-                                    className="group relative"
+                                    className={cn("group relative")}
                                 >
                                     <NavLink to={child.href} className="w-full flex items-center space-x-3">
                                         <child.icon className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
