@@ -80,15 +80,28 @@ class ProductException(InvalidOperationException):
     def __init__(self, message: str):
         local_message = f"Product Error: {message}"
         super().__init__(local_message)
-        
+
 class ProductNotFoundException(NotFoundException):
     def __init__(self, product_id: str):
         super().__init__("Product", product_id)
 
 
+
+class PricingException(InvalidOperationException):
+    def __init__(self, message: str):
+        local_message = f"Pricing Error: {message}"
+        super().__init__(local_message)
+
 class PricingNotFoundException(NotFoundException):
     def __init__(self, pricing_id: str):
         super().__init__("Pricing", pricing_id)
+
+
+
+class BillingRecordException(InvalidOperationException):
+    def __init__(self, message: str):
+        local_message = f"BillingRecord Error: {message}"
+        super().__init__(local_message)
 
 
 class BillingRecordNotFoundException(NotFoundException):

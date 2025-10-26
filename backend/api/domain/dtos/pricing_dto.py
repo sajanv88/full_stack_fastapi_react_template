@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Dict, Literal, Optional
 from pydantic import BaseModel, Field
 
 class RecurringDto(BaseModel):
@@ -28,3 +28,9 @@ class PricingDto(BaseModel):
 class PricingListDto(BaseModel):
    pricings: list[PricingDto]
    has_more: bool
+
+class UpdatePricingDto(BaseModel):
+   active: bool
+   metadata: Optional[Dict[str, Any]] = None
+   tax_behavior: Optional[Literal["exclusive", "inclusive", "unspecified"]] = None
+   

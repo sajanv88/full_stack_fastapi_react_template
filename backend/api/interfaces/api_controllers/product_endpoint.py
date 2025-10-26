@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status
+from fastapi.params import Query
 
 from api.core.container import get_product_service
 from api.domain.dtos.product_dto import CreateProductDto, ProductListDto
@@ -12,7 +13,8 @@ router.tags = ["Stripe - Products"]
 @router.get("/", summary="List Products", response_model=ProductListDto)
 async def list_products(
     current_user: CurrentUser,
-    product_service: ProductService = Depends(get_product_service)
+    product_service: ProductService = Depends(get_product_service),
+    active: bool = Query(default=True, description="Filter active products, defaults to True")
 ):
     scope = "tenant" if current_user.tenant_id else "host"
     return await product_service.list_products(scope=scope)

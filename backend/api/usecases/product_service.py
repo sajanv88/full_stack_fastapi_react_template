@@ -12,9 +12,9 @@ class ProductService:
         self.payment_repository: PaymentRepository = payment_repository
         self.stripe_resolver: StripeResolver = stripe_resolver
 
-    async def list_products(self, scope: ScopeType) -> ProductListDto:
+    async def list_products(self, scope: ScopeType, show_active: bool = True) -> ProductListDto:
         sc = await self.stripe_resolver.get_stripe_client(scope=scope)
-        result =  await sc.v1.products.list_async(params={"limit": 100})
+        result =  await sc.v1.products.list_async(params={"limit": 100, "active": show_active})
         return ProductListDto(products=[product for product in result.data],  has_more=result.has_more)
 
     async def create_product(self, product_dto: CreateProductDto, scope: ScopeType):
