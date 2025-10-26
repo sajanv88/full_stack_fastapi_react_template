@@ -27,6 +27,7 @@ from api.usecases.pricing_service import PricingService
 from api.usecases.product_service import ProductService
 from api.usecases.role_service import RoleService
 from api.usecases.storage_settings_service import StorageSettingsService
+from api.usecases.stripe_setting_service import StripeSettingService
 from api.usecases.user_preference_service import UserPreferenceService
 from api.usecases.user_service import UserService
 from api.usecases.tenant_service import TenantService
@@ -112,6 +113,7 @@ container.register(StripeResolver, scope=punq.Scope.singleton)
 container.register(BillingRecordService, scope=punq.Scope.singleton)
 container.register(ProductService, scope=punq.Scope.singleton)
 container.register(PricingService, scope=punq.Scope.singleton)
+container.register(StripeSettingService, scope=punq.Scope.singleton)
 
 
 
@@ -185,5 +187,7 @@ def get_pricing_service() -> PricingService:
 def get_stripe_resolver() -> StripeResolver:
     return container.resolve(StripeResolver)
 
+def get_stripe_setting_service() -> StripeSettingService:
+    return container.resolve(StripeSettingService)
 
 print("Dependency injection container configured.")

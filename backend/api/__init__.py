@@ -24,6 +24,7 @@ from api.interfaces.api_controllers.manage_security_endpoint import router as ma
 from api.interfaces.api_controllers.features_endpoint import router as features_router
 from api.interfaces.api_controllers.product_endpoint import router as product_router
 from api.interfaces.api_controllers.pricing_endpoint import router as pricing_router
+from api.interfaces.api_controllers.billing_endpoint import router as billing_router
 
 from api.common.logging import configure_logging
 from api.core.config import settings
@@ -110,6 +111,7 @@ router.include_router(storage_router)
 router.include_router(ai_router)
 router.include_router(product_router)
 router.include_router(pricing_router)
+router.include_router(billing_router)
 
 app.include_router(router)
 

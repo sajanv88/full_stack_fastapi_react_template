@@ -17,7 +17,7 @@ def get_seed_roles() -> List[Role]:
         Role(
             name=RoleType.ADMIN,
             description="Admin role can give full access to application. Can read, write and delete any resource.",
-            permissions=[Permission.FULL_ACCESS, Permission.MANAGE_STORAGE_SETTINGS, Permission.MANAGE_TENANT_SETTINGS]
+            permissions=[Permission.FULL_ACCESS]
             ),
         Role(
             name=RoleType.USER,
@@ -28,6 +28,11 @@ def get_seed_roles() -> List[Role]:
             name=RoleType.GUEST,
             description="Guest user has read only access to resources.",
             permissions=[Permission.USER_VIEW_ONLY, Permission.ROLE_VIEW_ONLY]
+        ),
+        Role(
+            name=RoleType.BILLING_MANAGER,
+            description="Billing manager can manage billing, payments settings, products and pricing.",
+            permissions=[Permission.MANAGE_BILLING, Permission.MANAGE_PAYMENTS_SETTINGS, Permission.MANAGE_PRODUCTS_AND_PRICING]
         )
     ]
     return roles

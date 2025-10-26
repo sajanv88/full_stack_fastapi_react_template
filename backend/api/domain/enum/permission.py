@@ -24,3 +24,6 @@ class Permission(str, Enum):
     
     MANAGE_TENANT_SETTINGS = "manage:tenant_settings"
 
+    MANAGE_BILLING = "manage:billing"
+    MANAGE_PAYMENTS_SETTINGS = "manage:payments_settings"
+    MANAGE_PRODUCTS_AND_PRICING = "manage:products_and_pricing"

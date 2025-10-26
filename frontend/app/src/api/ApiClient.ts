@@ -15,6 +15,9 @@ import { ManageSecurityService } from './services/ManageSecurityService';
 import { PermissionsService } from './services/PermissionsService';
 import { RolesService } from './services/RolesService';
 import { StorageSettingsService } from './services/StorageSettingsService';
+import { StripeBillingService } from './services/StripeBillingService';
+import { StripePricingService } from './services/StripePricingService';
+import { StripeProductsService } from './services/StripeProductsService';
 import { TenantsService } from './services/TenantsService';
 import { UsersService } from './services/UsersService';
 type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
@@ -29,6 +32,9 @@ export class ApiClient {
   public readonly permissions: PermissionsService;
   public readonly roles: RolesService;
   public readonly storageSettings: StorageSettingsService;
+  public readonly stripeBilling: StripeBillingService;
+  public readonly stripePricing: StripePricingService;
+  public readonly stripeProducts: StripeProductsService;
   public readonly tenants: TenantsService;
   public readonly users: UsersService;
   public readonly request: BaseHttpRequest;
@@ -54,6 +60,9 @@ export class ApiClient {
     this.permissions = new PermissionsService(this.request);
     this.roles = new RolesService(this.request);
     this.storageSettings = new StorageSettingsService(this.request);
+    this.stripeBilling = new StripeBillingService(this.request);
+    this.stripePricing = new StripePricingService(this.request);
+    this.stripeProducts = new StripeProductsService(this.request);
     this.tenants = new TenantsService(this.request);
     this.users = new UsersService(this.request);
   }

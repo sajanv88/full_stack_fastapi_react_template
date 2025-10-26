@@ -12,7 +12,7 @@ class PlanDto(BaseModel):
     interval: str
     interval_count: int
     product: str
-    trial_period_days: int
+    trial_period_days: Optional[int] = None
     usage_type: str
 
 
@@ -32,3 +32,29 @@ class UpdatePlanDto(BaseModel):
     trial_period_days: int
     active: bool = True
     metadata: Optional[Dict[str, Any]] = None
+
+
+class InvoiceDto(BaseModel):
+  id: str
+  amount_country: str
+  account_name: str
+  amount_due: int = 0
+  amount_paid: int = 0
+  amount_remaining: int = 0
+  amount_overpaid: int = 0
+  attempt_count: int = 0
+  attempted: bool = False
+  auto_advance: bool = False
+  billing_reason: str
+  collection_method: str
+  created: int
+  currency: str
+  customer: str
+  customer_name: str
+  status: str
+  total: int
+  receipt_number: Optional[str] = None
+
+class InvoiceListDto(BaseModel):
+    invoices: List[InvoiceDto]
+    has_more: bool = False

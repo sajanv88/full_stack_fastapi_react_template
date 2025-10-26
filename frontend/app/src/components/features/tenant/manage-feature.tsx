@@ -143,7 +143,7 @@ export function ManageFeature({ open, onDismiss }: ManageFeatureTenantDialogProp
 
     return (
         <Dialog open={open} onOpenChange={onCloseDialog}>
-            <DialogContent className="w-full md:max-w-screen-md">
+            <DialogContent className="sm:max-w-screen-md">
                 <DialogTitle>
                     Manage Features for Tenant: {selectedTenant?.tenant.name}
                 </DialogTitle>

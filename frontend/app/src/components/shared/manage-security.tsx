@@ -44,7 +44,7 @@ function PassKeyManagement({ accessToken, shouldRefresh }: PassKeyManagementProp
     }, [shouldRefresh]);
 
     return (
-        <DialogContent className="sm:max-w-3xl w-full">
+        <DialogContent className="sm:max-w-screen-md">
             <DialogHeader>
                 <DialogTitle>
                     List of Registered Passkeys
@@ -81,7 +81,7 @@ function PassKeyManagement({ accessToken, shouldRefresh }: PassKeyManagementProp
                     </TableBody>
                 </Table>
             </section>
-        </DialogContent>
+        </DialogContent >
     )
 }
 

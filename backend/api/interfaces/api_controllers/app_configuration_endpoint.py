@@ -2,15 +2,20 @@
 from fastapi import APIRouter, Depends, status
 
 from api.common.dtos.app_configuration_dto import AppConfigurationDto
+from api.common.exceptions import InvalidOperationException
 from api.common.utils import get_host_main_domain_name, get_logger, get_tenancy_strategy, is_tenancy_enabled
-from api.core.container import   get_passkey_service, get_tenant_service, get_user_preference_service
+from api.core.container import   get_passkey_service, get_stripe_setting_service, get_tenant_service, get_user_preference_service
 from api.core.exceptions import  TenantNotFoundException
+from api.domain.dtos.stripe_setting_dto import CreateStripeSettingDto
 from api.domain.dtos.tenant_dto import TenantDto
 from api.domain.entities.tenant import Tenant
+from api.domain.enum.permission import Permission
 from api.infrastructure.externals.local_ai_model import OllamaModels
-from api.infrastructure.security.current_user import  CurrentUserOptional
+from api.infrastructure.security.current_user import  CurrentUser, CurrentUserOptional
 from api.infrastructure.security.passkey_service import PasskeyService
 from api.interfaces.middlewares.tenant_middleware import get_tenant_id
+from api.interfaces.security.role_checker import check_permissions_for_current_role
+from api.usecases.stripe_setting_service import StripeSettingService
 from api.usecases.tenant_service import TenantService
 from api.usecases.user_preference_service import UserPreferenceService
 from api.core.config import settings
@@ -55,9 +60,6 @@ async def get_app_configuration(
     t = await get_tenant(tenant_service, str(tenant_id))
     current_tenant = TenantDto(**t.model_dump()) if t else None
 
-
-
-
     # Fetch available AI models from Ollama
     available_ai_models = OllamaModels().list_models()
     return AppConfigurationDto(
@@ -74,3 +76,15 @@ async def get_app_configuration(
 
 
 
+@router.post("/stripe", status_code=status.HTTP_201_CREATED)
+async def configure_stripe_setting(
+    configuration: CreateStripeSettingDto,
+    current_user: CurrentUser,
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.MANAGE_PAYMENTS_SETTINGS])),
+    stripe_setting_service: StripeSettingService = Depends(get_stripe_setting_service)
+):
+    if not current_user.tenant_id:
+        raise InvalidOperationException("Tenant context is required to configure Stripe settings.")
+
+    await stripe_setting_service.configure_stripe_settings(settings=configuration, tenant_id=str(current_user.tenant_id))
+    return status.HTTP_201_CREATED

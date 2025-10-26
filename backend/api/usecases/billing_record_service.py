@@ -1,6 +1,6 @@
 from api.common.utils import get_logger
 from api.core.exceptions import BillingRecordException, BillingRecordNotFoundException
-from api.domain.dtos.billing_dto import CreatePlanDto, PlanDto, PlanListDto, UpdatePlanDto
+from api.domain.dtos.billing_dto import CreatePlanDto, InvoiceListDto, PlanDto, PlanListDto, UpdatePlanDto
 from api.domain.entities.stripe_settings import ScopeType
 from api.infrastructure.externals.stripe_resolver import StripeResolver
 from api.infrastructure.persistence.repositories.payment_repository_impl import  PaymentRepository
@@ -58,3 +58,9 @@ class BillingRecordService:
         result = await sc.v1.plans.delete_async(plan=plan_id)
         if result.deleted is False:
             raise BillingRecordException(f"Unable to delete the plan {plan_id}.")
+        
+
+    async def list_invoices(self, scope: ScopeType) -> InvoiceListDto:
+        sc = await self.stripe_resolver.get_stripe_client(scope=scope)
+        result = await sc.v1.invoices.list_async(params={"limit": 100})
+        return InvoiceListDto(invoices=[invoice for invoice in result.data], has_more=result.has_more)
