@@ -9,34 +9,34 @@ import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class StripeService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
   /**
+   * Get Stripe Settings
+   * @returns StripeSettingDto Successful Response
+   * @throws ApiError
+   */
+  public getStripeSettingsApiV1ConfigurationsStripeGet(): CancelablePromise<StripeSettingDto> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/configurations/stripe',
+    });
+  }
+  /**
    * Configure Stripe Setting
    * @returns any Successful Response
    * @throws ApiError
    */
-  public configureStripeSettingApiV1StripeConfigurePost({
+  public configureStripeSettingApiV1ConfigurationsStripePost({
     requestBody,
   }: {
     requestBody: CreateStripeSettingDto,
   }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'POST',
-      url: '/api/v1/stripe/configure',
+      url: '/api/v1/configurations/stripe',
       body: requestBody,
       mediaType: 'application/json',
       errors: {
         422: `Validation Error`,
       },
-    });
-  }
-  /**
-   * Get Stripe Settings
-   * @returns StripeSettingDto Successful Response
-   * @throws ApiError
-   */
-  public getStripeSettingsApiV1StripeGet(): CancelablePromise<StripeSettingDto> {
-    return this.httpRequest.request({
-      method: 'GET',
-      url: '/api/v1/stripe/',
     });
   }
 }

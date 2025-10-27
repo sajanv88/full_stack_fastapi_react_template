@@ -37,14 +37,14 @@ export class StripeProductsService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public createProductApiV1ProductsCreatePost({
+  public createProductApiV1ProductsPost({
     requestBody,
   }: {
     requestBody: CreateProductDto,
   }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'POST',
-      url: '/api/v1/products/create',
+      url: '/api/v1/products/',
       body: requestBody,
       mediaType: 'application/json',
       errors: {
@@ -57,7 +57,7 @@ export class StripeProductsService {
    * @returns void
    * @throws ApiError
    */
-  public updateProductApiV1ProductsProductIdUpdatePatch({
+  public updateProductApiV1ProductsProductIdPatch({
     productId,
     requestBody,
   }: {
@@ -66,7 +66,7 @@ export class StripeProductsService {
   }): CancelablePromise<void> {
     return this.httpRequest.request({
       method: 'PATCH',
-      url: '/api/v1/products/{product_id}/update',
+      url: '/api/v1/products/{product_id}',
       path: {
         'product_id': productId,
       },
@@ -82,14 +82,14 @@ export class StripeProductsService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public deleteProductApiV1ProductsProductIdDeleteDelete({
+  public deleteProductApiV1ProductsProductIdDelete({
     productId,
   }: {
     productId: string,
   }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'DELETE',
-      url: '/api/v1/products/{product_id}/delete',
+      url: '/api/v1/products/{product_id}',
       path: {
         'product_id': productId,
       },

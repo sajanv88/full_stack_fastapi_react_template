@@ -42,8 +42,6 @@ export type { Gender } from './models/Gender';
 export type { HasPasskeysDto } from './models/HasPasskeysDto';
 export type { HealthCheckResponseDto } from './models/HealthCheckResponseDto';
 export type { HTTPValidationError } from './models/HTTPValidationError';
-export type { InvoiceDto } from './models/InvoiceDto';
-export type { InvoiceListDto } from './models/InvoiceListDto';
 export type { MagicLinkResponseDto } from './models/MagicLinkResponseDto';
 export type { MeResponseDto } from './models/MeResponseDto';
 export type { NewSessionResponseDto } from './models/NewSessionResponseDto';

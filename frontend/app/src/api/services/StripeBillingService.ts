@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CreatePlanDto } from '../models/CreatePlanDto';
-import type { InvoiceListDto } from '../models/InvoiceListDto';
 import type { PlanDto } from '../models/PlanDto';
 import type { PlanListDto } from '../models/PlanListDto';
 import type { UpdatePlanDto } from '../models/UpdatePlanDto';
@@ -20,6 +19,26 @@ export class StripeBillingService {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/billing/plans',
+    });
+  }
+  /**
+   * Create a new plan
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public createPlanApiV1BillingPlansPost({
+    requestBody,
+  }: {
+    requestBody: CreatePlanDto,
+  }): CancelablePromise<any> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/api/v1/billing/plans',
+      body: requestBody,
+      mediaType: 'application/json',
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
   /**
@@ -65,31 +84,11 @@ export class StripeBillingService {
     });
   }
   /**
-   * Create a new plan
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public createPlanApiV1BillingPlansCreatePost({
-    requestBody,
-  }: {
-    requestBody: CreatePlanDto,
-  }): CancelablePromise<any> {
-    return this.httpRequest.request({
-      method: 'POST',
-      url: '/api/v1/billing/plans/create',
-      body: requestBody,
-      mediaType: 'application/json',
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Update a existing plan
    * @returns void
    * @throws ApiError
    */
-  public updatePlanApiV1BillingPlansPlanIdUpdatePatch({
+  public updatePlanApiV1BillingPlansPlanIdPatch({
     planId,
     requestBody,
   }: {
@@ -98,7 +97,7 @@ export class StripeBillingService {
   }): CancelablePromise<void> {
     return this.httpRequest.request({
       method: 'PATCH',
-      url: '/api/v1/billing/plans/{plan_id}/update',
+      url: '/api/v1/billing/plans/{plan_id}',
       path: {
         'plan_id': planId,
       },
@@ -107,17 +106,6 @@ export class StripeBillingService {
       errors: {
         422: `Validation Error`,
       },
-    });
-  }
-  /**
-   * List invoices
-   * @returns InvoiceListDto Successful Response
-   * @throws ApiError
-   */
-  public listInvoicesApiV1BillingInvoicesGet(): CancelablePromise<InvoiceListDto> {
-    return this.httpRequest.request({
-      method: 'GET',
-      url: '/api/v1/billing/invoices',
     });
   }
 }

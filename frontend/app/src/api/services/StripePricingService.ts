@@ -14,10 +14,10 @@ export class StripePricingService {
    * @returns PricingListDto Successful Response
    * @throws ApiError
    */
-  public getPricingListApiV1PricingGet(): CancelablePromise<PricingListDto> {
+  public getPricingListApiV1PricesGet(): CancelablePromise<PricingListDto> {
     return this.httpRequest.request({
       method: 'GET',
-      url: '/api/v1/pricing/',
+      url: '/api/v1/prices/',
     });
   }
   /**
@@ -25,14 +25,14 @@ export class StripePricingService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public createPricingApiV1PricingCreatePost({
+  public createPricingApiV1PricesPost({
     requestBody,
   }: {
     requestBody: CreatePricingDto,
   }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'POST',
-      url: '/api/v1/pricing/create',
+      url: '/api/v1/prices/',
       body: requestBody,
       mediaType: 'application/json',
       errors: {
@@ -45,7 +45,7 @@ export class StripePricingService {
    * @returns void
    * @throws ApiError
    */
-  public updatePricingApiV1PricingPriceIdUpdatePatch({
+  public updatePricingApiV1PricesPriceIdPatch({
     priceId,
     requestBody,
   }: {
@@ -54,7 +54,7 @@ export class StripePricingService {
   }): CancelablePromise<void> {
     return this.httpRequest.request({
       method: 'PATCH',
-      url: '/api/v1/pricing/{price_id}/update',
+      url: '/api/v1/prices/{price_id}',
       path: {
         'price_id': priceId,
       },

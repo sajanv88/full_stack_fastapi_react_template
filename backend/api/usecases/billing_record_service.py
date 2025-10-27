@@ -3,13 +3,20 @@ from api.core.exceptions import BillingRecordException, BillingRecordNotFoundExc
 from api.domain.dtos.billing_dto import CreatePlanDto, InvoiceListDto, PlanDto, PlanListDto, UpdatePlanDto
 from api.domain.entities.stripe_settings import ScopeType
 from api.infrastructure.externals.stripe_resolver import StripeResolver
-from api.infrastructure.persistence.repositories.payment_repository_impl import  PaymentRepository
+from api.infrastructure.persistence.repositories.payment_repository_impl import  BillingRecordRepository, PaymentRepository
 
 logger = get_logger(__name__)
 
 class BillingRecordService:
-    def __init__(self, payment_repository: PaymentRepository, stripe_resolver: StripeResolver):
+    def __init__(
+            self, 
+            payment_repository: PaymentRepository,
+            billing_record_repository: BillingRecordRepository,
+            stripe_resolver: StripeResolver
+        ):
+
         self.payment_repository: PaymentRepository = payment_repository
+        self.billing_record_repository: BillingRecordRepository = billing_record_repository
         self.stripe_resolver: StripeResolver = stripe_resolver
 
     async def list_plans(self, scope: ScopeType) -> PlanListDto:
@@ -30,7 +37,6 @@ class BillingRecordService:
             logger.error(f"Error creating plan : {e}")
             raise BillingRecordException(str(e))
 
-
     async def update_plan(self, plan_id: str, update_plan: UpdatePlanDto, scope: ScopeType) -> None:
         try:
             sc = await self.stripe_resolver.get_stripe_client(scope=scope)
@@ -43,7 +49,6 @@ class BillingRecordService:
             logger.error(f"Error updating plan {plan_id}: {e}")
             raise BillingRecordNotFoundException(plan_id)
 
-
     async def get_plan(self, plan_id: str, scope: ScopeType) -> PlanDto:
         try:
             sc = await self.stripe_resolver.get_stripe_client(scope=scope)
@@ -52,14 +57,12 @@ class BillingRecordService:
             logger.error(f"Error retrieving plan {plan_id}: {e}")
             raise BillingRecordNotFoundException(plan_id)
 
-
     async def delete_plan(self, plan_id: str, scope: ScopeType) -> None:
         sc = await self.stripe_resolver.get_stripe_client(scope=scope)
         result = await sc.v1.plans.delete_async(plan=plan_id)
         if result.deleted is False:
             raise BillingRecordException(f"Unable to delete the plan {plan_id}.")
         
-
     async def list_invoices(self, scope: ScopeType) -> InvoiceListDto:
         sc = await self.stripe_resolver.get_stripe_client(scope=scope)
         result = await sc.v1.invoices.list_async(params={"limit": 100})

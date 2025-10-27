@@ -11,30 +11,28 @@ from api.usecases.storage_settings_service import StorageSettingsService
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/storage")
+router = APIRouter(
+    prefix="/storage",
+    dependencies=[
+        Depends(check_permissions_for_current_role(required_permissions=[Permission.MANAGE_STORAGE_SETTINGS]))
+    ]
+)
 router.tags = ["Storage Settings"]
-
-
 
 @router.get("/", response_model=List[AvailableStorageProviderDto])
 async def get_storage_settings(
-    setting_service: StorageSettingsService = Depends(get_storage_settings_service),
-    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.MANAGE_STORAGE_SETTINGS]))
+    setting_service: StorageSettingsService = Depends(get_storage_settings_service)
 ):
     return await setting_service.get_storages()
 
 @router.get("/available", response_model=List[dict[str, str]])
-async def get_available_providers(
-    setting_service: StorageSettingsService = Depends(get_storage_settings_service),
-    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.MANAGE_STORAGE_SETTINGS]))
-):
+async def get_available_providers():
     providers = [{"name": p.value} for p in StorageProvider]
     return providers
 
 @router.post("/configure", status_code=status.HTTP_201_CREATED)
 async def configure_storage(
     configuration: StorageSettingsDto,
-    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.MANAGE_STORAGE_SETTINGS])),
     setting_service: StorageSettingsService = Depends(get_storage_settings_service)
 ):
 

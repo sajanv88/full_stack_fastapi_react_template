@@ -36,12 +36,11 @@ export function StripeProvider({ children }: StripeProviderProps) {
     const [showConfigureStripe, setShowConfigureStripe] = useState(false);
     const featureCheck = useFeatureCheck();
 
-
     const isStripePaymentsFeatureEnabled = featureCheck.requireFeature("stripe");
-    console.log("Is Stripe Payments Feature Enabled:", isStripePaymentsFeatureEnabled);
+    
     async function fetchConfiguredStripeSetting() {
         try {
-            const setting = await getApiClient(accessToken).stripe.getStripeSettingsApiV1StripeGet();
+            const setting = await getApiClient(accessToken).stripe.getStripeSettingsApiV1ConfigurationsStripeGet();
             setConfiguredStripeSetting(setting);
         } catch (error) {
             console.error("Error fetching configured Stripe setting:", error);
@@ -62,7 +61,7 @@ export function StripeProvider({ children }: StripeProviderProps) {
         if (!accessToken || !isStripePaymentsFeatureEnabled) return;
         try {
             setLoading(true);
-            await getApiClient(accessToken).stripe.configureStripeSettingApiV1StripeConfigurePost({
+            await getApiClient(accessToken).stripe.configureStripeSettingApiV1ConfigurationsStripePost({
                 requestBody: data
             });
             await fetchConfiguredStripeSetting();
