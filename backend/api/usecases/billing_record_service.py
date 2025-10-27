@@ -67,3 +67,11 @@ class BillingRecordService:
         sc = await self.stripe_resolver.get_stripe_client(scope=scope)
         result = await sc.v1.invoices.list_async(params={"limit": 100})
         return InvoiceListDto(invoices=[invoice for invoice in result.data], has_more=result.has_more)
+    
+    async def create_host_check_out_session(self) -> str:
+        """
+        Create a Stripe checkout session for the host scope.
+        """
+        sc = await self.stripe_resolver.get_stripe_client(scope="host")
+        pass
+

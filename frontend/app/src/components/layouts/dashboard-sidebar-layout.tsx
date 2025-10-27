@@ -23,7 +23,7 @@ import {
     Tent,
     Cog
 } from 'lucide-react';
-import { IconMoneybag, IconSettingsBolt } from "@tabler/icons-react"
+import { IconSettingsBolt, IconCurrencyEuro } from "@tabler/icons-react"
 import { useAuthContext } from '../providers/auth-provider';
 import { useMemo } from 'react';
 import { cn, getApiClient } from '@/lib/utils';
@@ -40,7 +40,7 @@ const navLinks = [
         icon: Cog,
         children: [
             { href: "/settings/general", label: "General", icon: IconSettingsBolt },
-            { href: "/settings/payment", label: "Payment", icon: IconMoneybag },
+            { href: "/settings/payment", label: "Payment", icon: IconCurrencyEuro },
         ]
     },
 ];
@@ -48,6 +48,7 @@ const navLinks = [
 const bottomLinks = [
     { href: "/profile", label: "Profile", icon: User },
     { href: "/ai", label: "AI Chat", icon: MessageSquare },
+    { href: "/billing", label: "Billing", icon: IconCurrencyEuro },
 ];
 
 type LinkType = typeof navLinks[number];
@@ -65,7 +66,7 @@ export function DashboardSidebar() {
             const basePath = href.split('?')[0];
             return pathname === basePath;
         }
-        return pathname === href;
+        return pathname.includes(href);
     };
 
     async function logout() {

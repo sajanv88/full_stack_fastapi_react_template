@@ -5,6 +5,7 @@ import { getApiClient } from "@/lib/utils";
 import { toast } from "sonner";
 import { FeatureDisabledNotice } from "../shared/feature-disabled";
 import { useFeatureCheck } from "@/hooks/use-feature-check";
+import { useAppConfig } from "./app-config-provider";
 
 
 interface StripeProviderState {
@@ -13,6 +14,7 @@ interface StripeProviderState {
     loading: boolean;
     onRefreshStripeSetting: () => Promise<void>;
     showConfigureStripe: boolean;
+    stripeConfigurationError: boolean;
 }
 
 const initialStripeProviderState: StripeProviderState = {
@@ -21,6 +23,7 @@ const initialStripeProviderState: StripeProviderState = {
     loading: true,
     onRefreshStripeSetting: async () => { },
     showConfigureStripe: false,
+    stripeConfigurationError: false,
 }
 
 const StripeContext = createContext<StripeProviderState>(initialStripeProviderState);
@@ -31,13 +34,15 @@ interface StripeProviderProps {
 
 export function StripeProvider({ children }: StripeProviderProps) {
     const { accessToken } = useAuthContext();
+    const { current_tenant } = useAppConfig();
     const [configuredStripeSetting, setConfiguredStripeSetting] = useState<StripeSettingDto | null>(null);
     const [loading, setLoading] = useState(true);
     const [showConfigureStripe, setShowConfigureStripe] = useState(false);
     const featureCheck = useFeatureCheck();
+    const [stripeConfigurationError, setStripeConfigurationError] = useState<boolean>(false);
 
     const isStripePaymentsFeatureEnabled = featureCheck.requireFeature("stripe");
-    
+
     async function fetchConfiguredStripeSetting() {
         try {
             const setting = await getApiClient(accessToken).stripe.getStripeSettingsApiV1ConfigurationsStripeGet();
@@ -45,6 +50,7 @@ export function StripeProvider({ children }: StripeProviderProps) {
         } catch (error) {
             console.error("Error fetching configured Stripe setting:", error);
             setShowConfigureStripe(true);
+            setStripeConfigurationError(true);
         } finally {
             setLoading(false);
         }
@@ -52,10 +58,16 @@ export function StripeProvider({ children }: StripeProviderProps) {
 
 
     useEffect(() => {
-        if (accessToken && isStripePaymentsFeatureEnabled) {
+        if (accessToken && isStripePaymentsFeatureEnabled && current_tenant) {
             fetchConfiguredStripeSetting();
         }
     }, [accessToken, isStripePaymentsFeatureEnabled]);
+
+    useEffect(() => {
+        if (!current_tenant) {
+            setLoading(false);
+        }
+    }, [current_tenant])
 
     const onConfigureStripe = useCallback(async (data: CreateStripeSettingDto) => {
         if (!accessToken || !isStripePaymentsFeatureEnabled) return;
@@ -88,7 +100,8 @@ export function StripeProvider({ children }: StripeProviderProps) {
             configuredStripeSetting,
             loading,
             onRefreshStripeSetting,
-            showConfigureStripe
+            showConfigureStripe,
+            stripeConfigurationError
         }}>
             {children}
         </StripeContext.Provider>
