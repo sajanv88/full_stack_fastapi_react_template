@@ -17,6 +17,7 @@ import { RolesService } from './services/RolesService';
 import { StorageSettingsService } from './services/StorageSettingsService';
 import { StripeService } from './services/StripeService';
 import { StripeBillingService } from './services/StripeBillingService';
+import { StripeInvoicesService } from './services/StripeInvoicesService';
 import { StripePricingService } from './services/StripePricingService';
 import { StripeProductsService } from './services/StripeProductsService';
 import { TenantsService } from './services/TenantsService';
@@ -35,6 +36,7 @@ export class ApiClient {
   public readonly storageSettings: StorageSettingsService;
   public readonly stripe: StripeService;
   public readonly stripeBilling: StripeBillingService;
+  public readonly stripeInvoices: StripeInvoicesService;
   public readonly stripePricing: StripePricingService;
   public readonly stripeProducts: StripeProductsService;
   public readonly tenants: TenantsService;
@@ -64,6 +66,7 @@ export class ApiClient {
     this.storageSettings = new StorageSettingsService(this.request);
     this.stripe = new StripeService(this.request);
     this.stripeBilling = new StripeBillingService(this.request);
+    this.stripeInvoices = new StripeInvoicesService(this.request);
     this.stripePricing = new StripePricingService(this.request);
     this.stripeProducts = new StripeProductsService(this.request);
     this.tenants = new TenantsService(this.request);

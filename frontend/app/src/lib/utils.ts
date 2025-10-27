@@ -24,7 +24,20 @@ export function getTenant(): TenantDto | null {
 }
 
 
+export function formatPrice(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(amount / 100);
+};
 
+export function formatDate(timestamp: number) {
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(timestamp * 1000));
+};
 
 
 export function getApiClient(accessToken?: string) {

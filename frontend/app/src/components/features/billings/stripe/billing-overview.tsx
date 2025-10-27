@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useStripeProvider } from "@/components/providers/stripe-provider";
 import { useAuthContext } from "@/components/providers/auth-provider";
-import { getApiClient } from "@/lib/utils";
+import { formatPrice, getApiClient } from "@/lib/utils";
 import { PlanDto } from "@/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,13 +56,7 @@ export function BillingOverview() {
         }
     }, [accessToken, current_tenant, configuredStripeSetting]);
 
-    const formatPrice = (amount: number, currency?: string) => {
-        const curr = currency || "EUR";
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: curr.toUpperCase(),
-        }).format(amount / 100);
-    };
+
 
     const formatInterval = (interval: string, count: number) => {
         const unit = count > 1 ? `${count} ${interval}s` : interval;
@@ -189,7 +183,7 @@ export function BillingOverview() {
                                                     </Badge>
                                                 </div>
                                                 <CardTitle className="text-xl">
-                                                    {formatPrice(plan.amount, plan.currency)}
+                                                    {formatPrice(plan.amount, plan.currency || 'EUR')}
                                                 </CardTitle>
                                                 <CardDescription className="text-xs mt-1">
                                                     {formatInterval(plan.interval, plan.interval_count)}
