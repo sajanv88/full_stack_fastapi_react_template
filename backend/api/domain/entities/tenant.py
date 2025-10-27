@@ -83,6 +83,7 @@ class Feature(BaseModel):
 
 
 
+
 class Tenant(Document):
     name: str = Indexed(str, unique=True)
     subdomain: Subdomain | None = None

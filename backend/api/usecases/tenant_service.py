@@ -105,14 +105,20 @@ class TenantService:
         tenant_features = [FeatureDto(name=feature.name, enabled=feature.enabled) for feature in tenant.features]
         logger.debug(f"Tenant features for tenant {tenant_id}: {tenant_features}")
         
+        # Check if any features are added in the enum that are not present in tenant features
         if len(all_features) > len(tenant_features):
             logger.debug(f"Some features are not set for tenant {tenant_id}, adding missing features as disabled.")
             available_features: List[FeatureDto] = []
-            for feature in all_features:
+            for all_feature in all_features:
                 for tenant_feature in tenant_features:
-                    if feature.name != tenant_feature.name:
-                        available_features.append(FeatureDto(name=feature.name, enabled=False))
+                    if all_feature.name == tenant_feature.name:
+                        # Feature exists in tenant, add it as is
+                        available_features.append(tenant_feature)
                         break
+                else:
+                    # Feature not found in tenant, add it as enabled=False by default
+                    available_features.append(FeatureDto(name=all_feature.name, enabled=False))
             return available_features
         
+        # Return tenant features if all features are already set
         return tenant_features
