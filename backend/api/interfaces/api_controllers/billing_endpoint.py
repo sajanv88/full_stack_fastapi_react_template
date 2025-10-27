@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, status
 
+from api.common.utils import get_logger
 from api.core.container import get_billing_record_service
 from api.domain.dtos.billing_dto import CreatePlanDto,  PlanDto, PlanListDto, UpdatePlanDto
 from api.infrastructure.security.current_user import CurrentUser, CurrentUserOptional
 from api.usecases.billing_record_service import BillingRecordService
 
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/billing")
 router.tags = ["Stripe - Billing"]
@@ -18,6 +20,7 @@ async def list_plans(
     if current_user_optional and current_user_optional.tenant_id:
         scope = "tenant"
     
+    logger.debug(f"Listing plans for scope: {scope}")
     return await billing_service.list_plans(scope=scope)
 
 @router.get("/plans/{plan_id:path}", summary="Retrieve a plan details", response_model=PlanDto)

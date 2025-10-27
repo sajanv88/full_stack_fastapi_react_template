@@ -9,6 +9,7 @@ from api.common.utils import get_logger, is_tenancy_enabled
 from api.core.container import container
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
 from api.infrastructure.persistence.mongodb import Database
+from api.interfaces.middlewares.redis_cache_middleware import RedisCacheMiddleware
 from api.interfaces.middlewares.tenant_middleware import TenantMiddleware
 from api.interfaces.api_controllers.account_endpoint import router as account_router
 from api.interfaces.api_controllers.user_endpoint import router as user_router
@@ -78,6 +79,7 @@ async def api_exception_handler(req: Request, ex: ApiBaseException) -> JSONRespo
         content={"error": ex.message, "code": status_code}
     )
 
+app.add_middleware(RedisCacheMiddleware)
 
 if is_tenancy_enabled(): 
     app.add_middleware(TenantMiddleware)
