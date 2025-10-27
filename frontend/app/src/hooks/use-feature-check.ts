@@ -8,6 +8,7 @@ export function useFeatureCheck() {
     const { can } = useAuthContext();
     const hostManageTenants = can("host:manage_tenants");
     const isFeatureEnabled = useCallback((feature: Feature) => {
+
         if (hostManageTenants) {
             return true;
         }
@@ -19,11 +20,11 @@ export function useFeatureCheck() {
             return false;
         }
 
-        for (const f of current_tenant.features) {
-            if (f.name === feature && f.enabled) {
+        const onlyEnabledFeatures = current_tenant?.features?.filter(f => f.enabled).map(f => f.name) || [];
+        for (const f of onlyEnabledFeatures) {
+            if (f.toLowerCase() === feature.toLowerCase()) {
                 return true
             }
-            break
         }
         return false;
     }, [current_tenant, hostManageTenants]);

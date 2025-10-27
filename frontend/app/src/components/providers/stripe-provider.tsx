@@ -37,7 +37,8 @@ export function StripeProvider({ children }: StripeProviderProps) {
     const featureCheck = useFeatureCheck();
 
 
-    const isStripePaymentsFeatureEnabled = featureCheck.requireFeature("stripe_payments");
+    const isStripePaymentsFeatureEnabled = featureCheck.requireFeature("stripe");
+    console.log("Is Stripe Payments Feature Enabled:", isStripePaymentsFeatureEnabled);
     async function fetchConfiguredStripeSetting() {
         try {
             const setting = await getApiClient(accessToken).stripe.getStripeSettingsApiV1StripeGet();

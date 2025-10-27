@@ -3,6 +3,10 @@ import { getApiClient, setTenant } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useAuthContext } from "./auth-provider";
 
+
+export const AppConfigMessage = {
+    type: "RELOAD_APP_CONFIG"
+}
 interface Configuration extends AppConfigurationDto {
     reloadAppConfig: () => Promise<void>;
     shouldShowTenantSelection?: boolean;
@@ -48,7 +52,6 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
     const [shouldShowTenantSelection, setShouldShowTenantSelection] = useState(false);
 
     const reloadAppConfig = useCallback(async function reloadAppConfig() {
-        if (!accessToken) return;
         const config = await getApiClient(accessToken).appConfiguration.getAppConfigurationApiV1AppConfigurationGet();
         setAppConfig(config)
 

@@ -1,3 +1,4 @@
+from typing import List
 from beanie import PydanticObjectId
 
 from api.common.utils import get_logger, validate_password
@@ -5,6 +6,7 @@ from api.core.exceptions import TenantNotFoundException
 from api.domain.dtos.tenant_dto import CreateTenantDto, FeatureDto, TenantListDto, UpdateTenantDto
 from api.domain.entities.tenant import Feature, Tenant
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
+from api.domain.enum.feature import Feature as FeatureEnum
 
 logger = get_logger(__name__)
 
@@ -88,3 +90,29 @@ class TenantService:
         tenant.is_active = data.is_active
         await self.tenant_repository.update(tenant_id, tenant.model_dump(exclude_none=True))
 
+
+    async def get_features_by_tenant_id(self, tenant_id: str) -> List[FeatureDto]:
+        """
+            Get features for a tenant by ID.
+            Raises 
+                TenantNotFoundException if tenant not found.
+        """
+        tenant = await self.get_tenant_by_id(tenant_id)
+        all_features = [FeatureDto(name=name, enabled=False) for name in FeatureEnum]
+        if len(tenant.features) == 0:
+            return all_features
+
+        tenant_features = [FeatureDto(name=feature.name, enabled=feature.enabled) for feature in tenant.features]
+        logger.debug(f"Tenant features for tenant {tenant_id}: {tenant_features}")
+        
+        if len(all_features) > len(tenant_features):
+            logger.debug(f"Some features are not set for tenant {tenant_id}, adding missing features as disabled.")
+            available_features: List[FeatureDto] = []
+            for feature in all_features:
+                for tenant_feature in tenant_features:
+                    if feature.name != tenant_feature.name:
+                        available_features.append(FeatureDto(name=feature.name, enabled=False))
+                        break
+            return available_features
+        
+        return tenant_features

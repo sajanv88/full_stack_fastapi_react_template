@@ -41,7 +41,6 @@ const authContext = createContext<AuthProviderState>({
 
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-
     const [isLoggedInState, setIsLoggedInState] = useState<boolean>(false);
     const [user, setUser] = useState<MeResponseDto | null>(null);
     const [accessToken, setAccessToken] = useState<string>("");
@@ -194,14 +193,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const worker = new Worker(new URL('../../worker.ts', import.meta.url));
-        worker.addEventListener("message", (event: MessageEvent<TokenSetDto | { message: string; code: number }>) => {
+        worker.addEventListener("message", (event: MessageEvent<TokenSetDto | { type: string } | { message: string; code: number }>) => {
+            console.log("AuthProvider received message from worker:", event.data);
             if (event.data && 'access_token' in event.data) {
                 setAccessToken(event.data.access_token);
-            } else if (event.data && 'code' in event.data && event.data.code === 401 || event.data.code === 400) {
-                setIsLoggedInState(false);
-                setUser(null);
-                setAccessToken("");
-                navigate("/login");
+            } else if (event.data && 'code' in event.data) {
+                if (event.data.code === 401 || event.data.code === 400) {
+                    setIsLoggedInState(false);
+                    setUser(null);
+                    setAccessToken("");
+                    navigate("/login");
+                }
             }
 
         });

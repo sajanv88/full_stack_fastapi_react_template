@@ -13,7 +13,6 @@ from api.infrastructure.security.current_user import CurrentUser
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.tenant_service import TenantService
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation, handle_post_tenant_deletion, handle_tenant_dns_update
-from api.domain.enum.feature import Feature as FeatureEnum
 
 logger = get_logger(__name__)
 
@@ -226,11 +225,9 @@ async def get_tenant_features(
     tenant_service: TenantService = Depends(get_tenant_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS]))
 ):
-    tenant = await tenant_service.get_tenant_by_id(tenant_id)
-    if len(tenant.features) == 0:
-        return [FeatureDto(name=name, enabled=False) for name in FeatureEnum]
+    return await tenant_service.get_features_by_tenant_id(tenant_id)
     
-    return [FeatureDto(name=feature.name, enabled=feature.enabled) for feature in tenant.features]
+
 
 
 @router.patch("/{tenant_id}/update_feature", response_model=UpdateTenantResponseDto, status_code=status.HTTP_200_OK)

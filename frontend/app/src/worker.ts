@@ -31,3 +31,5 @@ setInterval(async () => {
     }
     self.postMessage(data);
 }, pollingDelayInMilliSeconds);
+
+
