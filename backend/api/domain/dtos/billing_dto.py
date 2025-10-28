@@ -1,6 +1,8 @@
 from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
+from api.domain.entities.stripe_settings import ActorType, PaymentType, ScopeType, StatusType
+
 
 class PlanDto(BaseModel):
     id: str
@@ -58,3 +60,34 @@ class InvoiceDto(BaseModel):
 class InvoiceListDto(BaseModel):
     invoices: List[InvoiceDto]
     has_more: bool = False
+
+
+
+# Billing Record stored in our system
+class BillingRecordDto(BaseModel):
+    scope: ScopeType
+    actor: ActorType
+    user_id: Optional[str] = None
+    payment_type: PaymentType
+    currency: str
+    amount: Optional[int] = None
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
+    stripe_session_id: Optional[str] = None
+    product_id: Optional[str] = None
+    price_id: Optional[str] = None
+    status: StatusType
+    current_period_end: Optional[int] = None
+    canceled_at: Optional[int] = None
+    cancellation_reason: Optional[str] = None
+    metadata: Optional[Dict[str, str]] = None
+
+class BillingRecordListDto(BaseModel):
+    billing_records: List[BillingRecordDto]
+    skip: int
+    limit: int
+    total: int
+    hasPrevious: bool
+    hasNext: bool
+
+

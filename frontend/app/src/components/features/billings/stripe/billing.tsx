@@ -19,6 +19,9 @@ export function Billing() {
                     <TabsTrigger asChild value="/billing/products" className="w-full">
                         <NavLink to="/billing/products">Products</NavLink>
                     </TabsTrigger>
+                    <TabsTrigger asChild value="/billing/checkouts" className="w-full">
+                        <NavLink to="/billing/checkouts?skip=0&limit=100">Checkouts</NavLink>
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value={pathname}>
                     <Outlet />

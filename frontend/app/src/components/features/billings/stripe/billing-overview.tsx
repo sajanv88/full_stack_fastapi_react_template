@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { ShowScreenLoader } from "@/components/shared/show-screen-loader";
-import { ConfigureStripeNow } from "./configure-stripe-now";
+import { ConfigureStripeNow } from "@/components/features/billings/stripe/configure-stripe-now";
 
 export function BillingOverview() {
     const { configuredStripeSetting, loading: stripeLoading, stripeConfigurationError } = useStripeProvider();

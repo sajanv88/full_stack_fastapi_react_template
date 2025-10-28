@@ -1,9 +1,9 @@
-from typing import Optional
+
 from api.common.base_repository import BaseRepository
 from api.common.utils import get_logger
 from api.core.exceptions import StripeSettingsNotFoundException
 from api.domain.dtos.stripe_setting_dto import CreateStripeSettingDto
-from api.domain.entities.stripe_settings import BillingRecord, StripeSettings
+from api.domain.entities.stripe_settings import  StripeSettings
 
 logger = get_logger(__name__)
 
@@ -52,10 +52,7 @@ class StripeSettingsRepository(BaseRepository[StripeSettings]):
             raise StripeSettingsNotFoundException("Stripe settings not found.")
     
 
-class BillingRecordRepository(BaseRepository[BillingRecord]):
-    def __init__(self):
-        super().__init__(BillingRecord)
-    
+
 
 class PaymentRepository(StripeSettingsRepository):
     pass

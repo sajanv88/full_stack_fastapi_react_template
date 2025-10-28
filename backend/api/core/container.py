@@ -3,10 +3,11 @@ from api.domain.interfaces.email_service import IEmailService
 from api.infrastructure.externals.coolify_app import CoolifyApp
 from api.infrastructure.externals.dns_resolver import DnsResolver
 from api.infrastructure.externals.smtp_email import SmtpEmail
+
 from api.infrastructure.externals.stripe_resolver import StripeResolver
 from api.infrastructure.persistence.repositories.chat_history_ai_repository_impl import ChatHistoryAIRepository
 from api.infrastructure.persistence.repositories.chat_session_ai_repository_impl import ChatSessionAIRepository
-from api.infrastructure.persistence.repositories.payment_repository_impl import BillingRecordRepository, PaymentRepository, StripeSettingsRepository
+from api.infrastructure.persistence.repositories.payment_repository_impl import PaymentRepository, StripeSettingsRepository
 from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
 from api.infrastructure.persistence.repositories.storage_settings_repository_impl import StorageSettingsRepository
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
@@ -15,6 +16,8 @@ from api.infrastructure.persistence.repositories.user_passkey_repository_impl im
 from api.infrastructure.persistence.repositories.user_password_reset_repository_impl import UserPasswordResetRepository
 from api.infrastructure.persistence.repositories.user_preference_repository_impl import UserPreferenceRepository
 from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
+from api.infrastructure.persistence.repositories.billing_record_repository_impl import BillingRecordRepository
+
 from api.infrastructure.security.jwt_token_service import JwtTokenService
 from api.infrastructure.security.passkey_service import PasskeyService
 from api.usecases.billing_record_service import BillingRecordService
@@ -31,6 +34,7 @@ from api.usecases.stripe_setting_service import StripeSettingService
 from api.usecases.user_preference_service import UserPreferenceService
 from api.usecases.user_service import UserService
 from api.usecases.tenant_service import TenantService
+
 from api.infrastructure.persistence.mongodb import Database, mongo_client
 
 container = punq.Container()

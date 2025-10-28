@@ -1,9 +1,10 @@
 from api.common.utils import get_logger
 from api.core.exceptions import BillingRecordException, BillingRecordNotFoundException
-from api.domain.dtos.billing_dto import CreatePlanDto, InvoiceListDto, PlanDto, PlanListDto, UpdatePlanDto
+from api.domain.dtos.billing_dto import BillingRecordListDto, CreatePlanDto, InvoiceListDto, PlanDto, PlanListDto, UpdatePlanDto
 from api.domain.entities.stripe_settings import ScopeType
 from api.infrastructure.externals.stripe_resolver import StripeResolver
-from api.infrastructure.persistence.repositories.payment_repository_impl import  BillingRecordRepository, PaymentRepository
+from api.infrastructure.persistence.repositories.billing_record_repository_impl import BillingRecordRepository
+from api.infrastructure.persistence.repositories.payment_repository_impl import PaymentRepository
 
 logger = get_logger(__name__)
 
@@ -75,3 +76,9 @@ class BillingRecordService:
         sc = await self.stripe_resolver.get_stripe_client(scope="host")
         pass
 
+
+    async def list_checkout_records(self, skip: int = 0, limit: int = 100) -> BillingRecordListDto:
+        """
+            List checkout records
+        """
+        return await self.billing_record_repository.list(skip=skip, limit=limit)

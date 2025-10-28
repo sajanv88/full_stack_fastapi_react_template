@@ -28,6 +28,7 @@ import { BillingOverview } from "@/components/features/billings/stripe/billing-o
 import { Billing } from "@/components/features/billings/stripe/billing";
 import { Invoices } from "@/components/features/billings/stripe/invoices";
 import { Products } from "@/components/features/billings/stripe/products";
+import { CheckoutOverview } from "@/components/features/billings/stripe/checkout-overview";
 
 function App() {
   const { user } = useAuthContext();
@@ -90,6 +91,7 @@ function App() {
           <Route index element={<BillingOverview />} />
           <Route path="invoices" element={<Invoices />} />
           <Route path="products" element={<Products />} />
+          <Route path="checkouts" element={<CheckoutOverview />} />
         </Route>
 
         <Route path="profile" element={<Profile />} />

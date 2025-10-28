@@ -39,6 +39,16 @@ export function formatDate(timestamp: number) {
   }).format(new Date(timestamp * 1000));
 };
 
+export function formatDateWithHourAndMinute(timestamp: number | null | undefined) {
+  if (timestamp == null) return "N/A";
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(timestamp * 1000));
+};
 
 export function getApiClient(accessToken?: string) {
   // console.log("Getting API client with access token:", accessToken);
