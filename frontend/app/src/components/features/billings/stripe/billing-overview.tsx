@@ -21,6 +21,7 @@ import {
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { ShowScreenLoader } from "@/components/shared/show-screen-loader";
 import { ConfigureStripeNow } from "@/components/features/billings/stripe/configure-stripe-now";
+import { AddANewPlan } from "./add-a-new-plan";
 
 export function BillingOverview() {
     const { configuredStripeSetting, loading: stripeLoading, stripeConfigurationError } = useStripeProvider();
@@ -98,7 +99,7 @@ export function BillingOverview() {
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-start justify-between">
-                <div>
+                <div className="flex-1">
                     <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                         <TrendingUp className="h-6 w-6" />
                         Billing Overview
@@ -107,10 +108,13 @@ export function BillingOverview() {
                         View and manage your billing plans and subscription details
                     </p>
                 </div>
-                <Button onClick={fetchPlans} variant="outline" size="sm">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Refresh
-                </Button>
+                <div className="flex items-center space-x-2">
+                    <Button onClick={fetchPlans} variant="outline" size="sm">
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Refresh
+                    </Button>
+                    <AddANewPlan onPlanCreated={fetchPlans} />
+                </div>
             </div>
 
 
@@ -128,6 +132,7 @@ export function BillingOverview() {
                                 {plans.length} {plans.length === 1 ? "plan" : "plans"} configured
                                 {hasMore && " (showing partial results)"}
                             </CardDescription>
+
                         </div>
                     </div>
                 </CardHeader>

@@ -9,12 +9,12 @@ export function cn(...inputs: ClassValue[]) {
 export function setTenant(tenant: TenantDto | null) {
   if (!tenant) {
     localStorage.removeItem("_tenant");
-    window.dispatchEvent(new Event("tenant_removed"));
+    // window.dispatchEvent(new Event("tenant_removed"));
 
     return;
   }
   localStorage.setItem("_tenant", JSON.stringify(tenant));
-  window.dispatchEvent(new Event("tenant_set"));
+  // window.dispatchEvent(new Event("tenant_set"));
 
 }
 

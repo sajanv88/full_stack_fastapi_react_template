@@ -28,7 +28,7 @@ export function Roles() {
         refreshRoles();
     }
     return (
-        <section>
+        <section className="w-full 2xl:container 2xl:mx-auto ">
             <PageHeader title="Roles" subtitle="Manage your roles"
                 cta={{
                     label: "Add Role",

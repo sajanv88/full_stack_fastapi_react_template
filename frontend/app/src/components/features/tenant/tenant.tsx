@@ -20,7 +20,7 @@ export function Tenants() {
         onSelectTenant();
     }
     return (
-        <section>
+        <section className="w-full 2xl:container 2xl:mx-auto ">
             <PageHeader title="Tenants" subtitle="Manage your tenants" cta={{
                 label: "Add Tenant",
                 onClick: () => setIsCreateNewTenantDialogOpen(true),

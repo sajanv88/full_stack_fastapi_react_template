@@ -11,7 +11,7 @@ export function Billing() {
             <Tabs defaultValue={pathname} className="w-full xl:container xl:mx-auto xl:max-w-4xl">
                 <TabsList className="mb-2 border-b pb-2 flex">
                     <TabsTrigger asChild value="/billing" className="w-full">
-                        <NavLink to="/billing">Overview</NavLink>
+                        <NavLink to="/billing" >Overview</NavLink>
                     </TabsTrigger>
                     <TabsTrigger asChild value="/billing/invoices" className="w-full">
                         <NavLink to="/billing/invoices">Invoices</NavLink>

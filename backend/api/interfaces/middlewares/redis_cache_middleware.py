@@ -14,6 +14,13 @@ logger = get_logger(__name__)
 redis_cache_expiry = 300  # Cache expiry time in seconds (5 minutes)
 redis: Redis =  from_url(url=settings.redis_uri, decode_responses=True)
 
+not_allowed_cache_paths = [
+    "/api/v1/account/login",
+    "/api/v1/account/register",
+    "/api/v1/account/refresh_token",
+    "/api/v1/app_configuration/",
+]
+
 class RedisCacheMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, expiry: int = redis_cache_expiry):
         super().__init__(app)
@@ -21,6 +28,10 @@ class RedisCacheMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
        
+        if any(request.url.path.endswith(path) for path in not_allowed_cache_paths):
+            logger.debug(f"Bypassing cache for path: {request.url.path}")
+            return await call_next(request)
+            
         try:
             token = None
             if "authorization" in request.headers:
