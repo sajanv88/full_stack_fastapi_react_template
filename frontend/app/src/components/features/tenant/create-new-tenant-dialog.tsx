@@ -116,7 +116,7 @@ export function CreateNewTenantDialog({ open, onDismiss }: CreateNewTenantDialog
     const subdomainError = form.formState.errors.subdomain?.message;
     return (
         <Dialog open={open} onOpenChange={onDismissDialog}>
-            <DialogContent className="sm:max-w-screen-md">
+            <DialogContent>
                 <DialogHeader >
                     <DialogTitle className="text-2xl font-bold mb-4">Create New Tenant</DialogTitle>
                     <DialogDescription className="mb-6">

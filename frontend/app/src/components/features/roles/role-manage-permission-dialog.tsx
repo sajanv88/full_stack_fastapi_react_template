@@ -48,7 +48,7 @@ export function RoleManagePermissionDialog({ open, onDismiss }: RoleManagePermis
     }
     return (
         <Dialog open={open} onOpenChange={onDismissHandler}>
-            <DialogContent className="sm:max-w-screen-md">
+            <DialogContent>
                 <DialogTitle>Manage Permissions</DialogTitle>
                 <DialogDescription>
                     Here you can manage the permissions for this role.

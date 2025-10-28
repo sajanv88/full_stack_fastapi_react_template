@@ -86,7 +86,7 @@ export function UserEditDialog({ open, onDismiss }: UserEditDialogProps) {
     return (
 
         <Dialog open={open} onOpenChange={onDismissDialog} modal>
-            <DialogContent className="sm:max-w-screen-md">
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Edit New User</DialogTitle>
 

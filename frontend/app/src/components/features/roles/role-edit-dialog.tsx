@@ -86,7 +86,7 @@ export function RoleEditDialog({ open, onDismiss }: RoleEditDialogProps) {
     return (
 
         <Dialog open={open} onOpenChange={onDismissDialog} modal>
-            <DialogContent className="sm:max-w-screen-md">
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Edit Role</DialogTitle>
 

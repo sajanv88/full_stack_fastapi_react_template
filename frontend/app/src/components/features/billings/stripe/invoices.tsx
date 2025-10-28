@@ -18,11 +18,11 @@ import {
     AlertCircle,
 } from "lucide-react";
 import { IconCurrencyEuro, IconReceiptEuro } from "@tabler/icons-react"
-import { Loading } from "@/components/shared/loading";
 import { useStripeProvider } from "@/components/providers/stripe-provider";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { NavLink } from "react-router";
+import { ShowScreenLoader } from "@/components/shared/show-screen-loader";
+import { ConfigureStripeNow } from "./configure-stripe-now";
 
 export function Invoices() {
     const { configuredStripeSetting, loading: stripeLoading, stripeConfigurationError } = useStripeProvider();
@@ -103,14 +103,7 @@ export function Invoices() {
     };
 
     if ((stripeLoading || loading) && !stripeConfigurationError) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="flex flex-col items-center gap-4">
-                    <Loading variant="dots" />
-                    <p className="text-sm text-muted-foreground">Loading invoices...</p>
-                </div>
-            </div>
-        );
+        return <ShowScreenLoader message="Loading invoices..." />
     }
 
 
@@ -128,17 +121,7 @@ export function Invoices() {
 
     // This check is to prompt user to configure Stripe if there is a configuration error for the tenant
     if (stripeConfigurationError && current_tenant) {
-        return (
-            <Alert variant="destructive">
-                <IconReceiptEuro className="h-4 w-4" />
-                <AlertDescription>
-                    Please configure Stripe settings to view billing information.
-                    <NavLink to="/settings/payment" className="text-primary underline hover:text-primary/80 ml-1">
-                        Configure Now
-                    </NavLink>
-                </AlertDescription>
-            </Alert>
-        );
+        return <ConfigureStripeNow />
     }
 
     return (

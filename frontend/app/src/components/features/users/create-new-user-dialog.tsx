@@ -93,7 +93,7 @@ export function CreateNewUserDialog({ open, onDismiss }: CreateNewUserDialogProp
     return (
 
         <Dialog open={open} onOpenChange={onDismissDialog} modal>
-            <DialogContent className="sm:max-w-screen-md">
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Create New User</DialogTitle>
                     <DialogDescription>

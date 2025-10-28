@@ -24,7 +24,7 @@ async def list_products(
     active: bool = Query(default=True, description="Filter active products, defaults to True")
 ):
     scope = "tenant" if current_user.tenant_id else "host"
-    return await product_service.list_products(scope=scope)
+    return await product_service.list_products(scope=scope, show_active=active)
 
 @router.post("/", summary="Create a Product", status_code=status.HTTP_201_CREATED)
 async def create_product(
