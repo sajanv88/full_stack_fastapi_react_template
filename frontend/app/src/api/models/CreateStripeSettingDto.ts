@@ -8,5 +8,6 @@ export type CreateStripeSettingDto = {
   mode?: 'one_time' | 'recurring' | 'both';
   trial_period_days?: number;
   stripe_secret_key: string;
+  tenant_id: string;
 };
 

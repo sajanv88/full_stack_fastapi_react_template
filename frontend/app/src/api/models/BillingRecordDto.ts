@@ -6,7 +6,7 @@ export type BillingRecordDto = {
   scope: 'host' | 'tenant';
   actor: 'tenant' | 'end_user';
   user_id?: (string | null);
-  payment_type: 'one_time' | 'recurring' | 'both';
+  payment_type: string;
   currency: string;
   amount?: (number | null);
   stripe_customer_id?: (string | null);

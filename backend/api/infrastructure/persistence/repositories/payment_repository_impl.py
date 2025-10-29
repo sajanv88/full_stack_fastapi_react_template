@@ -32,6 +32,7 @@ class StripeSettingsRepository(BaseRepository[StripeSettings]):
         else:
             logger.info(f"Creating new Stripe settings for tenant")
             settings = StripeSettings(**stripe_config.model_dump())
+            settings.tenant_id = stripe_config.tenant_id
             await self.create(settings.model_dump())
 
     async def get_stored_stripe_settings(self) -> StripeSettings:

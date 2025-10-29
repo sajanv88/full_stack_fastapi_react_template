@@ -33,7 +33,7 @@ const stripeConfigSchema = z.object({
     stripe_webhook_secret: z.string().min(1, "Webhook secret is required"),
     default_currency: z.string().min(3, "Currency code is required").max(3, "Currency code must be 3 characters"),
     mode: z.enum(["one_time", "recurring", "both"]),
-    trial_period_days: z.number().min(0, "Trial period must be 0 or more").max(365, "Trial period cannot exceed 365 days"),
+    trial_period_days: z.string().min(0, "Trial period must be 0 or more").max(365, "Trial period cannot exceed 365 days"),
 });
 
 type StripeConfigForm = z.infer<typeof stripeConfigSchema>;
@@ -58,7 +58,7 @@ export function ConfigureStripe() {
         defaultValues: {
             default_currency: configuredStripeSetting?.default_currency || "EUR",
             mode: configuredStripeSetting?.mode || "both",
-            trial_period_days: configuredStripeSetting?.trial_period_days || 0,
+            trial_period_days: configuredStripeSetting?.trial_period_days.toString() || "0",
             stripe_secret_key: "",
             stripe_webhook_secret: "",
         },
@@ -72,7 +72,8 @@ export function ConfigureStripe() {
             stripe_webhook_secret: data.stripe_webhook_secret,
             default_currency: data.default_currency.toLowerCase(),
             mode: data.mode,
-            trial_period_days: data.trial_period_days,
+            trial_period_days: Number(data.trial_period_days) || 0,
+            tenant_id: current_tenant?.id!,
         });
     };
 
@@ -295,7 +296,7 @@ export function ConfigureStripe() {
                                         </Label>
                                         <Input
                                             id="default_currency"
-                                            placeholder="USD"
+                                            placeholder="EUR"
                                             maxLength={3}
                                             {...register("default_currency")}
                                             className="uppercase"
@@ -315,8 +316,6 @@ export function ConfigureStripe() {
                                         <Input
                                             id="trial_period_days"
                                             type="number"
-                                            min="0"
-                                            max="365"
                                             placeholder="0"
                                             {...register("trial_period_days")}
                                         />

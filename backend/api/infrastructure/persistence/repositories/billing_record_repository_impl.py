@@ -1,6 +1,6 @@
 from api.common.base_repository import BaseRepository
 from api.common.utils import get_logger
-from api.domain.dtos.billing_dto import BillingRecordListDto
+from api.domain.dtos.billing_dto import BillingRecordDto, BillingRecordListDto
 from api.domain.entities.stripe_settings import BillingRecord
 
 logger = get_logger(__name__)
@@ -14,7 +14,7 @@ class BillingRecordRepository(BaseRepository[BillingRecord]):
         docs = await self.model.find_all().skip(skip).limit(limit).to_list()
         total = await self.model.count()
         result = BillingRecordListDto(
-            billing_records=[await doc.to_serializable_dict() for doc in docs],
+            billing_records=[BillingRecordDto(**doc.model_dump()) for doc in docs],
             skip=skip,
             limit=limit,
             total=total,

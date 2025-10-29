@@ -27,6 +27,8 @@ export type { Body_update_profile_picture_api_v1_users__user_id__update_profile_
 export type { ChangeEmailConfirmRequestDto } from './models/ChangeEmailConfirmRequestDto';
 export type { ChangeEmailRequestDto } from './models/ChangeEmailRequestDto';
 export type { ChangeEmailResponseDto } from './models/ChangeEmailResponseDto';
+export type { CheckoutRequestDto } from './models/CheckoutRequestDto';
+export type { CheckoutResponseDto } from './models/CheckoutResponseDto';
 export type { CreatePlanDto } from './models/CreatePlanDto';
 export type { CreatePricingDto } from './models/CreatePricingDto';
 export type { CreateProductDto } from './models/CreateProductDto';

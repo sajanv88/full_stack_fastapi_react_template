@@ -68,7 +68,7 @@ class BillingRecordDto(BaseModel):
     scope: ScopeType
     actor: ActorType
     user_id: Optional[str] = None
-    payment_type: PaymentType
+    payment_type: str
     currency: str
     amount: Optional[int] = None
     stripe_customer_id: Optional[str] = None

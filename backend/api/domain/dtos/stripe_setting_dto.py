@@ -10,6 +10,7 @@ class CreateStripeSettingDto(BaseModel):
     mode: PaymentType = "recurring"
     trial_period_days: int = 14  # Default trial period for subscriptions in days
     stripe_secret_key: str  #Secret key for Stripe API only tenant scope
+    tenant_id: str
 
 class UpdateStripeSettingDto(BaseModel):
     default_currency: Optional[str] = None

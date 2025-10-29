@@ -36,7 +36,7 @@ class BillingRecord(ApiBaseModel):
     scope: ScopeType
     actor: ActorType
     user_id: PydanticObjectId | None = None  # The end user who made the payment, if applicable
-    payment_type: PaymentType
+    payment_type: str
     currency: str
     amount: Optional[int] = None  # unit amount used for one-time payments
     stripe_customer_id: Optional[str] = None
