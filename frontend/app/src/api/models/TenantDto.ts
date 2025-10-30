@@ -11,5 +11,6 @@ export type TenantDto = {
   custom_domain: (string | null);
   custom_domain_status?: 'active' | 'failed' | 'activation-progress';
   features?: Array<FeatureDto>;
+  subscription_id: (string | null);
 };
 

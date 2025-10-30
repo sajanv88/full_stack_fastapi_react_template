@@ -32,6 +32,8 @@ const columns = [
             const { onSelectTenant, onUpdateTenant } = useTenants()
             const { can } = useAuthContext()
             const isHostManageTenants = can("host:manage_tenants");
+            const isActiveSubscription = !!c.row.original.subscription_id;
+
             const baseOptions: ActionOption<typeof c.row.original>[] = [
 
                 {
@@ -64,7 +66,22 @@ const columns = [
                     },
                     disabled: isHostManageTenants
                 }
+
             ];
+
+            if (!isActiveSubscription) {
+                baseOptions.push({
+                    label: "Manage Subscription",
+                    data: c.row.original,
+                    onClick: (data) => onSelectTenant({
+                        type: 'manage_subscription',
+                        tenant: data
+                    }),
+                    disabled: isHostManageTenants
+                });
+            }
+
+
             return (
                 <TableActions<typeof c.row.original>
                     options={baseOptions}
@@ -107,7 +124,10 @@ const columns = [
         header: "Is Active",
         cell: (c) => c.getValue() ? "Yes" : "No",
     }),
-
+    columHelper.accessor("subscription_id", {
+        header: "Active Subscription",
+        cell: (c) => c.getValue() || "N/A",
+    })
 ];
 
 interface TenantTableProps {

@@ -6,6 +6,7 @@ import { useTenants } from "@/components/providers/tenant-provider";
 import { CreateNewTenantDialog } from "@/components/features/tenant/create-new-tenant-dialog";
 import { TenantDeleteDialog } from "@/components/features/tenant/tenant-delete-dialog";
 import { ManageFeature } from "@/components/features/tenant/manage-feature";
+import { ManageTenantSubscription } from "@/components/features/tenant/manage-tenant-subscription";
 
 export function Tenants() {
     const [isCreateNewTenantDialogOpen, setIsCreateNewTenantDialogOpen] = useState(false);
@@ -28,7 +29,7 @@ export function Tenants() {
             }} />
             <CreateNewTenantDialog open={isCreateNewTenantDialogOpen} onDismiss={() => setIsCreateNewTenantDialogOpen(false)} />
             {selectedTenant?.type === 'delete' && <TenantDeleteDialog open={true} onDismiss={onTenantDismissHandler} />}
-
+            {selectedTenant?.type === 'manage_subscription' && <ManageTenantSubscription open={true} onDismiss={onTenantDismissHandler} />}
             {selectedTenant?.type === 'manage_features' && <ManageFeature open={true} onDismiss={onTenantDismissHandler} />}
             {tenantResponse && <TenantTable tenantResponse={tenantResponse} loading={isLoading} errorMsg={errorMsg} />}
         </section>

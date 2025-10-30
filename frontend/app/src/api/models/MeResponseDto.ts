@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { Gender } from './Gender';
 import type { RoleDto } from './RoleDto';
+import type { SubscriptionPlanDto } from './SubscriptionPlanDto';
 export type MeResponseDto = {
   id: string;
   first_name: string;
@@ -18,5 +19,6 @@ export type MeResponseDto = {
   updated_at: string;
   tenant_id?: (string | null);
   role: RoleDto;
+  subscription: (SubscriptionPlanDto | null);
 };
 

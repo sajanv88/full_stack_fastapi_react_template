@@ -70,6 +70,7 @@ export type { RoleListDto } from './models/RoleListDto';
 export type { StorageSettingsDto } from './models/StorageSettingsDto';
 export type { StripeSettingDto } from './models/StripeSettingDto';
 export type { SubdomainAvailabilityDto } from './models/SubdomainAvailabilityDto';
+export type { SubscriptionPlanDto } from './models/SubscriptionPlanDto';
 export type { TenantDto } from './models/TenantDto';
 export type { TenantListDto } from './models/TenantListDto';
 export type { TimeSeriesDto } from './models/TimeSeriesDto';

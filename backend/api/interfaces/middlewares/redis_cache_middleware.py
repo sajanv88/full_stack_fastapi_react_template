@@ -21,10 +21,15 @@ not_allowed_cache_paths = [
     "/api/v1/app_configuration/",
 ]
 
+
 class RedisCacheMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, expiry: int = redis_cache_expiry):
         super().__init__(app)
         self.expiry = expiry
+
+    async def _clear_cache(self, user_id: str, tenant_id: str):
+        async for key in redis.scan_iter(f"cache:cu{user_id}:ct{tenant_id}:*"):
+            await redis.delete(key)
 
     async def dispatch(self, request: Request, call_next):
        
@@ -61,8 +66,7 @@ class RedisCacheMiddleware(BaseHTTPMiddleware):
         # Only cache GET requests
         if request.method != "GET":
             logger.debug(f"Clearing cache for key: {cache_key}")
-            async for key in redis.scan_iter(f"cache:cu{user_id}:ct{tenant_id}:*"):
-                await redis.delete(key)
+            await self._clear_cache(user_id, tenant_id)
             logger.debug("Cache cleared for non-GET request.")
             return await call_next(request)
            
@@ -96,6 +100,11 @@ class RedisCacheMiddleware(BaseHTTPMiddleware):
             })
             await redis.set(cache_key, to_cache, ex=self.expiry)
             logger.debug(f"Cache set for key: {cache_key}")
+
+        if response.status_code == 401 and "application/json" in content_type and request.url.path not in not_allowed_cache_paths:
+            logger.debug(f"Response status {response.status_code} not cached.")
+            await self._clear_cache(user_id, tenant_id)
+
 
         # Return new Response (since body_iterator is consumed)
         return Response(
