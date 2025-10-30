@@ -10,6 +10,7 @@ from api.infrastructure.persistence.repositories.chat_session_ai_repository_impl
 from api.infrastructure.persistence.repositories.payment_repository_impl import PaymentRepository, StripeSettingsRepository
 from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
 from api.infrastructure.persistence.repositories.storage_settings_repository_impl import StorageSettingsRepository
+from api.infrastructure.persistence.repositories.subscription_plan_repository_impl import SubscriptionPlanRepository
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
 from api.infrastructure.persistence.repositories.user_magic_link_repository_impl import UserMagicLinkRepository
 from api.infrastructure.persistence.repositories.user_passkey_repository_impl import UserPasskeyChallengesRepository, UserPasskeyRepository
@@ -31,6 +32,7 @@ from api.usecases.product_service import ProductService
 from api.usecases.role_service import RoleService
 from api.usecases.storage_settings_service import StorageSettingsService
 from api.usecases.stripe_setting_service import StripeSettingService
+from api.usecases.subscription_plan_service import SubscriptionPlanService
 from api.usecases.user_preference_service import UserPreferenceService
 from api.usecases.user_service import UserService
 from api.usecases.tenant_service import TenantService
@@ -107,6 +109,9 @@ container.register(ChatSessionAIRepository)
 container.register(ChatHistoryAIRepository)
 container.register(LocalAIService, scope=punq.Scope.singleton)
 
+## Subscription Plan Components
+container.register(SubscriptionPlanRepository, scope=punq.Scope.singleton)
+container.register(SubscriptionPlanService, scope=punq.Scope.singleton)
 
 ## Stripe and Payment Components
 container.register(StripeSettingsRepository, scope=punq.Scope.singleton)
@@ -120,7 +125,7 @@ container.register(PricingService, scope=punq.Scope.singleton)
 container.register(StripeSettingService, scope=punq.Scope.singleton)
 
 
-
+## Dependency resolver functions
 
 def get_database() -> Database:
     return container.resolve(Database)
@@ -193,5 +198,8 @@ def get_stripe_resolver() -> StripeResolver:
 
 def get_stripe_setting_service() -> StripeSettingService:
     return container.resolve(StripeSettingService)
+
+def get_subscription_plan_service() -> SubscriptionPlanService:
+    return container.resolve(SubscriptionPlanService)
 
 print("Dependency injection container configured.")

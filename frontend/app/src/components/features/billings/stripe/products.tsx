@@ -375,7 +375,7 @@ export function Products() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {products.map((product) => (
                         <Card key={product.id} className="relative">
-                            <CardHeader className="pb-3">
+                            <CardHeader className="pb-3 h-full">
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-2">

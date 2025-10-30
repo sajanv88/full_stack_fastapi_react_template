@@ -18,6 +18,7 @@ class TenantDto(BaseModel):
     custom_domain: Optional[str] | None
     custom_domain_status: Literal["active", "failed", "activation-progress"] = "failed"
     features: List[FeatureDto] = []
+    subscription_id: Optional[str] | None
 
 
 class CreateTenantDto(BaseModel):

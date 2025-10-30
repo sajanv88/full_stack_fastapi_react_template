@@ -93,14 +93,24 @@ class Tenant(Document):
     custom_domain: Optional[CustomDomain] | None = None
     custom_domain_status: Literal["active", "failed", "activation-progress"] = "failed"
     features: List[Feature] = []
+    subscription_id: Optional[PydanticObjectId] | None = None
 
 
-    @field_serializer("created_at", "updated_at", "id")
-    def serialize_datetime(self, value: datetime | PydanticObjectId) -> str:
+    @field_serializer("created_at", "updated_at", "id", "subscription_id")
+    def serialize_datetime(self, value: datetime | PydanticObjectId) -> str | None:
+        if value is None:
+            return None
         return str(value)
     
 
     class Settings:
         name = "tenants"
+        indexes = [
+            "name",
+            "subdomain",
+            "custom_domain",
+            "is_active",
+            "subscription_id",
+        ]
     
 
