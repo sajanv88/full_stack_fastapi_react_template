@@ -1,9 +1,8 @@
-import subprocess
 from typing import List
 from fastapi import BackgroundTasks
 from langchain_ollama import ChatOllama
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema import HumanMessage, AIMessage, SystemMessage, BaseMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
 from api.common.utils import format_bytes_to_human_readable_size, get_logger
 from api.domain.dtos.ai_dto import AIModelInfoDto
 from api.usecases.local_ai_service import LocalAIService
