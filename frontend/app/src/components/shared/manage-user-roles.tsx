@@ -95,7 +95,7 @@ export function ManageUserRoles({ open, onDismiss, userId }: ManageUserRolesProp
 
     return (
         <Dialog open={open} onOpenChange={onDismiss} modal>
-            <DialogContent className="max-w-md">
+            <DialogContent>
                 <DialogTitle className="text-lg font-medium leading-6 mb-2">
                     Manage User Roles
                 </DialogTitle>

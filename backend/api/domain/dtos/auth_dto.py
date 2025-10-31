@@ -1,7 +1,9 @@
 
+from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 from api.domain.dtos.role_dto import RoleDto
+from api.domain.dtos.subcription_plan_dto import SubscriptionPlanDto
 from api.domain.dtos.user_dto import UserDto
 
 
@@ -25,6 +27,7 @@ class ChangeEmailResponseDto(BaseModel):
 
 class MeResponseDto(UserDto):
     role: RoleDto
+    subscription: Optional[SubscriptionPlanDto] | None
 
 
 class MagicLinkResponseDto(BaseModel):

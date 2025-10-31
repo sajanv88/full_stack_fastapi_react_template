@@ -3,6 +3,10 @@ import { getApiClient, setTenant } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useAuthContext } from "./auth-provider";
 
+
+export const AppConfigMessage = {
+    type: "RELOAD_APP_CONFIG"
+}
 interface Configuration extends AppConfigurationDto {
     reloadAppConfig: () => Promise<void>;
     shouldShowTenantSelection?: boolean;
@@ -20,7 +24,7 @@ const appConfigContext = createContext<Configuration>({
     },
     reloadAppConfig: async () => { },
     redirectToTenantDomain: () => { },
-    environment: "development"
+    environment: "development",
 });
 
 
@@ -48,11 +52,13 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
     const [shouldShowTenantSelection, setShouldShowTenantSelection] = useState(false);
 
     const reloadAppConfig = useCallback(async function reloadAppConfig() {
-        if (!accessToken) return;
         const config = await getApiClient(accessToken).appConfiguration.getAppConfigurationApiV1AppConfigurationGet();
         setAppConfig(config)
 
     }, [accessToken]);
+
+
+
 
     useEffect(() => {
 
@@ -80,6 +86,9 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
 
     }, [appConfig, accessToken, appConfig.current_tenant]);
 
+
+
+
     const redirectToTenantDomain = useCallback((tenant: TenantDto) => {
         const protocol = appConfig.environment === "development" ? "http" : "https";
         const port = appConfig.environment === "development" ? ":3000" : "";
@@ -106,7 +115,12 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
 
 
     return (
-        <appConfigContext.Provider value={{ ...appConfig, reloadAppConfig, shouldShowTenantSelection, redirectToTenantDomain }}>
+        <appConfigContext.Provider value={{
+            ...appConfig,
+            reloadAppConfig,
+            shouldShowTenantSelection,
+            redirectToTenantDomain
+        }}>
             {children}
         </appConfigContext.Provider>
     )

@@ -22,6 +22,13 @@ import { Activation } from "@/components/features/auth/activation";
 import { TenantSetting } from "@/components/features/tenant/tenant-setting";
 import { MagicLinkLoginValidate } from "@/components/features/auth/magic-link-login-validate";
 import { NonActiveTenantView } from "@/components/shared/non-active-tenant-view";
+import { StripeProvider } from "@/components/providers/stripe-provider";
+import { ConfigureStripe } from "@/components/features/billings/stripe/configure-stripe";
+import { BillingOverview } from "@/components/features/billings/stripe/billing-overview";
+import { Billing } from "@/components/features/billings/stripe/billing";
+import { Invoices } from "@/components/features/billings/stripe/invoices";
+import { Products } from "@/components/features/billings/stripe/products";
+import { CheckoutOverview } from "@/components/features/billings/stripe/checkout-overview";
 
 function App() {
   const { user } = useAuthContext();
@@ -60,13 +67,11 @@ function App() {
           />
         )}
 
-
         <Route path="settings" element={
           <SettingsProvider>
             <Settings />
           </SettingsProvider>
         } />
-
 
         <Route path="settings/general" element={
           <SettingsProvider>
@@ -76,6 +81,18 @@ function App() {
           </SettingsProvider>
         } />
 
+        <Route path="settings/payment" element={
+          <StripeProvider>
+            <ConfigureStripe />
+          </StripeProvider>
+        } />
+
+        <Route path="billing" element={<Billing />}>
+          <Route index element={<BillingOverview />} />
+          <Route path="invoices" element={<Invoices />} />
+          <Route path="products" element={<Products />} />
+          <Route path="checkouts" element={<CheckoutOverview />} />
+        </Route>
 
         <Route path="profile" element={<Profile />} />
         <Route path="ai" element={
@@ -83,7 +100,6 @@ function App() {
             <AIChat />
           </AIChatProvider>
         } />
-
 
         <Route path="*" element={<Navigate to="/dashboard" />} />
       </Route>

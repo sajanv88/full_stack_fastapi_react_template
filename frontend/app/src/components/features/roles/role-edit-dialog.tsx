@@ -45,7 +45,6 @@ export function RoleEditDialog({ open, onDismiss }: RoleEditDialogProps) {
     });
 
     const onSubmit = async (data: EditRoleFormInputs) => {
-        console.log("Form Data Submitted: ", data);
         setIsLoading(true);
         try {
             await onUpdateRole(selectedRole?.role.id!, {

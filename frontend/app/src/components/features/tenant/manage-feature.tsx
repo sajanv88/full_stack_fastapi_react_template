@@ -17,7 +17,8 @@ import {
     Users,
     Loader2,
     CheckCircle,
-    XCircle
+    XCircle,
+    Currency
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -39,6 +40,7 @@ export function ManageFeature({ open, onDismiss }: ManageFeatureTenantDialogProp
             const tenantFeatures = await apiClient.tenants.getTenantFeaturesApiV1TenantsTenantIdFeaturesGet({
                 tenantId: selectedTenant!.tenant.id!
             });
+
             setFeatures(tenantFeatures);
         } catch (error) {
             console.error("Error fetching features:", error);
@@ -80,7 +82,7 @@ export function ManageFeature({ open, onDismiss }: ManageFeatureTenantDialogProp
         }
     }
 
-    const getFeatureIcon = (featureName: string) => {
+    const getFeatureIcon = (featureName: Feature) => {
         switch (featureName.toLowerCase()) {
             case 'chat':
             case 'messaging':
@@ -97,6 +99,8 @@ export function ManageFeature({ open, onDismiss }: ManageFeatureTenantDialogProp
             case 'users':
             case 'user_management':
                 return <Users className="w-5 h-5" />;
+            case 'stripe':
+                return <Currency className="w-5 h-5" />;
             default:
                 return <CheckCircle className="w-5 h-5" />;
         }
@@ -124,6 +128,8 @@ export function ManageFeature({ open, onDismiss }: ManageFeatureTenantDialogProp
                 return 'User management and administration';
             case 'user_management':
                 return 'Advanced user management capabilities';
+            case 'stripe':
+                return 'Stripe payment processing and management';
             default:
                 return `Manage ${featureName} functionality`;
         }
@@ -143,7 +149,7 @@ export function ManageFeature({ open, onDismiss }: ManageFeatureTenantDialogProp
 
     return (
         <Dialog open={open} onOpenChange={onCloseDialog}>
-            <DialogContent className="w-full md:max-w-screen-md">
+            <DialogContent>
                 <DialogTitle>
                     Manage Features for Tenant: {selectedTenant?.tenant.name}
                 </DialogTitle>

@@ -3,17 +3,21 @@ from fastapi import APIRouter, Depends, status
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.exceptions import ApiBaseException, InvalidOperationException
 from api.common.utils import get_host_main_domain_name, get_logger
-from api.core.container import    get_tenant_service
+from api.core.container import    get_billing_record_service, get_subscription_plan_service, get_tenant_service
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
+from api.domain.dtos.subcription_plan_dto import SubscriptionPlanDto
 from api.domain.dtos.tenant_dto import CreateTenantResponseDto, FeatureDto, SubdomainAvailabilityDto, TenantDto, TenantListDto, CreateTenantDto, UpdateTenantDto, UpdateTenantResponseDto
 from api.domain.dtos.user_dto import CreateUserDto
 from api.domain.entities.tenant import Subdomain, Tenant
+from api.domain.enum.feature import Feature
 from api.domain.enum.permission import Permission
+from api.domain.security.feature_access_management import check_feature_access
 from api.infrastructure.security.current_user import CurrentUser
 from api.interfaces.security.role_checker import check_permissions_for_current_role
+from api.usecases.billing_record_service import BillingRecordService
+from api.usecases.subscription_plan_service import SubscriptionPlanService
 from api.usecases.tenant_service import TenantService
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation, handle_post_tenant_deletion, handle_tenant_dns_update
-from api.domain.enum.feature import Feature as FeatureEnum
 
 logger = get_logger(__name__)
 
@@ -226,13 +230,8 @@ async def get_tenant_features(
     tenant_service: TenantService = Depends(get_tenant_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS]))
 ):
-    tenant = await tenant_service.get_tenant_by_id(tenant_id)
-    if len(tenant.features) == 0:
-        return [FeatureDto(name=name, enabled=False) for name in FeatureEnum]
+    return await tenant_service.get_features_by_tenant_id(tenant_id)
     
-    return [FeatureDto(name=feature.name, enabled=feature.enabled) for feature in tenant.features]
-
-
 @router.patch("/{tenant_id}/update_feature", response_model=UpdateTenantResponseDto, status_code=status.HTTP_200_OK)
 async def update_tenant_feature(
     tenant_id: str,
@@ -244,3 +243,35 @@ async def update_tenant_feature(
     return UpdateTenantResponseDto(
         message=f"Feature '{feature.name.value}' updated successfully for tenant."
     )
+
+
+@router.patch("/{tenant_id}/activate_trial_plan", response_model=UpdateTenantResponseDto, status_code=status.HTTP_200_OK)
+async def activate_trial_plan(
+    tenant_id: str,
+    tenant_service: TenantService = Depends(get_tenant_service),
+    subcription_plan_service: SubscriptionPlanService = Depends(get_subscription_plan_service),
+    billing_record_service: BillingRecordService = Depends(get_billing_record_service),
+    _feature_check: bool = Depends(check_feature_access(feature_name=Feature.STRIPE))
+):
+    logger.debug(f"Activating trial plan for tenant ID: {tenant_id}")
+    all_plans = await billing_record_service.list_plans('host')
+    if len(all_plans.plans) == 0:
+        logger.error("No plans are configured in Stripe. Please create a plan before activating a trial.")
+        raise InvalidOperationException("No plans are configured. Please create a plan before activating a trial.")
+
+    trial = list(filter(lambda p: p.trial_period_days is not None and p.trial_period_days > 0, all_plans.plans))
+    
+    if not trial:
+        logger.error("No trial plan is configured. Please create a plan with a trial period before activating a trial or update an existing plan.")
+        raise InvalidOperationException("No trial plan is configured. Please create a plan with a trial period before activating a trial or update an existing plan.")
+    
+    id = trial[0].id
+    logger.debug(f"Trial plan found: {id}, activating for tenant ID: {tenant_id}")
+    await subcription_plan_service.create_trial_plan_for_tenant(tenant_id, id)
+    subcription = await subcription_plan_service.get_subscription_plans_by_tenant(tenant_id)
+    await tenant_service.update_tenant(tenant_id=tenant_id, data=UpdateTenantDto(subscription_id=str(subcription.id)))
+    logger.debug(f"Trial plan activated successfully for tenant ID: {tenant_id}")
+    return UpdateTenantResponseDto(
+        message="Trial plan activated successfully for tenant."
+    )
+

@@ -62,6 +62,18 @@ class Settings(BaseSettings):
     coolify_api_key: str
     coolify_application_id: str
 
+
+    # AWS S3 settings for file uploads this belongs to the Host - level settings
+    aws_region: str = "eu-central-1"
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    aws_s3_bucket_name: str = "fsrapptest"
+
+    # Stripe Settings for Billing and Payments - Host Level Settings
+    stripe_api_key: str
+    stripe_publishable_key: str
+    stripe_secret_key: str
+
 # Instantiate settings once
 settings = Settings()
 

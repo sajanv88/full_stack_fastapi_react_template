@@ -15,6 +15,12 @@ import { ManageSecurityService } from './services/ManageSecurityService';
 import { PermissionsService } from './services/PermissionsService';
 import { RolesService } from './services/RolesService';
 import { StorageSettingsService } from './services/StorageSettingsService';
+import { StripeService } from './services/StripeService';
+import { StripeBillingService } from './services/StripeBillingService';
+import { StripeCheckoutService } from './services/StripeCheckoutService';
+import { StripeInvoicesService } from './services/StripeInvoicesService';
+import { StripePricingService } from './services/StripePricingService';
+import { StripeProductsService } from './services/StripeProductsService';
 import { TenantsService } from './services/TenantsService';
 import { UsersService } from './services/UsersService';
 type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
@@ -29,6 +35,12 @@ export class ApiClient {
   public readonly permissions: PermissionsService;
   public readonly roles: RolesService;
   public readonly storageSettings: StorageSettingsService;
+  public readonly stripe: StripeService;
+  public readonly stripeBilling: StripeBillingService;
+  public readonly stripeCheckout: StripeCheckoutService;
+  public readonly stripeInvoices: StripeInvoicesService;
+  public readonly stripePricing: StripePricingService;
+  public readonly stripeProducts: StripeProductsService;
   public readonly tenants: TenantsService;
   public readonly users: UsersService;
   public readonly request: BaseHttpRequest;
@@ -54,6 +66,12 @@ export class ApiClient {
     this.permissions = new PermissionsService(this.request);
     this.roles = new RolesService(this.request);
     this.storageSettings = new StorageSettingsService(this.request);
+    this.stripe = new StripeService(this.request);
+    this.stripeBilling = new StripeBillingService(this.request);
+    this.stripeCheckout = new StripeCheckoutService(this.request);
+    this.stripeInvoices = new StripeInvoicesService(this.request);
+    this.stripePricing = new StripePricingService(this.request);
+    this.stripeProducts = new StripeProductsService(this.request);
     this.tenants = new TenantsService(this.request);
     this.users = new UsersService(this.request);
   }

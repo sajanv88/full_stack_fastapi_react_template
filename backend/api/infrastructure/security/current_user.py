@@ -7,8 +7,9 @@ from api.domain.dtos.auth_dto import MeResponseDto
 from api.domain.dtos.user_dto import UserDto
 from api.infrastructure.security.jwt_token_service import JwtTokenService
 from api.usecases.role_service import RoleService
+from api.usecases.subscription_plan_service import SubscriptionPlanService
 from api.usecases.user_service import UserService
-from api.core.container import get_role_service, get_user_service, get_jwt_token_service  
+from api.core.container import get_role_service, get_subscription_plan_service, get_user_service, get_jwt_token_service  
 from fastapi import Depends
 
 
@@ -18,7 +19,8 @@ async def get_current_user(
         token: Annotated[str, Depends(oauth2_scheme)],
         user_service: UserService = Depends(get_user_service),
         token_service: JwtTokenService = Depends(get_jwt_token_service),
-        role_service: RoleService = Depends(get_role_service)
+        role_service: RoleService = Depends(get_role_service),
+        subscription_service: SubscriptionPlanService = Depends(get_subscription_plan_service),
     ) -> MeResponseDto:
     payload = await token_service.decode_token(token, type="access_token")
     if payload is None:
@@ -33,7 +35,9 @@ async def get_current_user(
     user_dto = UserDto(**user_doc)
     role = await role_service.get_role_by_id(user.role_id)
     role_doc = await role.to_serializable_dict()
-    return MeResponseDto(**user_dto.model_dump(), role=role_doc)
+    # Get subscription plan for the user
+    subscription =  await subscription_service.get_subscription_plan_by_user_id(str(user.id))
+    return MeResponseDto(**user_dto.model_dump(), role=role_doc, subscription=subscription)
 
 
 
@@ -42,13 +46,14 @@ CurrentUser = Annotated[MeResponseDto, Depends(get_current_user)]
 async def current_user_optional(token: Annotated[str, Depends(oauth2_scheme)],
         user_service: UserService = Depends(get_user_service),
         token_service: JwtTokenService = Depends(get_jwt_token_service),
+        subscription_service: SubscriptionPlanService = Depends(get_subscription_plan_service),
         role_service: RoleService = Depends(get_role_service)) -> MeResponseDto | None:
     """
         Optional current user information. If the user is not authenticated, this will be None.
         Useful for endpoints that can be accessed by both authenticated and unauthenticated users.
     """
     try:
-        return await get_current_user(token, user_service, token_service, role_service)
+        return await get_current_user(token, user_service, token_service, role_service, subscription_service)
     except Exception as e:
         logger.info(f"Optional current user retrieval failed: {e}")
         return None

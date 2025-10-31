@@ -6,3 +6,4 @@ class RoleType(str, Enum):
     USER = "user"
     GUEST = "guest"
     HOST = "host"
+    BILLING_MANAGER = "billing_manager"

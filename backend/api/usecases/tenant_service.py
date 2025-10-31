@@ -1,3 +1,4 @@
+from typing import List
 from beanie import PydanticObjectId
 
 from api.common.utils import get_logger, validate_password
@@ -5,6 +6,7 @@ from api.core.exceptions import TenantNotFoundException
 from api.domain.dtos.tenant_dto import CreateTenantDto, FeatureDto, TenantListDto, UpdateTenantDto
 from api.domain.entities.tenant import Feature, Tenant
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
+from api.domain.enum.feature import Feature as FeatureEnum
 
 logger = get_logger(__name__)
 
@@ -86,5 +88,39 @@ class TenantService:
         """Update tenant details. Raises TenantNotFoundException if tenant not found."""
         tenant = await self.get_tenant_by_id(tenant_id)
         tenant.is_active = data.is_active
+        tenant.custom_domain = data.custom_domain
+        tenant.subscription_id = data.subscription_id
         await self.tenant_repository.update(tenant_id, tenant.model_dump(exclude_none=True))
 
+
+    async def get_features_by_tenant_id(self, tenant_id: str) -> List[FeatureDto]:
+        """
+            Get features for a tenant by ID.
+            Raises 
+                TenantNotFoundException if tenant not found.
+        """
+        tenant = await self.get_tenant_by_id(tenant_id)
+        all_features = [FeatureDto(name=name, enabled=False) for name in FeatureEnum]
+        if len(tenant.features) == 0:
+            return all_features
+
+        tenant_features = [FeatureDto(name=feature.name, enabled=feature.enabled) for feature in tenant.features]
+        logger.debug(f"Tenant features for tenant {tenant_id}: {tenant_features}")
+        
+        # Check if any features are added in the enum that are not present in tenant features
+        if len(all_features) > len(tenant_features):
+            logger.debug(f"Some features are not set for tenant {tenant_id}, adding missing features as disabled.")
+            available_features: List[FeatureDto] = []
+            for all_feature in all_features:
+                for tenant_feature in tenant_features:
+                    if all_feature.name == tenant_feature.name:
+                        # Feature exists in tenant, add it as is
+                        available_features.append(tenant_feature)
+                        break
+                else:
+                    # Feature not found in tenant, add it as enabled=False by default
+                    available_features.append(FeatureDto(name=all_feature.name, enabled=False))
+            return available_features
+        
+        # Return tenant features if all features are already set
+        return tenant_features

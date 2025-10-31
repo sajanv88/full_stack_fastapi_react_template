@@ -9,6 +9,7 @@ from api.common.utils import get_logger, is_tenancy_enabled
 from api.core.container import container
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
 from api.infrastructure.persistence.mongodb import Database
+from api.interfaces.middlewares.redis_cache_middleware import RedisCacheMiddleware
 from api.interfaces.middlewares.tenant_middleware import TenantMiddleware
 from api.interfaces.api_controllers.account_endpoint import router as account_router
 from api.interfaces.api_controllers.user_endpoint import router as user_router
@@ -22,6 +23,12 @@ from api.interfaces.api_controllers.ai_endpoint import router as ai_router
 from api.interfaces.api_controllers.health_endpoint import router as health_router
 from api.interfaces.api_controllers.manage_security_endpoint import router as manage_security_router
 from api.interfaces.api_controllers.features_endpoint import router as features_router
+from api.interfaces.api_controllers.product_endpoint import router as product_router
+from api.interfaces.api_controllers.prices_endpoint import router as prices_router
+from api.interfaces.api_controllers.billing_endpoint import router as billing_router
+from api.interfaces.api_controllers.stripe_endpoint import router as stripe_router
+from api.interfaces.api_controllers.invoice_endpoint import router as invoice_router
+from api.interfaces.api_controllers.checkout_endpoint import router as checkout_router
 
 from api.common.logging import configure_logging
 from api.core.config import settings
@@ -73,6 +80,7 @@ async def api_exception_handler(req: Request, ex: ApiBaseException) -> JSONRespo
         content={"error": ex.message, "code": status_code}
     )
 
+app.add_middleware(RedisCacheMiddleware)
 
 if is_tenancy_enabled(): 
     app.add_middleware(TenantMiddleware)
@@ -106,7 +114,12 @@ router.include_router(role_router)
 router.include_router(permissions_router)
 router.include_router(storage_router)
 router.include_router(ai_router)
-
+router.include_router(product_router)
+router.include_router(prices_router)
+router.include_router(billing_router)
+router.include_router(stripe_router)
+router.include_router(invoice_router)
+router.include_router(checkout_router)
 app.include_router(router)
 
 
@@ -118,3 +131,4 @@ async def react_router(full_path: str):
         return FileResponse(os.path.join(build_path, "index.html"))
     else:
         return {"message": "API endpoint not found", "available_docs": "/docs", "api_base": "/api/v1"}
+

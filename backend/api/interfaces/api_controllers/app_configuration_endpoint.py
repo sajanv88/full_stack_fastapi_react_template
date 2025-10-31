@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, status
 
 from api.common.dtos.app_configuration_dto import AppConfigurationDto
 from api.common.utils import get_host_main_domain_name, get_logger, get_tenancy_strategy, is_tenancy_enabled
-from api.core.container import   get_passkey_service, get_tenant_service, get_user_preference_service
+from api.core.container import   get_passkey_service,  get_tenant_service, get_user_preference_service
 from api.core.exceptions import  TenantNotFoundException
 from api.domain.dtos.tenant_dto import TenantDto
 from api.domain.entities.tenant import Tenant
@@ -55,8 +55,8 @@ async def get_app_configuration(
     t = await get_tenant(tenant_service, str(tenant_id))
     current_tenant = TenantDto(**t.model_dump()) if t else None
 
-
-
+   
+    
 
     # Fetch available AI models from Ollama
     available_ai_models = OllamaModels().list_models()
@@ -68,9 +68,7 @@ async def get_app_configuration(
         is_user_logged_in=is_user_logged_in,
         user_preferences=user_pref_doc,
         current_tenant=current_tenant,
-        environment = settings.fastapi_env
+        environment = settings.fastapi_env,
 
     )
-
-
 

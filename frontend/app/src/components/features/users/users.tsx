@@ -29,7 +29,7 @@ export function Users() {
         refreshUsers();
     }
     return (
-        <section>
+        <section className="w-full 2xl:container 2xl:mx-auto ">
             <PageHeader title="Users" subtitle="Manage your users" cta={{
                 label: "Add User",
                 onClick: () => setIsCreateNewUserDialogOpen(true),

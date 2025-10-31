@@ -17,8 +17,6 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 
 
-
-
 export function DashboardLayout() {
     const navigate = useNavigate();
     const auth = useAuthContext();
@@ -82,16 +80,16 @@ export function DashboardLayout() {
                 <section className="w-full h-full flex flex-col">
 
                     <div className="flex-1 flex-col">
-                        <header className={cn("flex items-center p-2", {
+                        <header className={cn("flex items-center p-2 mx-5", {
                             "mt-10": !auth.user?.is_active
                         })}>
-                            <Avatar>
+                            <Avatar className="size-14">
                                 <AvatarImage src={userImage} />
                                 <AvatarFallback>{auth.user?.first_name[0]}</AvatarFallback>
                             </Avatar>
                             <span className="pl-2 mr-auto flex-1 capitalize flex flex-col">
-                                <span className="flex items-center  sm:w-[25rem]">
-                                    <span className="flex-1">
+                                <span className="flex items-center flex-wrap">
+                                    <span className="flex-1 truncate">
                                         Welcome {auth.user?.last_name}
                                     </span>
 

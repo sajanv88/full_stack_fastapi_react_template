@@ -34,3 +34,8 @@ class User(ApiBaseModel):
 
     class Settings:
         name = "users"
+        indexes = [
+            "email",
+            "role_id",
+            "is_active",
+        ]
