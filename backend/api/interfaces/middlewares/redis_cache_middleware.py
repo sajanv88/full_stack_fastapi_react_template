@@ -6,7 +6,7 @@ from fastapi import Request
 from api.common.utils import get_logger
 from api.core.config import settings
 
-from api.core.container import get_jwt_token_service, get_role_service, get_user_service
+from api.core.container import get_jwt_token_service, get_role_service, get_user_service, get_subscription_plan_service
 from api.infrastructure.security.current_user import  current_user_optional
 
 logger = get_logger(__name__)
@@ -45,12 +45,14 @@ class RedisCacheMiddleware(BaseHTTPMiddleware):
             user_service = get_user_service()
             jwt_service = get_jwt_token_service()
             role_service = get_role_service()
+            subscription_service = get_subscription_plan_service()
 
             current_user = await current_user_optional(
                 token,
                 user_service=user_service,
                 token_service=jwt_service,
                 role_service=role_service,
+                subscription_service=subscription_service
             )
         except Exception as e:
             logger.debug(f"Could not resolve current_user in middleware: {e}")
@@ -104,6 +106,8 @@ class RedisCacheMiddleware(BaseHTTPMiddleware):
         if response.status_code == 401 and "application/json" in content_type and request.url.path not in not_allowed_cache_paths:
             logger.debug(f"Response status {response.status_code} not cached.")
             await self._clear_cache(user_id, tenant_id)
+            logger.debug(f"Cleared cache for user: {user_id}, tenant: {tenant_id}")
+            return await call_next(request)
 
 
         # Return new Response (since body_iterator is consumed)
