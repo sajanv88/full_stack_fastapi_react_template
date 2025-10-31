@@ -1,6 +1,6 @@
 from api.common.utils import get_logger
 from api.core.exceptions import ProductException, ProductNotFoundException
-from api.domain.dtos.product_dto import CreateProductDto, ProductListDto
+from api.domain.dtos.product_dto import CreateProductDto, ProductDto, ProductListDto
 from api.domain.entities.stripe_settings import ScopeType
 from api.infrastructure.externals.stripe_resolver import StripeResolver
 from api.infrastructure.persistence.repositories.payment_repository_impl import PaymentRepository
@@ -16,6 +16,13 @@ class ProductService:
         sc = await self.stripe_resolver.get_stripe_client(scope=scope)
         result =  await sc.v1.products.list_async(params={"limit": 100, "active": show_active})
         return ProductListDto(products=[product for product in result.data],  has_more=result.has_more)
+    
+    async def get_product_by_id(self, product_id: str,  scope: ScopeType) -> ProductDto:
+        sc = await self.stripe_resolver.get_stripe_client(scope=scope)
+        product = await sc.v1.products.retrieve_async(id=product_id)
+        if not product:
+            raise ProductNotFoundException(f"Product with ID {product_id} not found.")
+        return ProductDto(id=product.id, name=product.name, description=product.description, active=product.active, tax_code=product.tax_code) 
 
     async def create_product(self, product_dto: CreateProductDto, scope: ScopeType):
         try:

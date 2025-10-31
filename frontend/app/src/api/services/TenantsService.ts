@@ -265,4 +265,25 @@ export class TenantsService {
       },
     });
   }
+  /**
+   * Activate Trial Plan
+   * @returns UpdateTenantResponseDto Successful Response
+   * @throws ApiError
+   */
+  public activateTrialPlanApiV1TenantsTenantIdActivateTrialPlanPatch({
+    tenantId,
+  }: {
+    tenantId: string,
+  }): CancelablePromise<UpdateTenantResponseDto> {
+    return this.httpRequest.request({
+      method: 'PATCH',
+      url: '/api/v1/tenants/{tenant_id}/activate_trial_plan',
+      path: {
+        'tenant_id': tenantId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

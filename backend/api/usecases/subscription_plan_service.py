@@ -1,4 +1,5 @@
-from api.domain.dtos.subcription_plan_dto import SubscriptionPlanDto
+from api.common.exceptions import InvalidOperationException
+from api.domain.dtos.subcription_plan_dto import CreateSubscriptionPlanDto, SubscriptionPlanDto
 from api.infrastructure.persistence.repositories.subscription_plan_repository_impl import SubscriptionPlanRepository
 
 
@@ -23,3 +24,17 @@ class SubscriptionPlanService:
         if result:
             return SubscriptionPlanDto(**result.model_dump())
         return None
+
+    async def create_trial_plan_for_tenant(self, tenant_id: str, plan_id: str):
+
+        subscription_plan = CreateSubscriptionPlanDto(
+            tenant_id=tenant_id,
+            plan_id=plan_id,
+            is_trial=True,
+            user_id=None,
+            actor="tenant",
+            plan_level={"premium": 2}
+        )
+        result = await self.subscription_plan_repository.create_subscription_plan(subscription_plan=subscription_plan)
+        if result is None:
+            raise InvalidOperationException("Failed to create trial subscription plan.")

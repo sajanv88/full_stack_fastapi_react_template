@@ -38,11 +38,12 @@ class TenantRepository(BaseRepository[Tenant]):
         return result
     
     async def create(self, data: CreateTenantDto) -> PydanticObjectId | None:
+        
         try:
             new_tenant = Tenant(
                 name=data.name,
                 subdomain=data.subdomain,
-                features=default_enable_features
+                features=default_enable_features,
             )
             result = await super().create(new_tenant.model_dump(exclude_none=True))
             return result.id

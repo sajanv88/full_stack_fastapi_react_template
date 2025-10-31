@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useStripeProvider } from "@/components/providers/stripe-provider";
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { formatPrice, getApiClient } from "@/lib/utils";
-import { PlanDto } from "@/api";
+import { PlanDto, ProductDto } from "@/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
     CreditCard,
     Calendar,
@@ -22,6 +24,7 @@ import { useAppConfig } from "@/components/providers/app-config-provider";
 import { ShowScreenLoader } from "@/components/shared/show-screen-loader";
 import { ConfigureStripeNow } from "@/components/features/billings/stripe/configure-stripe-now";
 import { AddANewPlan } from "./add-a-new-plan";
+import { toast } from "sonner";
 
 export function BillingOverview() {
     const { configuredStripeSetting, loading: stripeLoading, stripeConfigurationError } = useStripeProvider();
@@ -31,12 +34,33 @@ export function BillingOverview() {
     const [loading, setLoading] = useState(true);
     const [hasMore, setHasMore] = useState(false);
     const [planError, setPlanError] = useState<string | null>(null);
+    const [products, setProducts] = useState<ProductDto[]>([]);
+    const [updatingPlanId, setUpdatingPlanId] = useState<string | null>(null);
 
     const fetchPlans = async () => {
         if (!accessToken) return;
         try {
             setLoading(true);
             const response = await getApiClient(accessToken).stripeBilling.listPlansApiV1BillingPlansGet();
+            for (const plan of response.plans) {
+                if (plan.product) {
+                    try {
+                        const product = await getApiClient(accessToken).stripeProducts.getProductByIdApiV1ProductsProductIdGet({
+                            productId: plan.product,
+                        });
+                        setProducts((prevProducts) => {
+                            // Avoid duplicates
+                            if (!prevProducts.find((p) => p.id === product.id)) {
+                                return [...prevProducts, product];
+                            }
+                            return prevProducts;
+                        });
+                    } catch (error) {
+                        console.error(`Error fetching product with ID ${plan.product}:`, error);
+                    }
+
+                }
+            }
             setPlans(response.plans);
             setHasMore(response.has_more);
             setPlanError(null);
@@ -57,6 +81,33 @@ export function BillingOverview() {
         }
     }, [accessToken, current_tenant, configuredStripeSetting]);
 
+    const handleTrialToggle = async (planId: string, currentTrialDays: number | null | undefined) => {
+        if (!accessToken) return;
+
+        try {
+            setUpdatingPlanId(planId);
+            const newTrialDays = (currentTrialDays != null && currentTrialDays > 0) ? 0 : 14;
+
+            await getApiClient(accessToken).stripeBilling.updatePlanApiV1BillingPlansPlanIdPatch({
+                planId,
+                requestBody: {
+                    trial_period_days: newTrialDays,
+                },
+            });
+
+            toast.success(
+                newTrialDays > 0 ? "Trial enabled (14 days)" : "Trial disabled",
+                { richColors: true, position: "top-right" }
+            );
+
+            await fetchPlans();
+        } catch (error) {
+            console.error("Error updating plan trial:", error);
+            toast.error("Failed to update trial period", { richColors: true, position: "top-right" });
+        } finally {
+            setUpdatingPlanId(null);
+        }
+    };
 
 
     const formatInterval = (interval: string, count: number) => {
@@ -198,6 +249,28 @@ export function BillingOverview() {
                                             )}
                                         </div>
                                         <Separator />
+
+                                        {/* Trial Toggle */}
+                                        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                                            <div className="space-y-0.5">
+                                                <Label htmlFor={`trial-${plan.id}`} className="text-sm font-medium">
+                                                    Enable Trial
+                                                </Label>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {plan.trial_period_days != null && plan.trial_period_days > 0
+                                                        ? `${plan.trial_period_days} days trial`
+                                                        : "No trial period"}
+                                                </p>
+                                            </div>
+                                            <Switch
+                                                id={`trial-${plan.id}`}
+                                                checked={plan.trial_period_days != null && plan.trial_period_days > 0}
+                                                onCheckedChange={() => handleTrialToggle(plan.id, plan.trial_period_days)}
+                                                disabled={updatingPlanId === plan.id}
+                                            />
+                                        </div>
+
+                                        <Separator />
                                         <div className="space-y-1">
                                             <p className="text-xs text-muted-foreground">Plan ID</p>
                                             <p className="text-xs font-mono bg-muted p-2 rounded truncate">
@@ -208,6 +281,12 @@ export function BillingOverview() {
                                             <p className="text-xs text-muted-foreground">Product ID</p>
                                             <p className="text-xs font-mono bg-muted p-2 rounded truncate">
                                                 {plan.product}
+                                            </p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-xs text-muted-foreground">Product Name</p>
+                                            <p className="text-xs font-mono bg-muted p-2 rounded truncate">
+                                                {products.find((p) => p.id === plan.product)?.name || "N/A"}
                                             </p>
                                         </div>
                                     </CardContent>

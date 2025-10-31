@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CreateProductDto } from '../models/CreateProductDto';
+import type { ProductDto } from '../models/ProductDto';
 import type { ProductListDto } from '../models/ProductListDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
@@ -47,6 +48,27 @@ export class StripeProductsService {
       url: '/api/v1/products/',
       body: requestBody,
       mediaType: 'application/json',
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Get Product by ID
+   * @returns ProductDto Successful Response
+   * @throws ApiError
+   */
+  public getProductByIdApiV1ProductsProductIdGet({
+    productId,
+  }: {
+    productId: string,
+  }): CancelablePromise<ProductDto> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/products/{product_id}',
+      path: {
+        'product_id': productId,
+      },
       errors: {
         422: `Validation Error`,
       },

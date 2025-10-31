@@ -3,12 +3,14 @@ from fastapi import APIRouter, Depends, status
 from api.common.utils import get_logger
 from api.core.container import get_billing_record_service
 from api.domain.dtos.billing_dto import CreatePlanDto,  PlanDto, PlanListDto, UpdatePlanDto
+from api.domain.enum.feature import Feature
+from api.domain.security.feature_access_management import check_feature_access
 from api.infrastructure.security.current_user import CurrentUser, CurrentUserOptional
 from api.usecases.billing_record_service import BillingRecordService
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/billing")
+router = APIRouter(prefix="/billing", dependencies=[Depends(check_feature_access(feature_name=Feature.STRIPE))])
 router.tags = ["Stripe - Billing"]
 
 @router.get("/plans", summary="List available plans", response_model=PlanListDto)
@@ -73,7 +75,7 @@ async def update_plan(
     if current_user.tenant_id:
         scope = "tenant"
 
-    await billing_service.update_plan(plan_id=plan_id, updated_plan=updated_plan, scope=scope)
+    await billing_service.update_plan(plan_id=plan_id, update_plan=updated_plan, scope=scope)
 
 
 

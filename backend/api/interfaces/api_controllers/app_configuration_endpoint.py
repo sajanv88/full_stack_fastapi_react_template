@@ -55,6 +55,9 @@ async def get_app_configuration(
     t = await get_tenant(tenant_service, str(tenant_id))
     current_tenant = TenantDto(**t.model_dump()) if t else None
 
+   
+    
+
     # Fetch available AI models from Ollama
     available_ai_models = OllamaModels().list_models()
     return AppConfigurationDto(
@@ -65,7 +68,7 @@ async def get_app_configuration(
         is_user_logged_in=is_user_logged_in,
         user_preferences=user_pref_doc,
         current_tenant=current_tenant,
-        environment = settings.fastapi_env
+        environment = settings.fastapi_env,
 
     )
 

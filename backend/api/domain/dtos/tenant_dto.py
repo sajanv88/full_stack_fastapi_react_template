@@ -47,8 +47,9 @@ class SubdomainAvailabilityDto(BaseModel):
     is_available: bool
 
 class UpdateTenantDto(BaseModel):
-    is_active: Optional[bool]
+    is_active: Optional[bool] | None = None
     custom_domain: Optional[CustomDomain] | None = None
+    subscription_id: Optional[str] | None = None
 
 
 class UpdateTenantResponseDto(BaseModel):

@@ -88,6 +88,8 @@ class TenantService:
         """Update tenant details. Raises TenantNotFoundException if tenant not found."""
         tenant = await self.get_tenant_by_id(tenant_id)
         tenant.is_active = data.is_active
+        tenant.custom_domain = data.custom_domain
+        tenant.subscription_id = data.subscription_id
         await self.tenant_repository.update(tenant_id, tenant.model_dump(exclude_none=True))
 
 
