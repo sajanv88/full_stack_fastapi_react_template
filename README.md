@@ -12,6 +12,8 @@ This full-stack template provides enterprise-ready features out of the box:
 - **Profile Management**: Complete user profile with image upload support
 - **Account Management**: User activation, deactivation, and role assignment
 - **Password Management**: Secure password reset and update functionality
+- **Passkeys Management**: Passkeys and management
+- **Magic link**: Passwordless login via Magic link
 
 ### 🏢 Tenant Management
 - **Multi-tenancy Support**: Isolated data and resources per tenant
@@ -38,6 +40,34 @@ This full-stack template provides enterprise-ready features out of the box:
 - **Chat History**: Persistent conversation history and management
 - **Model Selection**: Dynamic switching between different AI models
 - **Responsive Design**: Mobile-optimized chat interface
+
+### 💳 Stripe Payment Integration
+- **Payment Gateway Configuration**: Easy Stripe API and webhook setup
+- **Product Management**: Create and manage products with CRUD operations
+- **Billing Plans**: Flexible plan creation with monthly/yearly intervals
+- **Trial Periods**: Toggle trial periods for any plan (default 14 days)
+- **Invoice Management**: Comprehensive invoice listing and tracking
+- **Checkout Sessions**: Billing record management with pagination
+- **Multi-Currency Support**: Accept payments in multiple currencies
+- **Subscription Management**: Handle one-time and recurring payments
+
+### 🎛️ Feature Management
+- **Feature Toggles**: Enable/disable features per tenant
+- **Dynamic Feature Control**: Real-time feature activation/deactivation
+- **Visual Feature Dashboard**: Intuitive interface for feature management (Comming soon!)
+- **Granular Permissions**: Control feature access at tenant level
+
+### 🏠 Tenant Experience
+- **Custom Branding**: Tenant-specific configurations and settings (Coming soon!)
+- **Inactive Tenant View**: Professional inactive account messaging
+- **DNS Configuration**: Step-by-step custom domain setup
+- **Tenant Settings**: Comprehensive tenant information management
+
+### Coolify Integration
+- **Domain Mapping**: Assign domain easily with Coolify app
+- **Deployment**: Auto deploy when new domain added.
+- **Toggle on/off**: Via env
+
 
 ## Watch Demo
 
@@ -166,6 +196,7 @@ The backend follows **Clean Architecture** principles with clear layer separatio
 - **Background Tasks**: Celery with Redis broker
 - **Email**: SMTP integration with async mail sending
 - **AI Integration**: LangChain for AI/ML capabilities
+- **Stripe Integration**: Complete payment gateway with products, plans, and subscriptions
 - **API Documentation**: Auto-generated OpenAPI/Swagger docs
 - **Testing**: Comprehensive test suite with pytest
 
@@ -181,7 +212,18 @@ The frontend is built with modern React patterns and TypeScript for type safety:
 
 ### Component Organization
 
-- **Features** (`components/features/`): Business logic components (auth, profile, chat, etc.)
+- **Features** (`components/features/`): Business logic components
+  - **Auth**: Login, registration, password reset, passkey, and magic link authentication
+  - **Profile**: User profile management with image upload
+  - **Chat**: AI chat interface with streaming responses
+  - **Tenant**: Tenant management, settings, and feature toggles
+  - **Billings/Stripe**: Complete payment gateway integration
+    - Stripe configuration and settings
+    - Product management (CRUD operations)
+    - Billing plan creation and management
+    - Invoice listing and tracking
+    - Checkout session overview
+    - Trial period management
 - **Layouts** (`components/layouts/`): Page layout components (dashboard, default)
 - **Providers** (`components/providers/`): React context providers for global state
 - **Shared** (`components/shared/`): Reusable components across features
@@ -196,6 +238,9 @@ The frontend is built with modern React patterns and TypeScript for type safety:
 - **State Management**: React Context for global state
 - **Styling**: Tailwind CSS with responsive design
 - **API Integration**: Auto-generated client from OpenAPI specs
+- **Payment Integration**: Complete Stripe payment gateway components
+- **Feature Management**: Dynamic feature toggle interface
+- **Professional UI**: Modern card-based layouts with proper loading states
 
 ### Build System
 
@@ -205,6 +250,29 @@ The frontend is built with modern React patterns and TypeScript for type safety:
 - **pnpm**: Efficient package management
 
 ## 🐳 Development Environment
+
+### Stripe Payment Integration Setup
+
+To use the Stripe payment features, you need to configure your Stripe account:
+
+1. **Get Stripe API Keys**:
+   - Sign up at [Stripe Dashboard](https://dashboard.stripe.com)
+   - Get your API keys from Developers → API keys
+   - Get your webhook secret from Developers → Webhooks
+
+2. **Configure Stripe in Application**:
+   - Navigate to Stripe Configuration page in the app
+   - Enter your Stripe Secret Key
+   - Enter your Webhook Secret
+   - Set default currency (e.g., USD, EUR)
+   - Choose payment mode (one-time, recurring, or both)
+   - Set trial period days (optional)
+
+3. **Create Products and Plans**:
+   - Navigate to Products page to create your offerings
+   - Use "Add a Plan" to create pricing plans
+   - Toggle trial periods for any plan
+   - Monitor billing through the Billing Overview dashboard
 
 ### Prerequisites
 
@@ -279,12 +347,26 @@ The frontend is built with modern React patterns and TypeScript for type safety:
         # Environment
         FASTAPI_ENV="development"  # Options: "development", "production"
 
-
+        # Ollama settings
+        OLLAMA_HOST="http://localhost:11434"
+      
         # Coolify settings for deployment
          COOLIFY_ENABLED="false" # Set to "true" to enable Coolify integration
          COOLIFY_API_URL="https://{replace_with_your_coolify_instance_endpoint}/api/v1"
          COOLIFY_API_KEY="{replace_with_your_coolify_api_key}" # Read here https://coolify.io/docs/api-reference/authorization
          COOLIFY_APPLICATION_ID="{replace_with_your_coolify_application_id}" # Read here https://coolify.io/docs/api-reference/api/operations/get-application-by-uuid
+
+
+         # Default aws s3 settings for file uploads this belongs to the Host
+         AWS_REGION="eu-central-1"
+         AWS_ACCESS_KEY_ID="Ab..."
+         AWS_SECRET_ACCESS_KEY="xxe..."
+         AWS_S3_BUCKET_NAME="fs.."
+
+         # Stripe credentials settings
+         STRIPE_API_KEY="rk_test_5..."
+         STRIPE_PUBLISHABLE_KEY="pk_test_5..."
+         STRIPE_SECRET_KEY="sk_test_$..."
 
    ```
 
@@ -320,6 +402,41 @@ The frontend is built with modern React patterns and TypeScript for type safety:
 - **MongoDB**: localhost:27012
 - **Redis**: localhost:6372
 - **Fake SMTP UI**: http://localhost:1083
+
+### Available Features in UI
+
+Once you have the application running, you can access the following features:
+
+**Authentication & User Management:**
+- Login with email/password
+- Passkey authentication (WebAuthn)
+- Magic link authentication
+- User registration and profile management
+- Password reset functionality
+
+**Tenant Management:**
+- Tenant settings and configuration
+- Custom domain DNS setup
+- Feature toggle management
+- Inactive tenant view with support information
+
+**Stripe Billing & Payments:**
+- Stripe configuration interface
+- Product management (create, edit, delete)
+- Billing plan creation with trial periods
+- Billing overview dashboard
+- Invoice listing and management
+- Checkout session tracking
+
+**AI Chat:**
+- Real-time AI chat interface
+- Chat history management
+- Model selection
+
+**Dashboard:**
+- Overview of key metrics
+- Quick access to all features
+- Responsive design for mobile and desktop
 
 ## 🔄 Integration & Workflow
 
