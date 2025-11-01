@@ -1,7 +1,8 @@
-import { CreateUserDto, Gender, Permission, type MeResponseDto } from "@/api";
+import { CreateUserDto, Gender, Permission, TokenSetDto, type MeResponseDto } from "@/api";
 import { useProfileImage } from "@/hooks/use-profile-image";
 import {
     getApiClient,
+    getTenant,
 } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useLocation, useNavigate } from "react-router";
@@ -61,7 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    const fetchUser = useCallback(async function fetchUser() {
+    const fetchUser = useCallback(async function fetchUser(force?: boolean) {
+        if (isLoggedInState && !force) return;
+
         const apiClient = getApiClient(accessToken);
         const auth = apiClient.account;
         try {
@@ -136,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     async function refreshCurrentUser() {
-        await fetchUser();
+        await fetchUser(true); // Force refresh
     }
 
     async function login(data: { email: string; password: string }) {
@@ -190,39 +193,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    // Todo: Remove this worker implementation
+    // Todo: Refactor to auto refresh token using web worker
 
-    // useEffect(() => {
-    //     const worker = new Worker(new URL('../../worker.ts', import.meta.url));
-    //     worker.addEventListener("message", (event: MessageEvent<TokenSetDto | { type: string } | { message: string; code: number }>) => {
-    //         console.log("AuthProvider received message from worker:", event.data);
-    //         if (event.data && 'access_token' in event.data) {
-    //             setAccessToken(event.data.access_token);
-    //         } else if (event.data && 'code' in event.data) {
-    //             if (event.data.code === 401 || event.data.code === 400) {
-    //                 setIsLoggedInState(false);
-    //                 setUser(null);
-    //                 setAccessToken("");
-    //                 navigate("/login");
-    //             }
-    //         }
+    useEffect(() => {
+        const worker = new Worker(new URL('../../worker.ts', import.meta.url));
+        worker.addEventListener("message", (event: MessageEvent<TokenSetDto | { type: string } | { message: string; code: number }>) => {
+            console.log("AuthProvider received message from worker:", event.data);
+            if (event.data && 'access_token' in event.data) {
+                setAccessToken(event.data.access_token);
+            } else if (event.data && 'code' in event.data) {
+                if (event.data.code === 401 || event.data.code === 400) {
+                    setIsLoggedInState(false);
+                    setUser(null);
+                    setAccessToken("");
+                    navigate("/login");
+                }
+            }
 
-    //     });
-    //     window.addEventListener("tenant_set", () => {
-    //         console.log("tenant_set event received in auth provider");
-    //         const tenant = getTenant();
-    //         if (tenant) {
-    //             worker.postMessage({ tenantId: tenant.id });
-    //         }
+        });
+        window.addEventListener("tenant_set", () => {
+            console.log("tenant_set event received in auth provider");
+            const tenant = getTenant();
+            if (tenant) {
+                worker.postMessage({ tenantId: tenant.id });
+            }
 
-    //     })
+        })
 
-    //     window.addEventListener("tenant_removed", () => {
-    //         console.log("tenant_removed event received in auth provider");
-    //         worker.postMessage({ tenantId: null });
-    //     })
+        window.addEventListener("tenant_removed", () => {
+            console.log("tenant_removed event received in auth provider");
+            worker.postMessage({ tenantId: null });
+        })
 
-    // }, [])
+    }, [])
 
     useEffect(() => {
         if (notProtectedRoutes.includes(pathname)) {

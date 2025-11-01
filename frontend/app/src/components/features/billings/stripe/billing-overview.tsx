@@ -42,25 +42,23 @@ export function BillingOverview() {
         try {
             setLoading(true);
             const response = await getApiClient(accessToken).stripeBilling.listPlansApiV1BillingPlansGet();
+            const allProductsPromises = [];
             for (const plan of response.plans) {
                 if (plan.product) {
                     try {
-                        const product = await getApiClient(accessToken).stripeProducts.getProductByIdApiV1ProductsProductIdGet({
+                        const product = getApiClient(accessToken).stripeProducts.getProductByIdApiV1ProductsProductIdGet({
                             productId: plan.product,
                         });
-                        setProducts((prevProducts) => {
-                            // Avoid duplicates
-                            if (!prevProducts.find((p) => p.id === product.id)) {
-                                return [...prevProducts, product];
-                            }
-                            return prevProducts;
-                        });
+                        allProductsPromises.push(product);
+
                     } catch (error) {
                         console.error(`Error fetching product with ID ${plan.product}:`, error);
                     }
 
                 }
             }
+            const allProducts = await Promise.all(allProductsPromises);
+            setProducts(allProducts);
             setPlans(response.plans);
             setHasMore(response.has_more);
             setPlanError(null);
@@ -150,7 +148,7 @@ export function BillingOverview() {
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-start justify-between">
-                <div className="flex-1">
+                <div className="sm:flex-1">
                     <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                         <TrendingUp className="h-6 w-6" />
                         Billing Overview
@@ -159,10 +157,13 @@ export function BillingOverview() {
                         View and manage your billing plans and subscription details
                     </p>
                 </div>
-                <div className="flex items-center space-x-2">
-                    <Button onClick={fetchPlans} variant="outline" size="sm">
+                <div className="flex items-center justify-between space-x-2">
+                    <Button onClick={fetchPlans} variant="outline" className="hidden sm:inline-flex" >
                         <RefreshCw className="h-4 w-4 mr-2" />
                         Refresh
+                    </Button>
+                    <Button onClick={fetchPlans} variant="outline" className="sm:hidden" size="icon">
+                        <RefreshCw className="h-4 w-4" />
                     </Button>
                     <AddANewPlan onPlanCreated={fetchPlans} />
                 </div>

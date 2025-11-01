@@ -225,17 +225,25 @@ export function Products() {
                         Manage your Stripe products and offerings
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button onClick={fetchProducts} variant="outline" size="sm">
+                <div className="flex items-center justify-between gap-2">
+                    <Button onClick={fetchProducts} variant="outline" className="hidden sm:inline-flex">
                         <RefreshCw className="h-4 w-4 mr-2" />
                         Refresh
                     </Button>
+                    <Button onClick={fetchProducts} variant="outline" className="sm:hidden" size="icon">
+                        <RefreshCw className="h-4 w-4" />
+                    </Button>
                     <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button onClick={openCreateDialog}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Create Product
-                            </Button>
+                            <>
+                                <Button onClick={openCreateDialog} className="hidden sm:inline-flex">
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Create Product
+                                </Button>
+                                <Button onClick={openCreateDialog} className="sm:hidden" size="icon">
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </>
                         </DialogTrigger>
                         <DialogContent>
                             <form onSubmit={handleSubmit(onSubmit)}>

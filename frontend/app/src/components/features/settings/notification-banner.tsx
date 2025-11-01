@@ -134,7 +134,7 @@ export function NotificationBanner() {
                         Manage the notification banner displayed to users across your application
                     </p>
                 </div>
-                <Button onClick={fetchNotificationBanner} variant="outline" size="sm">
+                <Button onClick={fetchNotificationBanner} variant="outline">
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Refresh
                 </Button>
