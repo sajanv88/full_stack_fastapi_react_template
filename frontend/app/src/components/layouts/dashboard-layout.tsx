@@ -23,15 +23,6 @@ export function DashboardLayout() {
     const auth = useAuthContext();
     const { current_tenant, notificationBannerSetting } = useAppConfig();
 
-    useEffect(() => {
-        if (!auth.user) {
-            async function init() {
-                await auth.refreshCurrentUser();
-            }
-            init();
-        }
-    }, [auth.user])
-
     const userImage = auth.user?.image_url ? auth.user?.image_url : "https://github.com/evilrabbit.png";
     const isHost = useMemo(() => auth.can("host:manage_tenants"), [auth]);
 
@@ -57,9 +48,6 @@ export function DashboardLayout() {
         <SidebarProvider>
             <DashboardSidebar />
             <main className="sm:w-full ">
-
-
-
                 <div className="flex justify-between">
                     <SidebarTrigger />
                     <DarkMode />

@@ -186,9 +186,12 @@ export function CheckoutOverview() {
                         View and manage all checkout sessions and billing records
                     </p>
                 </div>
-                <Button onClick={() => fetchCheckoutRecords(pagination.skip)} variant="outline" size="sm">
+                <Button onClick={() => fetchCheckoutRecords(pagination.skip)} variant="outline" className="hidden sm:inline-flex">
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Refresh
+                </Button>
+                <Button onClick={() => fetchCheckoutRecords(pagination.skip)} variant="outline" className="sm:hidden">
+                    <RefreshCw className="h-4 w-4" />
                 </Button>
             </div>
 

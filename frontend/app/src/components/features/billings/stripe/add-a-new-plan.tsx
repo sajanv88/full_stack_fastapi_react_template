@@ -128,10 +128,15 @@ export function AddANewPlan({ onPlanCreated }: AddANewPlanProps) {
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add a Plan
-                </Button>
+                <>
+                    <Button className="hidden sm:inline-flex" onClick={() => setIsOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add a Plan
+                    </Button>
+                    <Button className="sm:hidden" size="icon" onClick={() => setIsOpen(true)}>
+                        <Plus className="h-4 w-4" />
+                    </Button>
+                </>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[550px]">
                 <form onSubmit={handleSubmit(onSubmit)}>
