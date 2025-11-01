@@ -29,6 +29,7 @@ import { Billing } from "@/components/features/billings/stripe/billing";
 import { Invoices } from "@/components/features/billings/stripe/invoices";
 import { Products } from "@/components/features/billings/stripe/products";
 import { CheckoutOverview } from "@/components/features/billings/stripe/checkout-overview";
+import { AppSettings } from "@/components/features/settings/app-settings";
 
 function App() {
   const { user } = useAuthContext();
@@ -85,6 +86,10 @@ function App() {
           <StripeProvider>
             <ConfigureStripe />
           </StripeProvider>
+        } />
+
+        <Route path="settings/notifications" element={
+          <AppSettings />
         } />
 
         <Route path="billing" element={<Billing />}>

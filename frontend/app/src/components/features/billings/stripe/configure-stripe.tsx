@@ -27,6 +27,7 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { useState } from "react";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { useAuthContext } from "@/components/providers/auth-provider";
+import { ShowScreenLoader } from "@/components/shared/show-screen-loader";
 
 const stripeConfigSchema = z.object({
     stripe_secret_key: z.string().min(1, "Stripe secret key is required"),
@@ -90,12 +91,7 @@ export function ConfigureStripe() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="flex flex-col items-center gap-4">
-                    <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Loading Stripe configuration...</p>
-                </div>
-            </div>
+            <ShowScreenLoader message="Loading Stripe configuration..." />
         );
     }
 
