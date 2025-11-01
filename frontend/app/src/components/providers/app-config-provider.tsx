@@ -1,6 +1,6 @@
-import { AppConfigurationDto, TenantDto } from "@/api";
+import { AppConfigurationDto, NotificationBannerSettingDto, TenantDto } from "@/api";
 import { getApiClient, setTenant } from "@/lib/utils";
-import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react"
 import { useAuthContext } from "./auth-provider";
 
 
@@ -11,6 +11,7 @@ interface Configuration extends AppConfigurationDto {
     reloadAppConfig: () => Promise<void>;
     shouldShowTenantSelection?: boolean;
     redirectToTenantDomain: (tenant: TenantDto) => void;
+    notificationBannerSetting: NotificationBannerSettingDto
 }
 const appConfigContext = createContext<Configuration>({
     is_multi_tenant_enabled: false,
@@ -25,6 +26,11 @@ const appConfigContext = createContext<Configuration>({
     reloadAppConfig: async () => { },
     redirectToTenantDomain: () => { },
     environment: "development",
+    notificationBannerSetting: {
+        is_enabled: false,
+        message: "",
+    }
+
 });
 
 
@@ -50,21 +56,31 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
         environment: "development"
     });
     const [shouldShowTenantSelection, setShouldShowTenantSelection] = useState(false);
+    const [notificationBannerSetting, setNotificationBannerSetting] = useState<NotificationBannerSettingDto>({
+        is_enabled: false,
+        message: "",
+    });
 
     const reloadAppConfig = useCallback(async function reloadAppConfig() {
-        const config = await getApiClient(accessToken).appConfiguration.getAppConfigurationApiV1AppConfigurationGet();
+        const [config, notificationSetting] = await Promise.all([
+            getApiClient(accessToken).appConfiguration.getAppConfigurationApiV1AppConfigurationGet(),
+            getApiClient(accessToken).notifications.getNotificationBannerApiV1NotificationsBannerGet()
+        ]);
         setAppConfig(config)
-
+        setNotificationBannerSetting(notificationSetting);
     }, [accessToken]);
 
 
 
 
     useEffect(() => {
-
         const fetchConfig = async () => {
-            const config = await getApiClient(accessToken).appConfiguration.getAppConfigurationApiV1AppConfigurationGet();
+            const [config, notificationSetting] = await Promise.all([
+                getApiClient(accessToken).appConfiguration.getAppConfigurationApiV1AppConfigurationGet(),
+                getApiClient(accessToken).notifications.getNotificationBannerApiV1NotificationsBannerGet()
+            ]);
             setAppConfig(config)
+            setNotificationBannerSetting(notificationSetting);
             if (config.is_multi_tenant_enabled === false) {
                 setTenant(null);
             }
@@ -113,14 +129,16 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
 
     }, [])
 
+    const value = useMemo(() => ({
+        ...appConfig,
+        reloadAppConfig,
+        shouldShowTenantSelection,
+        redirectToTenantDomain,
+        notificationBannerSetting
+    }), [appConfig, notificationBannerSetting])
 
     return (
-        <appConfigContext.Provider value={{
-            ...appConfig,
-            reloadAppConfig,
-            shouldShowTenantSelection,
-            redirectToTenantDomain
-        }}>
+        <appConfigContext.Provider value={value}>
             {children}
         </appConfigContext.Provider>
     )

@@ -23,7 +23,7 @@ import {
     Tent,
     Cog
 } from 'lucide-react';
-import { IconSettingsBolt, IconCurrencyEuro } from "@tabler/icons-react"
+import { IconSettingsBolt, IconCurrencyEuro, IconNotification } from "@tabler/icons-react"
 import { useAuthContext } from '../providers/auth-provider';
 import { useMemo } from 'react';
 import { cn, getApiClient } from '@/lib/utils';
@@ -39,8 +39,9 @@ const navLinks = [
         label: "Settings",
         icon: Cog,
         children: [
-            { href: "/settings/general", label: "General", icon: IconSettingsBolt },
-            { href: "/settings/payment", label: "Payment", icon: IconCurrencyEuro },
+            { href: "/settings/general", label: "General", icon: IconSettingsBolt, visibility: "tenants" },
+            { href: "/settings/payment", label: "Payment", icon: IconCurrencyEuro, visibility: "tenants" },
+            { href: "/settings/notifications", label: "Notifications", icon: IconNotification, visibility: "both" },
         ]
     },
 ];
@@ -121,6 +122,30 @@ export function DashboardSidebar() {
                                     </NavLink>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
+                        ))}
+                    </SidebarMenu>
+                )}
+
+                {(link.children && link.children.length > 0 && !isTenant) && (
+                    <SidebarMenu className='pl-8 mt-1'>
+                        {link.children.map((child) => (
+                            (child.visibility === "both") && (
+                                <SidebarMenuItem key={child.href}>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={isLinkActive(child.href)}
+                                        className={cn("group relative")}
+                                    >
+                                        <NavLink to={child.href} className="w-full flex items-center space-x-3">
+                                            <child.icon className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                            <span className="group-hover:translate-x-0.5 transition-transform">{child.label}</span>
+                                            {isLinkActive(child.href) && (
+                                                <ChevronRight className="w-4 h-4 ml-auto text-primary" />
+                                            )}
+                                        </NavLink>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            )
                         ))}
                     </SidebarMenu>
                 )}

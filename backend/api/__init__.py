@@ -29,6 +29,7 @@ from api.interfaces.api_controllers.billing_endpoint import router as billing_ro
 from api.interfaces.api_controllers.stripe_endpoint import router as stripe_router
 from api.interfaces.api_controllers.invoice_endpoint import router as invoice_router
 from api.interfaces.api_controllers.checkout_endpoint import router as checkout_router
+from api.interfaces.api_controllers.notification_endpoint import router as notification_router
 
 from api.common.logging import configure_logging
 from api.core.config import settings
@@ -120,6 +121,7 @@ router.include_router(billing_router)
 router.include_router(stripe_router)
 router.include_router(invoice_router)
 router.include_router(checkout_router)
+router.include_router(notification_router)
 app.include_router(router)
 
 
