@@ -9,8 +9,11 @@ class NotificationBannerRepository(BaseRepository[NotificationBannerSetting]):
         super().__init__(NotificationBannerSetting)
     
     async def get_banner_setting(self) -> NotificationBannerSetting | None:
-        result = await self.single_or_none()
-        return result
+        result = await self.list()
+        if len(result) == 0:
+            return None
+        setting = result[0]
+        return NotificationBannerSetting(**setting.model_dump())
 
     async def create_banner_setting(self, is_enabled: bool, message: str | None, tenant_id: PydanticObjectId | None) -> NotificationBannerSetting:
         new_setting = NotificationBannerSetting(is_enabled=is_enabled, message=message, tenant_id=tenant_id)

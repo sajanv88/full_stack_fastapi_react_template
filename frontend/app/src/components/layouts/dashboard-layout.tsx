@@ -9,18 +9,19 @@ import { useAuthContext } from "@/components/providers/auth-provider";
 import { Toaster } from "sonner";
 import { SimpleFooter } from "@/components/shared/simple-footer";
 import { DashboardSidebar } from "@/components/layouts/dashboard-sidebar-layout";
-import { useAppConfig } from "../providers/app-config-provider";
+import { useAppConfig } from "@/components/providers/app-config-provider";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useMemo } from "react";
-import { Loading } from "../shared/loading";
-import { Button } from "../ui/button";
+import { Loading } from "@/components/shared/loading";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Banner } from "@/components/shared/banner";
 
 
 export function DashboardLayout() {
     const navigate = useNavigate();
     const auth = useAuthContext();
-    const { current_tenant } = useAppConfig();
+    const { current_tenant, notificationBannerSetting } = useAppConfig();
 
     useEffect(() => {
         if (!auth.user) {
@@ -57,6 +58,8 @@ export function DashboardLayout() {
             <DashboardSidebar />
             <main className="sm:w-full ">
 
+
+
                 <div className="flex justify-between">
                     <SidebarTrigger />
                     <DarkMode />
@@ -78,7 +81,7 @@ export function DashboardLayout() {
                     </div>
                 )}
                 <section className="w-full h-full flex flex-col">
-
+                    <Banner isEnabled={notificationBannerSetting.is_enabled} message={notificationBannerSetting.message} />
                     <div className="flex-1 flex-col">
                         <header className={cn("flex items-center p-2 mx-5", {
                             "mt-10": !auth.user?.is_active

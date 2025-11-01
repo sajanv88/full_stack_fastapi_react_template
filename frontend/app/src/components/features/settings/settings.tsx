@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Cloud, Database, Settings as SettingsIcon, CheckCircle, AlertCircle } from "lucide-react";
-import { Loading } from "@/components/shared/loading";
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { AvailableStorageProviderDto } from "@/api";
 import { ShowScreenLoader } from "@/components/shared/show-screen-loader";

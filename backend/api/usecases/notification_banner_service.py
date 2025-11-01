@@ -12,7 +12,7 @@ class NotificationBannerService:
     async def get_banner_setting(self) -> NotificationBannerSettingDto:
         result = await self.repository.get_banner_setting()
         if result:
-            return NotificationBannerSettingDto(**result)
+            return NotificationBannerSettingDto(**result.model_dump())
         return NotificationBannerSettingDto(is_enabled=False, message=None)
 
     async def create_banner_setting(self, is_enabled: bool, message: Optional[str] = None, tenant_id: Optional[PydanticObjectId] = None):
