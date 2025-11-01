@@ -1,6 +1,6 @@
 import { AppConfigurationDto, NotificationBannerSettingDto, TenantDto } from "@/api";
 import { getApiClient, setTenant } from "@/lib/utils";
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react"
+import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useAuthContext } from "./auth-provider";
 
 
@@ -129,13 +129,13 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
 
     }, [])
 
-    const value = useMemo(() => ({
+    const value = {
         ...appConfig,
         reloadAppConfig,
         shouldShowTenantSelection,
         redirectToTenantDomain,
         notificationBannerSetting
-    }), [appConfig, notificationBannerSetting])
+    }
 
     return (
         <appConfigContext.Provider value={value}>
