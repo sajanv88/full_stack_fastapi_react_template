@@ -1,4 +1,4 @@
-const pollingDelayInMilliSeconds = 1 * 1000 * 60;
+const pollingDelayInMilliSeconds = 10 * 1000 * 60;
 let tenantId: string | null = null;
 
 self.addEventListener("message", (event: MessageEvent<{ tenantId: string }>) => {
