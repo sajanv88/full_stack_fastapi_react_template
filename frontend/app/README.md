@@ -64,7 +64,7 @@ src/
 
 2. **Generate API Client** (Backend must be running):
    ```bash
-   pnpm run generate:api
+   pnpm run generate:api # You may have to change it to localhost:8000.. Check the package.json 
    ```
 
 3. **Start Development Server**:

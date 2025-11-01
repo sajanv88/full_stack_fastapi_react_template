@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate:api": "openapi --input http://desktop:8086/openapi.json --output ./src/api --client fetch --name ApiClient --useOptions --useUnionTypes --exportCore true --exportServices true --exportModels true --exportSchemas false --indent 2 --postfixServices Service"
+    "generate:api": "openapi --input http://desktop.tail4fc230.ts.net:8086/openapi.json --output ./src/api --client fetch --name ApiClient --useOptions --useUnionTypes --exportCore true --exportServices true --exportModels true --exportSchemas false --indent 2 --postfixServices Service"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
