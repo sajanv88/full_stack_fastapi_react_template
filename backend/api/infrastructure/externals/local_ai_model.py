@@ -8,7 +8,7 @@ from api.domain.dtos.ai_dto import AIModelInfoDto
 from api.usecases.local_ai_service import LocalAIService
 from api.core.config import settings
 import requests
-import time
+import asyncio
 
 logger = get_logger(__name__)
 
@@ -97,7 +97,7 @@ class OllamaChat:
             for chunk in self.chain.stream({"question": question, "history": recent_history, "username": self.username}):
                 output += chunk.content
                 yield chunk.content
-                time.sleep(0.01)
+                await asyncio.sleep(0.01)
 
             self.history.append(AIMessage(content=output))
             background_tasks.add_task(self.local_ai_service.save_user_query,

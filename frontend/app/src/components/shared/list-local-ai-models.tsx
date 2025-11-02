@@ -12,15 +12,13 @@ import {
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { InfoIcon, Brain, Cpu, Zap, Sparkles } from 'lucide-react'
-import { useAppConfig } from "@/components/providers/app-config-provider";
 
 interface ListLocalAIModelsProps {
     onModelSelect: (model: AIModelInfoDto) => void;
     selectedModel?: AIModelInfoDto;
+    avilableModels: AIModelInfoDto[];
 }
-export function ListLocalAIModels({ onModelSelect, selectedModel }: ListLocalAIModelsProps) {
-    const { available_ai_models } = useAppConfig()
-    const [models, setModels] = useState<AIModelInfoDto[]>(available_ai_models || []);
+export function ListLocalAIModels({ onModelSelect, selectedModel, avilableModels }: ListLocalAIModelsProps) {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
@@ -37,14 +35,12 @@ export function ListLocalAIModels({ onModelSelect, selectedModel }: ListLocalAIM
     }
 
     useEffect(() => {
-        if (!available_ai_models) {
+        if (!avilableModels) {
             setError("No AI models available. Please ensure your AI backend is configured correctly.");
             setLoading(false);
             return;
         }
-        setModels(available_ai_models);
-        setLoading(false);
-    }, [available_ai_models])
+    }, [avilableModels])
 
     if (error) {
         return (
@@ -66,7 +62,7 @@ export function ListLocalAIModels({ onModelSelect, selectedModel }: ListLocalAIM
 
                 <Select
                     onValueChange={(value) => {
-                        const selected = models.find(model => model.name === value);
+                        const selected = avilableModels.find(model => model.name === value);
                         if (selected) {
                             onModelSelect(selected);
                         }
@@ -84,7 +80,7 @@ export function ListLocalAIModels({ onModelSelect, selectedModel }: ListLocalAIM
                                 <Cpu className="h-3 w-3" />
                                 <span>{loading ? "Fetching Models..." : "Available Models"}</span>
                             </SelectLabel>
-                            {models.map((model) => (
+                            {avilableModels.map((model) => (
                                 <SelectItem
                                     key={model.name}
                                     value={model.name}

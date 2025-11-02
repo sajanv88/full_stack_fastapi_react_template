@@ -34,10 +34,12 @@ interface ChatState {
 
 
 export function AIChat() {
+    const isUserScrollingRef = useRef(false)
+    const userScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [searchParams, setSearchParams] = useSearchParams()
     const { user, accessToken } = useAuthContext()
     const { getAIChatNewSession, fetchAllSessions } = useAIChat()
-    const { user_preferences, available_ai_models } = useAppConfig()
+    const { user_preferences } = useAppConfig()
     const [chatState, setChatState] = useState<ChatState>({
         messages: [],
         isLoading: false,
@@ -49,6 +51,7 @@ export function AIChat() {
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const [pending, startTransition] = useTransition()
+    const [availableAiModels, setAvailableAIModels] = useState<AIModelInfoDto[]>([])
     // Auto-resize textarea
     const adjustTextareaHeight = () => {
         const textarea = inputRef.current
@@ -65,6 +68,7 @@ export function AIChat() {
 
     // Auto-scroll to bottom when new messages arrive or content changes
     const scrollToBottom = () => {
+        if (isUserScrollingRef.current) return
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
 
@@ -84,8 +88,48 @@ export function AIChat() {
 
     }
 
+    async function fetchAvailableModels() {
+        try {
+            const apiClient = getApiClient(accessToken)
+            const response = await apiClient.ai.getModelsApiV1AiModelsGet();
+            setAvailableAIModels(response)
+        } catch (error) {
+            console.error("Failed to fetch available AI models:", error)
+            toast.error("Failed to fetch available AI models", { description: "AI chat won't work.", richColors: true, position: "top-right" })
+        }
+    }
+
+    // Focus input on mount
     useEffect(() => {
-        scrollToBottom()
+        inputRef.current?.focus()
+        function handleScroll() {
+            isUserScrollingRef.current = true
+            if (userScrollTimeoutRef.current) {
+                clearTimeout(userScrollTimeoutRef.current)
+            }
+            userScrollTimeoutRef.current = setTimeout(() => {
+                isUserScrollingRef.current = false
+            }, 200)
+        }
+        window.addEventListener("scroll", handleScroll)
+        return () => {
+            window.removeEventListener("scroll", handleScroll)
+            if (userScrollTimeoutRef.current) {
+                clearTimeout(userScrollTimeoutRef.current)
+            }
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!accessToken) return;
+        fetchAvailableModels()
+    }, [accessToken])
+
+
+    useEffect(() => {
+        if (chatState.messages.length > 0) {
+            scrollToBottom()
+        }
     }, [chatState.messages])
 
     // Also scroll when streaming content changes
@@ -96,18 +140,15 @@ export function AIChat() {
         }
     }, [chatState.isLoading])
 
-    // Focus input on mount
-    useEffect(() => {
-        inputRef.current?.focus()
-    }, [])
+
 
     // Load preferred model from user preferences
     useEffect(() => {
-        if (user_preferences?.preferences?.model_name && available_ai_models) {
-            const preferredModel = available_ai_models.find(model => model.name === user_preferences.preferences.model_name)
+        if (user_preferences?.preferences?.model_name && availableAiModels) {
+            const preferredModel = availableAiModels.find(model => model.name === user_preferences.preferences.model_name)
             setSelectedModel(preferredModel)
         }
-    }, [user_preferences, available_ai_models])
+    }, [user_preferences, availableAiModels])
 
     useEffect(() => {
         async function fetchSelectedSessionHistory() {
@@ -335,7 +376,7 @@ export function AIChat() {
     return (
         <section className="h-full flex flex-col pb-10">
             {/* Page Header */}
-            {available_ai_models?.length == 0 && (
+            {availableAiModels?.length == 0 && (
                 <Alert className='mb-5' variant="destructive">
                     <AlertTitle>No AI Models Available</AlertTitle>
                     <AlertDescription>
@@ -376,6 +417,7 @@ export function AIChat() {
                                 <ListLocalAIModels
                                     onModelSelect={onSelectModelEvent}
                                     selectedModel={selectedModel}
+                                    avilableModels={availableAiModels}
                                 />
                             </section>
 
@@ -426,6 +468,7 @@ export function AIChat() {
                             <ListLocalAIModels
                                 onModelSelect={setSelectedModel}
                                 selectedModel={selectedModel}
+                                avilableModels={availableAiModels}
                             />
                         </section>
                     </section>
@@ -607,7 +650,7 @@ export function AIChat() {
                                                 <Loading variant="spinner" size="sm" />
                                             </section>
                                         )}
-                                        {available_ai_models?.length === 0 && (
+                                        {availableAiModels?.length === 0 && (
                                             <section className="pt-4 flex items-center">
                                                 <InfoIcon className="w-4 h-4 text-muted-foreground" />
                                                 <span className="ml-2 text-xs text-muted-foreground">No AI models available. Please install a local AI model to start chatting.</span>
@@ -616,7 +659,7 @@ export function AIChat() {
                                     </section>
                                     <Button
                                         onClick={sendMessage}
-                                        disabled={!input.trim() || chatState.isLoading || !selectedModel?.name || available_ai_models?.length === 0}
+                                        disabled={!input.trim() || chatState.isLoading || !selectedModel?.name || availableAiModels.length === 0}
                                         className="px-3 sm:px-6 h-10 sm:h-11"
                                         size="default"
                                     >
