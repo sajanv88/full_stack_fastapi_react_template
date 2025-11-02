@@ -17,4 +17,12 @@ async def get_permissions(
     current_user: CurrentUser
 ):
     permissions = [{"name": perm.value} for perm in Permission]
+    if current_user.tenant_id:
+        logger.debug("Filtering out host-level permissions for tenant user")
+        permissions = filter(
+            lambda p: not p["name"].startswith("host:"),
+            permissions
+        )
+        permissions = list(permissions)
+
     return permissions
