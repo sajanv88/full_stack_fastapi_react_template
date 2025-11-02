@@ -59,12 +59,12 @@ async def get_app_configuration(
     
 
     # Fetch available AI models from Ollama
-    available_ai_models = OllamaModels().list_models()
+    # available_ai_models = OllamaModels().list_models()
     return AppConfigurationDto(
         is_multi_tenant_enabled=is_tenancy_enabled(),
         multi_tenancy_strategy=get_tenancy_strategy(),
         host_main_domain=get_host_main_domain_name(),
-        available_ai_models=available_ai_models,
+        available_ai_models=[],
         is_user_logged_in=is_user_logged_in,
         user_preferences=user_pref_doc,
         current_tenant=current_tenant,
