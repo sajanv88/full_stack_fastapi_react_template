@@ -149,10 +149,12 @@ export function RolesProvider({ children }: RolesProviderProps) {
             });
             await refreshRoles();
         } catch (error) {
-            console.error("Error deleting role:", error);
+
             toast.error("Failed to delete role", {
                 richColors: true,
+                description: "Check if the role is assigned to any users",
                 position: "top-right",
+                duration: 3000,
             });
         }
 

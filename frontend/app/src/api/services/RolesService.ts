@@ -124,6 +124,7 @@ export class RolesService {
   }
   /**
    * Delete Role
+   * Deletes a role if it is not assigned to any users.
    * @returns any Successful Response
    * @throws ApiError
    */

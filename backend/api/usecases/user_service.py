@@ -71,7 +71,20 @@ class UserService:
         existing = await self.user_repository.get(id=user_id)
         if existing is None:
             raise UserNotFoundException(user_id)
-        return await self.user_repository.update(user_id=user_id, data=user_data)
+        # Todo: Refactor email update logic or check if email is being updated
+        # existing_email = user_data.email
+        # if existing_email and existing_email != existing.email:
+        #     email_in_use = await self.user_repository.single_or_none(email=existing_email)
+        #     if email_in_use is not None:
+        #         raise EmailAlreadyExistsException(existing_email)
+        #     existing.email = existing_email
+        existing.first_name = user_data.first_name or existing.first_name
+        existing.last_name = user_data.last_name or existing.last_name
+        existing.gender = user_data.gender or existing.gender
+        existing.role_id = PydanticObjectId(user_data.role_id) if user_data.role_id else existing.role_id
+        doc = await existing.to_serializable_dict()
+        logger.info(f"Updating user {user_id} with data: {doc}")
+        return await self.user_repository.update(user_id=user_id, data=UpdateUserDto(**doc))
      
 
     async def delete_user(self, user_id: str) -> None:
@@ -121,3 +134,4 @@ class UserService:
         """Aggregate users based on the provided pipeline. Returns an async list[TimeSeriesDto]."""
         return await self.user_repository.aggregate(pipeline, projection_model=TimeSeriesDto)
     
+
