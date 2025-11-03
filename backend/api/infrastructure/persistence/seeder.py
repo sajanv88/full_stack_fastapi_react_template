@@ -28,7 +28,7 @@ async def seed_initial_data():
 
     existing_roles = await role_repo.count()
     roles = get_seed_roles()
-    if existing_roles != len(roles):
+    if existing_roles == 0:
         logger.info("Seeding initial data...")
         for role in roles:
             create_role = CreateRoleDto(
