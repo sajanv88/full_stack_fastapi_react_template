@@ -9,10 +9,15 @@ from api.domain.dtos.role_dto import CreateRoleDto, UpdateRoleDto
 from api.domain.enum.role import RoleType
 from api.common.security import hash_it
 from api.domain.enum.permission import Permission
+import os
+
+from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
+from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
 
 fake = Faker()
 
 logger = get_logger(__name__)
+LOCK_FILE = "/tmp/seed.lock"
 
 async def seed_initial_data():
     if settings.fastapi_env != "development":
@@ -21,16 +26,23 @@ async def seed_initial_data():
     
     if settings.mongo_db_name == "myapp":
         logger.warning("Using default database name 'myapp'. Please change it in production environments.")
-    # Add your seeding logic here
+    
+    if os.path.exists(LOCK_FILE):
+        logger.info("Seeding has already been completed. Skipping...")
+        return
 
-    user_repo = get_user_service().user_repository
-    role_repo = get_role_service().role_repository
+    user_repo: UserRepository = get_user_service().user_repository
+    role_repo: RoleRepository = get_role_service().role_repository
 
     existing_roles = await role_repo.count()
     roles = get_seed_roles()
     if existing_roles == 0:
         logger.info("Seeding initial data...")
         for role in roles:
+            is_role_existing = await role_repo.single_or_none(name=role.name)
+            if is_role_existing:
+                logger.info(f"Role {role.name} already exists. Skipping...")
+                return
             create_role = CreateRoleDto(
                 name=role.name,
                 description=role.description,
@@ -86,3 +98,6 @@ async def seed_initial_data():
             await user_repo.create(data=fake_user)
         logger.info("Seeded fake users.")
     
+    # Create lock file to indicate seeding is done
+    with open(LOCK_FILE, "w") as f:
+        f.write("seeding completed")

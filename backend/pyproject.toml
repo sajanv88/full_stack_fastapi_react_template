@@ -31,5 +31,6 @@ dependencies = [
     "starlette>=0.48.0",
     "streamlit>=1.49.1",
     "stripe>=13.0.1",
+    "uvicorn>=0.37.0",
     "webauthn>=2.7.0",
 ]

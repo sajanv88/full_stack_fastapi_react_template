@@ -3,6 +3,7 @@ import { getApiClient } from "@/lib/utils";
 import { useContext, createContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuthContext } from "./auth-provider";
+import { NoPermissionToAccessResource } from "@/components/shared/no-permission-access-resource";
 
 export interface StorageFormData extends Omit<AvailableStorageProviderDto, 'id' | 'created_at' | 'updated_at'> { }
 interface SettingsContextProps {
@@ -26,11 +27,12 @@ interface SettingsProviderProps {
     children: React.ReactNode;
 }
 export function SettingsProvider({ children }: SettingsProviderProps) {
-    const { accessToken } = useAuthContext();
+    const { accessToken, can } = useAuthContext();
     const apiClient = getApiClient(accessToken);
     const [storages, setStorages] = useState<AvailableStorageProviderDto[]>([]);
     const [availableStorages, setAvailableStorages] = useState<Array<Record<string, string>>>([]);
     const [loading, setLoading] = useState(true);
+    const canManageSettings = can('manage:storage_settings') || can('full:access');
 
     async function fetchSettings() {
         setLoading(true);
@@ -77,8 +79,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }
 
     useEffect(() => {
+        if (!canManageSettings || !accessToken) return;
         fetchSettings();
-    }, [accessToken])
+    }, [accessToken, canManageSettings])
+
+    if (!canManageSettings) {
+        return <NoPermissionToAccessResource message='Storage Settings' />;
+    }
 
     return (
         <SettingsContext.Provider value={{ loading, onConfigureStorage, storages, availableStorages }}>

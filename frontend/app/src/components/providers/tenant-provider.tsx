@@ -1,10 +1,10 @@
 import { CreateTenantDto, TenantListDto, UpdateTenantDto } from '@/api';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { IResponseData } from '../shared/iresponse-data.inteface';
+import { IResponseData } from '@/components/shared/iresponse-data.inteface';
 import { getApiClient } from '@/lib/utils';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
-import { useAuthContext } from './auth-provider';
+import { useAuthContext } from '@/components/providers/auth-provider';
 
 export type TenantResponse = TenantListDto
 export type TenantsType = TenantResponse["tenants"][0]

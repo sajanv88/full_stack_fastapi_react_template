@@ -3,9 +3,10 @@ import { CreateStripeSettingDto, StripeSettingDto } from "@/api"
 import { useAuthContext } from "./auth-provider";
 import { getApiClient } from "@/lib/utils";
 import { toast } from "sonner";
-import { FeatureDisabledNotice } from "../shared/feature-disabled";
+import { FeatureDisabledNotice } from "@/components/shared/feature-disabled";
 import { useFeatureCheck } from "@/hooks/use-feature-check";
-import { useAppConfig } from "./app-config-provider";
+import { useAppConfig } from "@/components/providers/app-config-provider";
+import { NoPermissionToAccessResource } from "@/components/shared/no-permission-access-resource";
 
 
 interface StripeProviderState {
@@ -33,13 +34,14 @@ interface StripeProviderProps {
 }
 
 export function StripeProvider({ children }: StripeProviderProps) {
-    const { accessToken } = useAuthContext();
+    const { accessToken, can } = useAuthContext();
     const { current_tenant } = useAppConfig();
     const [configuredStripeSetting, setConfiguredStripeSetting] = useState<StripeSettingDto | null>(null);
     const [loading, setLoading] = useState(true);
     const [showConfigureStripe, setShowConfigureStripe] = useState(false);
     const featureCheck = useFeatureCheck();
     const [stripeConfigurationError, setStripeConfigurationError] = useState<boolean>(false);
+    const canManageBilling = can("manage:billing") || can("full:access");
 
     const isStripePaymentsFeatureEnabled = featureCheck.requireFeature("stripe");
 
@@ -58,10 +60,10 @@ export function StripeProvider({ children }: StripeProviderProps) {
 
 
     useEffect(() => {
-        if (accessToken && isStripePaymentsFeatureEnabled && current_tenant) {
+        if (accessToken && isStripePaymentsFeatureEnabled && current_tenant && canManageBilling) {
             fetchConfiguredStripeSetting();
         }
-    }, [accessToken, isStripePaymentsFeatureEnabled]);
+    }, [accessToken, isStripePaymentsFeatureEnabled, canManageBilling, current_tenant]);
 
     useEffect(() => {
         if (!current_tenant) {
@@ -69,8 +71,9 @@ export function StripeProvider({ children }: StripeProviderProps) {
         }
     }, [current_tenant])
 
+
     const onConfigureStripe = useCallback(async (data: CreateStripeSettingDto) => {
-        if (!accessToken || !isStripePaymentsFeatureEnabled) return;
+        if (!accessToken || !isStripePaymentsFeatureEnabled || !canManageBilling) return;
         try {
             setLoading(true);
             await getApiClient(accessToken).stripe.configureStripeSettingApiV1ConfigurationsStripePost({
@@ -84,16 +87,23 @@ export function StripeProvider({ children }: StripeProviderProps) {
         } finally {
             setLoading(false);
         }
-    }, [accessToken, isStripePaymentsFeatureEnabled]);
+    }, [accessToken, isStripePaymentsFeatureEnabled, canManageBilling]);
+
 
     const onRefreshStripeSetting = useCallback(async () => {
+        if (!accessToken || !isStripePaymentsFeatureEnabled || !canManageBilling) return;
         await fetchConfiguredStripeSetting();
-    }, [accessToken, isStripePaymentsFeatureEnabled]);
+    }, [accessToken, isStripePaymentsFeatureEnabled, canManageBilling]);
 
 
     if (!isStripePaymentsFeatureEnabled) {
         return <FeatureDisabledNotice featureName="Stripe Payments" />;
     }
+
+    if (!canManageBilling) {
+        return <NoPermissionToAccessResource message='Billing Management' />;
+    }
+
     return (
         <StripeContext.Provider value={{
             onConfigureStripe,
