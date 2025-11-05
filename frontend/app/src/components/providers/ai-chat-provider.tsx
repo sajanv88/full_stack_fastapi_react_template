@@ -1,7 +1,7 @@
 import { AISessionByUserIdDto } from "@/api";
 import { getApiClient } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
-import { useAuthContext } from "./auth-provider";
+import { useAuthContext } from "@/components/providers/auth-provider";
 import { toast } from "sonner";
 import { useFeatureCheck } from "@/hooks/use-feature-check";
 import { FeatureDisabledNotice } from "@/components/shared/feature-disabled";

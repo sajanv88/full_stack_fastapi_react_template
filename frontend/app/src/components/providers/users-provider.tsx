@@ -1,10 +1,11 @@
 import { CreateUserDto, UserListDto, UpdateUserDto } from '@/api';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { IResponseData } from '../shared/iresponse-data.inteface';
+import { IResponseData } from '@/components/shared/iresponse-data.inteface';
 import { getApiClient } from '@/lib/utils';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
-import { useAuthContext } from './auth-provider';
+import { useAuthContext } from '@/components/providers/auth-provider';
+import { NoPermissionToAccessResource } from '@/components/shared/no-permission-access-resource';
 
 export type UserResponse = UserListDto
 export type UsersType = UserResponse["users"][0]
@@ -55,7 +56,7 @@ interface UsersProviderProps {
 }
 
 export function UsersProvider({ children }: UsersProviderProps) {
-    const { accessToken } = useAuthContext();
+    const { accessToken, can } = useAuthContext();
     const [searchParams] = useSearchParams();
     const [pending, setPending] = useState(true);
     const [userError, setUserError] = useState<string | null>(null);
@@ -64,6 +65,7 @@ export function UsersProvider({ children }: UsersProviderProps) {
     const apiClient = getApiClient(accessToken);
     const user = apiClient.users;
     const auth = apiClient.account;
+    const canViewUsers = can("user:view_only") || can("full:access");
 
     async function fetchUsers() {
         setUserError(null);
@@ -163,8 +165,13 @@ export function UsersProvider({ children }: UsersProviderProps) {
     }
 
     useEffect(() => {
+        if (!accessToken || !canViewUsers) return;
         refreshUsers();
-    }, [searchParams, accessToken]);
+    }, [searchParams, accessToken, canViewUsers]);
+
+    if (!canViewUsers) {
+        return <NoPermissionToAccessResource message='User Management' />;
+    }
 
     return (
         <UsersContext.Provider value={

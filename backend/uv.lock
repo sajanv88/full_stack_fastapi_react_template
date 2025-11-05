@@ -148,6 +148,7 @@ dependencies = [
     { name = "starlette" },
     { name = "streamlit" },
     { name = "stripe" },
+    { name = "uvicorn" },
     { name = "webauthn" },
 ]
 
@@ -179,6 +180,7 @@ requires-dist = [
     { name = "starlette", specifier = ">=0.48.0" },
     { name = "streamlit", specifier = ">=1.49.1" },
     { name = "stripe", specifier = ">=13.0.1" },
+    { name = "uvicorn", specifier = ">=0.37.0" },
     { name = "webauthn", specifier = ">=2.7.0" },
 ]
 

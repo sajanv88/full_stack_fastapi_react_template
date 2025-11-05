@@ -1,10 +1,11 @@
 import { CreateRoleDto, RoleListDto, UpdateRoleDto } from '@/api';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { IResponseData } from '../shared/iresponse-data.inteface';
+import { IResponseData } from '@/components/shared/iresponse-data.inteface';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { getApiClient } from '@/lib/utils';
-import { useAuthContext } from './auth-provider';
+import { useAuthContext } from '@/components/providers/auth-provider';
+import { NoPermissionToAccessResource } from '@/components/shared/no-permission-access-resource';
 
 
 export type RoleResponse = RoleListDto
@@ -55,7 +56,7 @@ interface RolesProviderProps {
     children: React.ReactNode;
 }
 export function RolesProvider({ children }: RolesProviderProps) {
-    const { accessToken } = useAuthContext();
+    const { accessToken, can } = useAuthContext();
     const [searchParams] = useSearchParams();
     const [pending, setPending] = useState(true);
     const [roleError, setRoleError] = useState<string | null>(null);
@@ -64,6 +65,8 @@ export function RolesProvider({ children }: RolesProviderProps) {
     const [selectedRole, setSelectedRole] = useState<Action | undefined>(initialState.selectedRole);
     const apiClient = getApiClient(accessToken);
     const role = apiClient.roles;
+    const canViewRoles = can("role:view_only") || can("full:access");
+
 
     async function fetchRoles() {
         setRoleError(null);
@@ -160,9 +163,15 @@ export function RolesProvider({ children }: RolesProviderProps) {
 
     }
 
+
     useEffect(() => {
+        if (!canViewRoles || !accessToken) return;
         refreshRoles();
-    }, [searchParams, accessToken]);
+    }, [searchParams, accessToken, canViewRoles]);
+
+    if (!canViewRoles) {
+        return <NoPermissionToAccessResource message='Roles Management' />;
+    }
 
     return (
         <RolesContext.Provider value={
