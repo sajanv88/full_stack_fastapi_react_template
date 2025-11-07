@@ -22,6 +22,7 @@ from api.infrastructure.persistence.repositories.notification_banner_repository_
 
 from api.infrastructure.security.jwt_token_service import JwtTokenService
 from api.infrastructure.security.passkey_service import PasskeyService
+from api.usecases.audit_logs_service import AuditLogsService
 from api.usecases.billing_record_service import BillingRecordService
 from api.usecases.coolify_app_service import CoolifyAppService
 from api.usecases.local_ai_service import LocalAIService
@@ -131,6 +132,9 @@ container.register(StripeSettingService, scope=punq.Scope.singleton)
 container.register(NotificationBannerRepository, scope=punq.Scope.singleton)
 container.register(NotificationBannerService, scope=punq.Scope.singleton)
 
+## Audit Log Components
+container.register(AuditLogsService, scope=punq.Scope.singleton)
+
 
 ## Dependency resolver functions
 
@@ -211,5 +215,8 @@ def get_subscription_plan_service() -> SubscriptionPlanService:
 
 def get_notification_banner_service() -> NotificationBannerService:
     return container.resolve(NotificationBannerService)
+
+def get_audit_logs_service() -> AuditLogsService:
+    return container.resolve(AuditLogsService)
 
 print("Dependency injection container configured.")

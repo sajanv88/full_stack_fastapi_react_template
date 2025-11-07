@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TenantDto } from './TenantDto';
-export type TenantListDto = {
-  tenants: Array<TenantDto>;
-  skip: number;
-  limit: number;
+import type { AuditLogDto } from './AuditLogDto';
+export type AuditLogListDto = {
   total: number;
-  has_previous: boolean;
+  logs: Array<AuditLogDto>;
   has_next: boolean;
+  has_previous: boolean;
+  limit: number;
+  skip: number;
 };
 

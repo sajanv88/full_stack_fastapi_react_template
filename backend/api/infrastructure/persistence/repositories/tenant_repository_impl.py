@@ -32,8 +32,8 @@ class TenantRepository(BaseRepository[Tenant]):
             skip=skip,
             limit=limit,
             total=total,
-            hasPrevious=skip > 0,
-            hasNext=skip + limit < total
+            has_previous=skip > 0,
+            has_next=skip + limit < total
         )
         return result
     

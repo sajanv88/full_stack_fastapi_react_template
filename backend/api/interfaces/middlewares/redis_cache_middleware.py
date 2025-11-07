@@ -32,16 +32,16 @@ class RedisCacheMiddleware(BaseHTTPMiddleware):
             await redis.delete(key)
 
     async def dispatch(self, request: Request, call_next):
-       
-        if any(request.url.path.endswith(path) for path in not_allowed_cache_paths):
+        token = None
+        if "authorization" in request.headers:
+            token = request.headers["authorization"].replace("Bearer ", "")
+
+        if any(request.url.path.endswith(path) for path in not_allowed_cache_paths) or token is None:
             logger.debug(f"Bypassing cache for path: {request.url.path}")
             return await call_next(request)
             
         try:
-            token = None
-            if "authorization" in request.headers:
-                token = request.headers["authorization"].replace("Bearer ", "")
-
+            
             user_service = get_user_service()
             jwt_service = get_jwt_token_service()
             role_service = get_role_service()

@@ -75,9 +75,9 @@ export function UsersProvider({ children }: UsersProviderProps) {
             const res = await user.listUsersApiV1UsersGet({ skip: skip ? parseInt(skip) : 0, limit: limit ? parseInt(limit) : 10 });
             setUserResponse({
                 items: res.users,
-                hasNext: res.hasNext,
+                hasNext: res.has_next,
                 total: res.total,
-                hasPrevious: res.hasPrevious,
+                hasPrevious: res.has_previous,
                 limit: res.limit,
                 skip: res.skip,
             });

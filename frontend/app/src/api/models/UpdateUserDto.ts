@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Gender } from './Gender';
+import type { PydanticObjectId } from './PydanticObjectId';
 export type UpdateUserDto = {
   first_name?: (string | null);
   last_name?: (string | null);
@@ -11,5 +12,6 @@ export type UpdateUserDto = {
   image_url?: (string | null);
   role_id?: (string | null);
   is_active?: (boolean | null);
+  tenant_id?: (PydanticObjectId | null);
 };
 

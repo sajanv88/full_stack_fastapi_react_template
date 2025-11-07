@@ -9,6 +9,7 @@ from api.common.utils import get_logger, is_tenancy_enabled
 from api.core.container import container
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
 from api.infrastructure.persistence.mongodb import Database
+from api.interfaces.middlewares.audit_logs_read_middleware import AuditLogsReadMiddleware
 from api.interfaces.middlewares.redis_cache_middleware import RedisCacheMiddleware
 from api.interfaces.middlewares.tenant_middleware import TenantMiddleware
 from api.interfaces.api_controllers.account_endpoint import router as account_router
@@ -30,6 +31,7 @@ from api.interfaces.api_controllers.stripe_endpoint import router as stripe_rout
 from api.interfaces.api_controllers.invoice_endpoint import router as invoice_router
 from api.interfaces.api_controllers.checkout_endpoint import router as checkout_router
 from api.interfaces.api_controllers.notification_endpoint import router as notification_router
+from api.interfaces.api_controllers.audit_logs_endpoint import router as audit_logs_router
 
 from api.common.logging import configure_logging
 from api.core.config import settings
@@ -81,6 +83,7 @@ async def api_exception_handler(req: Request, ex: ApiBaseException) -> JSONRespo
         content={"error": ex.message, "code": status_code}
     )
 
+app.add_middleware(AuditLogsReadMiddleware)
 app.add_middleware(RedisCacheMiddleware)
 
 if is_tenancy_enabled(): 
@@ -122,6 +125,7 @@ router.include_router(stripe_router)
 router.include_router(invoice_router)
 router.include_router(checkout_router)
 router.include_router(notification_router)
+router.include_router(audit_logs_router)
 app.include_router(router)
 
 

@@ -20,8 +20,9 @@ class RoleListDto(BaseModel):
     skip: int
     limit: int
     total: int
-    hasPrevious: bool
-    hasNext: bool
+    has_previous: bool
+    has_next: bool
+
 
 class CreateRoleDto(BaseModel):
     name: str

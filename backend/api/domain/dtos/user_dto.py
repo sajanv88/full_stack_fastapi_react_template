@@ -26,6 +26,8 @@ class UpdateUserDto(BaseModel):
     image_url: Optional[str] = None
     role_id: Optional[str] = None
     is_active: Optional[bool] = None
+    tenant_id: PydanticObjectId | None = None
+
 
 class UserDto(BaseModel):
     id: str
@@ -47,8 +49,8 @@ class UserListDto(BaseModel):
     skip: int
     limit: int
     total: int
-    hasPrevious: bool
-    hasNext: bool
+    has_previous: bool
+    has_next: bool
 
 
 class CreateUserResponseDto(BaseModel):

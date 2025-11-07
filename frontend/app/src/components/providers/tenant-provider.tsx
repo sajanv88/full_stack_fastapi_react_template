@@ -68,8 +68,8 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
             setTenantResponse({
                 items: response.tenants,
                 total: response.total,
-                hasNext: response.hasNext,
-                hasPrevious: response.hasPrevious,
+                hasNext: response.has_next,
+                hasPrevious: response.has_previous,
                 limit: response.limit,
                 skip: response.skip
             });
