@@ -43,6 +43,7 @@ export type { CreateTenantResponseDto } from './models/CreateTenantResponseDto';
 export type { CreateUserDto } from './models/CreateUserDto';
 export type { CreateUserResponseDto } from './models/CreateUserResponseDto';
 export type { DashboardMetricsDto } from './models/DashboardMetricsDto';
+export type { DownloadResponseDto } from './models/DownloadResponseDto';
 export type { Feature } from './models/Feature';
 export type { FeatureDto } from './models/FeatureDto';
 export type { Gender } from './models/Gender';

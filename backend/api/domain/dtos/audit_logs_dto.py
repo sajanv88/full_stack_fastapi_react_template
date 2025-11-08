@@ -2,7 +2,7 @@ from typing import Any, Dict, Literal, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
-AuditActionType = Literal["create", "update", "delete", "read", "login", "logout", "error"]
+AuditActionType = Literal["create", "update", "delete", "read", "login", "logout", "error", "download"]
 class AuditLogDto(BaseModel):
     entity: str
     action: AuditActionType
@@ -19,7 +19,3 @@ class AuditLogListDto(BaseModel):
     limit: int
     skip: int
 
-class DownloadReportPayloadDto(BaseModel):
-    requested_by_user_id: str
-    admin_user_id: str
-    tenant_id: Optional[str] = None

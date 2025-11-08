@@ -1,12 +1,13 @@
 import asyncio
+from io import BytesIO
 import os
+from typing import Dict
 from celery import Celery
 
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_host_main_domain_name, get_logger
 from api.core.container import  get_audit_logs_service, get_dns_resolver, get_role_service, get_tenant_service, get_user_service, get_coolify_app_service
 from api.core.exceptions import CoolifyIntegrationException
-from api.domain.dtos.audit_logs_dto import DownloadReportPayloadDto
 from api.domain.dtos.coolify_app_dto import UpdateDomainDto
 from api.domain.dtos.tenant_dto import TenantDto
 from api.domain.dtos.user_dto import CreateUserDto, UserDto
@@ -18,6 +19,7 @@ from api.usecases.audit_logs_service import AuditLogsService
 from api.usecases.coolify_app_service import CoolifyAppService
 from api.usecases.tenant_service import TenantService
 from api.usecases.user_service import UserService
+
 
 broker_url = os.getenv("CELERY_BROKER_URL")
 backend_url = os.getenv("CELERY_RESULT_BACKEND")
@@ -182,31 +184,50 @@ async def _update_coolify_domain(data: UpdateDomainDto):
 
 
 async def _handle_download_report_shared_task_async(payload: str):
-    worker_payload = WorkerPayloadDto[DownloadReportPayloadDto].model_validate_json(payload)
+    worker_payload = WorkerPayloadDto[Dict[str, str | None]].model_validate_json(payload)
     logger.info(f"Handling task with label: {worker_payload.label}")
+    ct_id = str(worker_payload.tenant_id) if worker_payload.tenant_id else None
     if worker_payload.label == "email-sending":
-        
-        logger.info(f"Starting download report email sending for tenant_id: {worker_payload.tenant_id}")
-        db = await _get_current_tenant_db(tenant_id=worker_payload.tenant_id)
+
+        logger.info(f"Starting download report email sending for tenant_id: {ct_id}")
+        if ct_id is None:
+            db = Database(uri=mongo_uri, models=models)
+            await db.init_db(db_name=mongo_db_default, is_tenant=False)
+        else:
+            db = await _get_current_tenant_db(tenant_id=ct_id)
+
         user_service: UserService = get_user_service()
         audit_log_service: AuditLogsService = get_audit_logs_service()
-        if worker_payload.data.admin_user_id != worker_payload.data.requested_by_user_id:
-            admin_user: User = await user_service.get_user_by_id(user_id=worker_payload.data.admin_user_id)
-            requesting_user: User = await user_service.get_user_by_id(user_id=worker_payload.data.requested_by_user_id)
-            await audit_log_service.create_audit_log(audit_log={
-                "entity": "audit_logs",
-                "action": "read",
-                "changes": {
-                    "report_requested_by": str(requesting_user.first_name + ' ' + requesting_user.last_name),
-                    "info": "A copy of the download report will be reported to Admin."
-                },
-                "user_id": str(requesting_user.id),
-                "tenant_id": worker_payload.tenant_id
-            })
-            await audit_log_service.generate_audit_logs_download()
+        requesting_user: User = await user_service.get_user_by_id(user_id=worker_payload.data["requested_by"])
+        from openpyxl import Workbook
+        from api.common.utils import get_utc_now
+        attachment_file_name = f"audit_logs_report_{ct_id or 'host_'}{get_utc_now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx"
 
-        admin_user: User = await user_service.get_user_by_id(user_id=worker_payload.data["user_id"])
-        admin_user_dto = await admin_user.to_serializable_dict()
-        # Here you would implement the logic to generate and send the download report email
-        logger.info(f"Download report email sent to {admin_user_dto['email']} for tenant_id: {worker_payload.tenant_id}")
+        res = await audit_log_service.generate_audit_logs_download(action=worker_payload.data.get("action", None), tenant_id=ct_id)
+        # Create Excel workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"Audit Logs Report from {ct_id or 'host_'} on {get_utc_now().strftime('%Y-%m-%d')}"
+        ws.append(["Timestamp", "Tenant", "User", "Action", "Entity", "Changes"])
+        for log in res:
+            ws.append([
+                log.timestamp,
+                log.tenant_id or "host",
+                log.user_id,
+                log.action,
+                log.entity,
+                str(log.changes)
+            ])
+        # Save workbook to a temporary file
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        logger.info(f"Completed download report email sending for tenant_id: {ct_id}")
+        logger.info(f"Sending audit log report to email: {requesting_user.email}")
+        await audit_log_service.send_audit_log_report_via_email(
+            to_email=requesting_user.email,
+            first_name=requesting_user.first_name,
+            attachment_data=buffer,
+            attachment_filename=attachment_file_name
+        )
         await db.close()

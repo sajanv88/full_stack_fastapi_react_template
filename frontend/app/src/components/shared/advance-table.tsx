@@ -59,6 +59,9 @@ export default function AdvanceTable<T>({
         // Handle dropdown action change
         console.log("Selected action:", value);
         searchParams.set("action", value);
+        if (value === "all") {
+            searchParams.delete("action");
+        }
         setSearchParams(searchParams);
     }
     const currentPage = useMemo(
@@ -71,7 +74,7 @@ export default function AdvanceTable<T>({
     );
 
     const selectedAction = useMemo(
-        () => searchParams.get("action") || "",
+        () => searchParams.get("action") || "all",
         [searchParams],
     );
 
@@ -144,6 +147,7 @@ export default function AdvanceTable<T>({
                                         {option.name}
                                     </SelectItem>
                                 ))}
+                                <SelectItem value="all">All</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>

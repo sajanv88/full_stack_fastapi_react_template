@@ -4,7 +4,7 @@
 /* eslint-disable */
 export type AuditLogDto = {
   entity: string;
-  action: 'create' | 'update' | 'delete' | 'read' | 'login' | 'logout' | 'error';
+  action: 'create' | 'update' | 'delete' | 'read' | 'login' | 'logout' | 'error' | 'download';
   changes?: Record<string, any>;
   user_id?: (string | null);
   timestamp?: string;

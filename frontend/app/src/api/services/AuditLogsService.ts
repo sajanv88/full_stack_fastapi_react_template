@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AuditLogListDto } from '../models/AuditLogListDto';
+import type { DownloadResponseDto } from '../models/DownloadResponseDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class AuditLogsService {
@@ -19,7 +20,7 @@ export class AuditLogsService {
   }: {
     limit?: number,
     skip?: number,
-    action?: ('create' | 'update' | 'delete' | 'read' | 'login' | 'logout' | 'error' | null),
+    action?: ('create' | 'update' | 'delete' | 'read' | 'login' | 'logout' | 'error' | 'download' | null),
   }): CancelablePromise<AuditLogListDto> {
     return this.httpRequest.request({
       method: 'GET',
@@ -36,13 +37,23 @@ export class AuditLogsService {
   }
   /**
    * Download Audit Logs
-   * @returns any Successful Response
+   * @returns DownloadResponseDto Successful Response
    * @throws ApiError
    */
-  public downloadAuditLogsApiV1AuditLogsDownloadGet(): CancelablePromise<any> {
+  public downloadAuditLogsApiV1AuditLogsDownloadPost({
+    action,
+  }: {
+    action?: ('create' | 'update' | 'delete' | 'read' | 'login' | 'logout' | 'error' | 'download' | null),
+  }): CancelablePromise<DownloadResponseDto> {
     return this.httpRequest.request({
-      method: 'GET',
+      method: 'POST',
       url: '/api/v1/audit-logs/download',
+      query: {
+        'action': action,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
 }

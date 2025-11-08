@@ -1,4 +1,6 @@
-from typing import Literal
+from typing import List, Literal
+
+from fastapi import UploadFile
 from api.common.utils import get_logger
 from api.domain.interfaces.email_service import IEmailService
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType, errors
@@ -22,18 +24,28 @@ class SmtpEmail(IEmailService):
             )
         )
 
-    async def send_email(self, to: str, subject: str, body: str, type: Literal[MessageType.html, MessageType.plain]) -> None:
+    async def send_email(self, to: str, subject: str, body: str, type: Literal[MessageType.html, MessageType.plain], attachments: List[UploadFile | dict | str] = []) -> None:
         try:
             logger.info(f"Sending email to {to} with subject '{subject}'")
-            message = MessageSchema(
-                subject=subject,
-                recipients=[to],
-                body=body,
-                subtype=type
-            )
+            if len(attachments) > 0:
+                logger.info(f"Email has {len(attachments)} attachments")
+                message = MessageSchema(
+                    subject=subject,
+                    recipients=[to],
+                    body=body,
+                    subtype=type,
+                    attachments=attachments
+                )
+            else:
+                message = MessageSchema(
+                    subject=subject,
+                    recipients=[to],
+                    body=body,
+                    subtype=type
+                )
             await self.fm.send_message(message)
 
-            logger.info(f"Activation email sent to {to}")
+            logger.info(f"Email sent to {to}")
         except errors.ApiError as e:
             logger.error(f"Failed to send email to {to}: {str(e)}")
         except errors.ConnectionErrors as e:

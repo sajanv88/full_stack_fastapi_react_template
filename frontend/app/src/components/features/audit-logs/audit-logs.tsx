@@ -4,10 +4,9 @@ import { IconDownload } from "@tabler/icons-react";
 import { AuditTable } from "./audit-table";
 
 export function AuditLogs() {
-    const { data, canDownloadAuditLogs } = useAuditLogsContext();
-    console.log("Audit Logs Data:", data);
+    const { data, canDownloadAuditLogs, triggerDownloadAuditLogs } = useAuditLogsContext();
     async function downloadAuditLogs() {
-        // Implement download logic here
+        await triggerDownloadAuditLogs();
     }
     return (
         <section className="w-full 2xl:container 2xl:mx-auto ">

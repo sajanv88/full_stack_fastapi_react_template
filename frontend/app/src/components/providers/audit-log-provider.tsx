@@ -15,6 +15,7 @@ interface AuditLogsProviderProps {
 interface AuditLogsContextProps {
     data: IResponseData<AuditLogType>;
     canDownloadAuditLogs: boolean
+    triggerDownloadAuditLogs: () => Promise<void>;
 }
 
 const initialState: AuditLogsContextProps = {
@@ -26,7 +27,8 @@ const initialState: AuditLogsContextProps = {
         hasNext: false,
         hasPrevious: false
     },
-    canDownloadAuditLogs: false
+    canDownloadAuditLogs: false,
+    triggerDownloadAuditLogs: async () => { }
 };
 const AuditLogsContext = createContext<AuditLogsContextProps>(initialState);
 
@@ -65,12 +67,37 @@ export function AuditLogProvider({ children }: AuditLogsProviderProps) {
             });
         }
     }
+
+    async function triggerDownloadAuditLogs() {
+        toast.dismiss();
+        try {
+            const apiClient = getApiClient(accessToken);
+            const response = await apiClient.auditLogs.downloadAuditLogsApiV1AuditLogsDownloadPost({
+                action: searchParams.get("action") as AuditLogActionType | null
+            });
+
+            toast.success("Audit logs download requested", {
+                richColors: true,
+                duration: 5000,
+                position: "top-right",
+                description: response.message || "You will receive an email with the download link shortly."
+            });
+        } catch (error) {
+            console.error("Failed to download audit logs:", error);
+            toast.error("Failed to download audit logs", {
+                richColors: true,
+                duration: 5000,
+                position: "top-right",
+            });
+        }
+    }
+
     useEffect(() => {
         if (!accessToken) return;
         fetchAuditLogs();
     }, [accessToken, searchParams]);
     return (
-        <AuditLogsContext.Provider value={{ data: logs, canDownloadAuditLogs }}>
+        <AuditLogsContext.Provider value={{ data: logs, canDownloadAuditLogs, triggerDownloadAuditLogs }}>
             {children}
         </AuditLogsContext.Provider>
     );
