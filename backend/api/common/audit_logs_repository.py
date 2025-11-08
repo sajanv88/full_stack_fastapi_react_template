@@ -8,10 +8,8 @@ from api.domain.dtos.audit_logs_dto import AuditActionType, AuditLogDto, AuditLo
 logger = get_logger(__name__)
 
 class AuditLogRepository:
-    async def add_audit_log(self, audit_log: AuditLogDto) -> None:
-        await capture_audit_log(audit_log)
 
-    async def list_audit_logs(self, tenant_id: str | None = None, limit: int = 10, skip: int = 0, action: Optional[AuditActionType] = None) -> AuditLogListDto:
+    async def _get_files_matching_pattern(self, tenant_id: str | None = None) -> List[str]:
         file_path_pattern = "/tmp/audit_logs_forhost_*.jsonl"
         if tenant_id:
             file_path_pattern = f"/tmp/audit_logs_for{tenant_id}_*.jsonl"
@@ -23,6 +21,14 @@ class AuditLogRepository:
         # IMPORTANT: scan oldest → newest so the deque ends up with the last K lines
         # If your filenames end with YYYY-MM-DD, name sort works for chronological asc.
         files.sort()  # ascending
+        return files
+
+    async def add_audit_log(self, audit_log: AuditLogDto) -> None:
+        await capture_audit_log(audit_log)
+
+    async def list_audit_logs(self, tenant_id: str | None = None, limit: int = 10, skip: int = 0, action: Optional[AuditActionType] = None) -> AuditLogListDto:
+       
+        files = await self._get_files_matching_pattern(tenant_id=tenant_id)
 
         total = 0
         keep = skip + limit
@@ -58,3 +64,23 @@ class AuditLogRepository:
             limit=limit,
             skip=skip
         )
+
+    async def return_all_audit_logs(self, action: Optional[AuditActionType] = None, tenant_id: str | None = None) -> List[AuditLogDto]:
+        files = await self._get_files_matching_pattern(tenant_id=tenant_id)
+        results: List[AuditLogDto] = []
+        for file_path in files:
+            try:
+                with open(file_path, "r") as f:
+                    for line in f:
+                        obj = json.loads(line)
+                        if action and obj.get("action") != action:
+                            continue
+                        results.append(AuditLogDto(**obj))
+            except FileNotFoundError:
+                continue
+    
+        if len(results) == 0:
+            logger.info("No audit logs found.")
+            return []
+    
+        return results[::-1]  # return newest first

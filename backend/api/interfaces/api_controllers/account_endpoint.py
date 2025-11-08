@@ -37,7 +37,7 @@ async def login(
     response: Response,
     login_request: Annotated[OAuth2PasswordRequestForm, Depends()],
     auth_service: AuthService = Depends(get_auth_service),
-    x_tenant_id: str = Depends(get_tenant_id)
+    x_tenant_id: str | None = Depends(get_tenant_id)
 ):
     logger.info(f"Login attempt for user: {login_request.username} x_tenant_id: {x_tenant_id}")
     token_set: TokenSetDto = await auth_service.login(LoginRequestDto(
@@ -82,8 +82,10 @@ async def refresh_token(
 async def logout(
     response: Response,
     current_user: CurrentUser,
+    auth_service: AuthService = Depends(get_auth_service)
 ):
     response.delete_cookie("refresh_token")
+    await auth_service.logout(user_id=str(current_user.id), tenant_id=str(current_user.tenant_id) if current_user.tenant_id else None)
     return status.HTTP_200_OK
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)

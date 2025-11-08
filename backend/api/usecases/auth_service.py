@@ -5,12 +5,14 @@ from api.common.exceptions import ForbiddenException, InvalidOperationException,
 from api.common.security import verify_password
 from api.common.utils import get_logger, get_utc_now, is_tenancy_enabled, get_email_sharing_link
 from api.core.exceptions import TenantNotFoundException, UserNotFoundException
+from api.domain.dtos.audit_logs_dto import AuditLogDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.role_dto import RoleDto
 from api.domain.dtos.tenant_dto import CreateTenantDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserResendActivationEmailRequestDto
 from api.domain.entities.tenant import validate_subdomain
 from api.domain.entities.user import User
+from api.domain.enum.permission import Permission
 from api.domain.interfaces.email_service import IEmailService
 from api.infrastructure.security.jwt_token_service import JwtTokenService
 from api.interfaces.email_templates.password_reset_email_template_html import password_reset_email_template_html
@@ -18,6 +20,7 @@ from api.interfaces.email_templates.notify_password_changes_template_html import
 from api.interfaces.email_templates.activation_template_html import activation_template_html
 from api.interfaces.email_templates.email_changes_confirmation_template_html import email_changes_confirmation_template_html
 from api.interfaces.email_templates.notify_email_changes_template_html import notify_email_change_template_html
+from api.usecases.audit_logs_service import AuditLogsService
 from api.usecases.role_service import RoleService
 from api.usecases.tenant_service import TenantService
 from api.usecases.user_service import UserService
@@ -31,13 +34,15 @@ class AuthService:
             tenant_service: TenantService,
             role_service: RoleService,
             jwt_token_service: JwtTokenService,
-            email_service: IEmailService
+            email_service: IEmailService,
+            audit_log_service: AuditLogsService
         ):
         self.user_service: UserService = user_service
         self.tenant_service: TenantService = tenant_service
         self.role_service: RoleService = role_service
         self.jwt_token_service: JwtTokenService = jwt_token_service
         self.email_service: IEmailService = email_service
+        self.audit_log_service: AuditLogsService = audit_log_service
         logger.info("Initialized.")
         print(self.email_service, "email service in auth service")
 
@@ -55,22 +60,72 @@ class AuthService:
                 role=RoleDto(**role_doc) if role_doc is not None else None,
                 tenant_id=user.tenant_id
             )
-        return await self.jwt_token_service.generate_tokens(payload)
+
+        res = await self.jwt_token_service.generate_tokens(payload)
+        await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
+            entity="User",
+            action="login",
+            user_id=str(user.id),
+            tenant_id=str(user.tenant_id) if user.tenant_id else None,
+            changes={"Info": f"User received tokens and logged in."}
+        ))
+        
+        # Host audit log for tenant admin login
+        if user.tenant_id and Permission.FULL_ACCESS in (role.permissions if role.permissions else []):
+            logger.info(f"Tenant ID: {user.tenant_id} logged in. Updating an audit log in the host.")
+            await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
+                entity="User",
+                action="login",
+                user_id=str(user.id),
+                tenant_id=None,
+                changes={"Info": f"Tenant admin user logged in."}
+            ))
+        return res
 
 
     async def login_with_magic_link(self, user_id: str) -> TokenSetDto:
         try:
+  
             user = await self.user_service.get_user_by_id(user_id=user_id)
+            await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
+                entity="User",
+                action="login",
+                user_id=user_id,
+                changes={"Info": f"User attempted to log in with magic link."},
+                tenant_id=str(user.tenant_id) if user.tenant_id else None
+            ))
             return await self._get_token_set(user)
         except UserNotFoundException or Exception:
-            raise UnauthorizedException("Authentication failed. Please check your credentials.")    
-        
+            logger.error(f"Login attempt failed for user_id: {user_id}")
+            await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
+                entity="User",
+                action="error",
+                user_id=str(user.id),
+                tenant_id=str(user.tenant_id) if user.tenant_id else None,
+                changes={"Info": f"User with an email: {user.email} failed to log in."}
+            ))
+            raise UnauthorizedException("Authentication failed. Please check your credentials.")
+
 
     async def login_with_passkey(self, email: str) -> TokenSetDto:
         try:
             user = await self.user_service.find_by_email(email=email)
+            await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
+                entity="User",
+                action="login",
+                user_id=str(user.id),
+                tenant_id=str(user.tenant_id) if user.tenant_id else None,
+                changes={"Info": f"User attempted to log in with passkey."}
+            ))
             return await self._get_token_set(user)
         except UserNotFoundException or Exception:
+            logger.error(f"Login attempt failed for email: {email}")
+            await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
+                entity="User",
+                action="error",
+                user_id="unknown",
+                changes={"Info": f"User with an email: {email} failed to log in with passkey."}
+            ))
             raise UnauthorizedException("Authentication failed. Please check your credentials.")
 
 
@@ -104,6 +159,13 @@ class AuthService:
             try:
                 tenant = await self.tenant_service.find_by_subdomain(subdomain=new_user.sub_domain)
                 if tenant is not None:
+                    await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
+                        entity="Tenant",
+                        action="error",
+                        user_id="unknown",
+                        changes={"Info": f"Tenant with subdomain: {new_user.sub_domain} is already taken."},
+                        tenant_id=str(tenant.id)
+                    ))
                     raise InvalidOperationException(f"Subdomain '{new_user.sub_domain}' is already taken.")
             except InvalidOperationException as ioe:
                 logger.warning(f"Subdomain validation failed for '{new_user.sub_domain}': {ioe}")
@@ -125,6 +187,15 @@ class AuthService:
                 logger.info(f"New tenant created with ID: {newly_created_tenant_id} for subdomain '{new_user.sub_domain}' and user creation will be procssed...")
                 cb(newly_created_tenant_id)
 
+    async def logout(self, user_id: str, tenant_id: str | None) -> None:
+        await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
+            entity="User",
+            action="logout",
+            user_id=user_id,
+            tenant_id=tenant_id,
+            changes={"Info": f"User logged out and refresh tokens invalidated."}
+        ))
+        logger.info(f"User {user_id} logged out successfully and refresh tokens invalidated.")
     
     async def refresh_token(self, token: TokenRefreshRequestDto) -> TokenSetDto:
         """

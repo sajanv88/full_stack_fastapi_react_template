@@ -19,3 +19,6 @@ class AuditLogsService:
     async def generate_audit_logs_download(self) -> None:
         # Placeholder implementation
         return None
+    
+    async def create_audit_log(self, audit_log: AuditLogDto) -> None:
+        await self.audit_log_repository.add_audit_log(audit_log)

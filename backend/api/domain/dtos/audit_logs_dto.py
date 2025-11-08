@@ -18,3 +18,8 @@ class AuditLogListDto(BaseModel):
     has_previous: bool
     limit: int
     skip: int
+
+class DownloadReportPayloadDto(BaseModel):
+    requested_by_user_id: str
+    admin_user_id: str
+    tenant_id: Optional[str] = None
