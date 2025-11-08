@@ -30,6 +30,8 @@ import { Invoices } from "@/components/features/billings/stripe/invoices";
 import { Products } from "@/components/features/billings/stripe/products";
 import { CheckoutOverview } from "@/components/features/billings/stripe/checkout-overview";
 import { AppSettings } from "@/components/features/settings/app-settings";
+import { AuditLogProvider } from "@/components/providers/audit-log-provider";
+import { AuditLogs } from "@/components/features/audit-logs/audit-logs";
 
 function App() {
   const { user } = useAuthContext();
@@ -67,6 +69,12 @@ function App() {
           }
           />
         )}
+        <Route path="audit-logs" element={
+          <AuditLogProvider>
+            <AuditLogs />
+          </AuditLogProvider>
+        }
+        />
 
         <Route path="settings" element={
           <SettingsProvider>

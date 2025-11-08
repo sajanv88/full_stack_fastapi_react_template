@@ -1,5 +1,5 @@
 from typing import  List, Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_serializer
 from beanie import PydanticObjectId
 from api.common.enums.gender import Gender
 
@@ -16,6 +16,12 @@ class BaseUserDto(BaseModel):
 class CreateUserDto(BaseUserDto):
     password: str
     sub_domain: Optional[str] = None
+
+    @field_serializer("tenant_id", "role_id")
+    def serialize(v: PydanticObjectId | None) -> str | None:
+        if isinstance(v, PydanticObjectId) and v is not None:
+            return str(v)
+        return None
 
 
 class UpdateUserDto(BaseModel):

@@ -1,4 +1,5 @@
 import punq
+from api.common.audit_logs_repository import AuditLogRepository
 from api.domain.interfaces.email_service import IEmailService
 from api.infrastructure.externals.coolify_app import CoolifyApp
 from api.infrastructure.externals.dns_resolver import DnsResolver
@@ -133,6 +134,7 @@ container.register(NotificationBannerRepository, scope=punq.Scope.singleton)
 container.register(NotificationBannerService, scope=punq.Scope.singleton)
 
 ## Audit Log Components
+container.register(AuditLogRepository, scope=punq.Scope.singleton)
 container.register(AuditLogsService, scope=punq.Scope.singleton)
 
 

@@ -7,6 +7,7 @@ interface PageHeaderProps {
         label: string;
         onClick: () => void;
         disabled?: boolean;
+        icon?: React.ReactNode;
     };
 }
 export function PageHeader({ title, subtitle, cta }: PageHeaderProps) {
@@ -17,7 +18,7 @@ export function PageHeader({ title, subtitle, cta }: PageHeaderProps) {
                 {subtitle && <h2 className="text-sm text-muted-foreground">{subtitle}</h2>}
             </div>
             {cta && <Button onClick={cta.onClick} disabled={cta.disabled}>
-                <Plus className="w-4 h-4" />
+                {cta.icon ? <>{cta.icon}</> : <Plus className="w-4 h-4" />}
                 {cta.label}
             </Button>
             }

@@ -2,14 +2,15 @@ from typing import Optional
 
 from beanie import PydanticObjectId
 from api.common.exceptions import NotFoundException
-from api.common.utils import capture_audit_log, get_logger
+from api.common.utils import get_logger
 from api.domain.dtos.audit_logs_dto import AuditLogDto
 from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto, UserListDto
 from api.domain.entities.user import User
 from api.common.base_repository import BaseRepository
+from api.common.audit_logs_repository import AuditLogRepository
 
 logger = get_logger(__name__)
-class UserRepository(BaseRepository[User]):
+class UserRepository(BaseRepository[User], AuditLogRepository):
     def __init__(self):
         super().__init__(User)
 
@@ -41,12 +42,13 @@ class UserRepository(BaseRepository[User]):
             role_id=data.role_id,
             tenant_id=data.tenant_id
         )
-        result = await super().create(new_user.model_dump())
-        await capture_audit_log(AuditLogDto(
+        d = new_user.model_dump()
+        result = await super().create(data=d)
+        await self.add_audit_log(AuditLogDto(
             action="create",
             entity="User",
             user_id=str(result.id),
-            changes=data.model_dump(exclude={"password", "email"}),
+            changes={"new": data.model_dump(exclude={"password", "email"}, exclude_none=True, exclude_unset=True)},
             tenant_id=str(data.tenant_id) if data.tenant_id else None
         ))
         return result.id
@@ -58,7 +60,7 @@ class UserRepository(BaseRepository[User]):
                 raise NotFoundException("User not found")
             updated_user = await super().update(id=user_id, data=data.model_dump(exclude_unset=True))
             if updated_user:
-                await capture_audit_log(AuditLogDto(
+                await self.add_audit_log(AuditLogDto(
                     action="update",
                     entity="User",
                     user_id=user_id,
@@ -71,7 +73,7 @@ class UserRepository(BaseRepository[User]):
                 return updated_user
         except NotFoundException as e:
             logger.error(f"No user found for the given user id: {user_id}")
-            await capture_audit_log(AuditLogDto(
+            await self.add_audit_log(AuditLogDto(
                 action="update",
                 entity="User",
                 user_id=user_id,
@@ -88,7 +90,7 @@ class UserRepository(BaseRepository[User]):
 
             result = await super().delete(id=user_id)
             if result:
-                await capture_audit_log(AuditLogDto(
+                await self.add_audit_log(AuditLogDto(
                     action="delete",
                     entity="User",
                     user_id=user_id,
@@ -98,7 +100,7 @@ class UserRepository(BaseRepository[User]):
             return result
         except NotFoundException as e:
             logger.error(f"No user found for the given user id: {user_id}")
-            await capture_audit_log(AuditLogDto(
+            await self.add_audit_log(AuditLogDto(
                 action="delete",
                 entity="User",
                 user_id=user_id,

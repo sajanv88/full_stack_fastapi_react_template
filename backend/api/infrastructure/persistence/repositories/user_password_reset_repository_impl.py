@@ -1,10 +1,12 @@
+from api.common.audit_logs_repository import AuditLogRepository
 from api.common.base_repository import BaseRepository
+from api.domain.dtos.audit_logs_dto import AuditLogDto
 from api.domain.entities.user_password_reset import UserPasswordReset
 from beanie import PydanticObjectId
 from api.common.utils import get_utc_now, get_logger
 logger = get_logger(__name__)
 
-class UserPasswordResetRepository(BaseRepository[UserPasswordReset]):
+class UserPasswordResetRepository(BaseRepository[UserPasswordReset], AuditLogRepository):
     def __init__(self):
         super().__init__(UserPasswordReset)
 
@@ -15,7 +17,15 @@ class UserPasswordResetRepository(BaseRepository[UserPasswordReset]):
             existing.token_secret = str(token_secret)
             existing.reset_secret_updated_at = get_utc_now()
             logger.info(f"Updating password reset for user {user_id}")
-            return await existing.save()
+            ex = await existing.save()
+            await self.add_audit_log(AuditLogDto(
+                action="update",
+                entity="UserPasswordReset",
+                user_id=user_id,
+                changes={"Info": "Updated password with reset token"},
+                tenant_id=tenant_id
+            ))
+            return ex
         new_reset = UserPasswordReset(
             user_id = user_id,
             token_secret = str(token_secret),
@@ -24,7 +34,15 @@ class UserPasswordResetRepository(BaseRepository[UserPasswordReset]):
             first_name=first_name
         )
         logger.info(f"Creating password reset for user {user_id}")
-        return await self.create(data = new_reset.model_dump())
+        res = await self.create(data = new_reset.model_dump())
+        await self.add_audit_log(AuditLogDto(
+            action="create",
+            entity="UserPasswordReset",
+            user_id=user_id,
+            changes={"Info": "Created password reset with token"},
+            tenant_id=tenant_id
+        ))
+        return res
     
 
     async def delete_by_user_id(self, user_id: str) -> bool:
