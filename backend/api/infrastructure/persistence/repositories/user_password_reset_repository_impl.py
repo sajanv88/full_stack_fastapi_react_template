@@ -49,7 +49,21 @@ class UserPasswordResetRepository(BaseRepository[UserPasswordReset], AuditLogRep
         existing = await self.single_or_none(user_id=PydanticObjectId(user_id))
         if existing is None:
             logger.warning(f"Password reset not found for user {user_id}")
+            await self.add_audit_log(AuditLogDto(
+                action="delete",
+                entity="UserPasswordReset",
+                user_id=user_id,
+                changes={"Info": "Attempted to delete non-existing password reset"},
+                tenant_id=None
+            ))
             return False
         await existing.delete()
         logger.info(f"Deleted password reset for user {user_id}")
+        await self.add_audit_log(AuditLogDto(
+            action="delete",
+            entity="UserPasswordReset",
+            user_id=user_id,
+            changes={"Info": "Deleted password reset"},
+            tenant_id=existing.tenant_id if existing.tenant_id else None
+        ))
         return True

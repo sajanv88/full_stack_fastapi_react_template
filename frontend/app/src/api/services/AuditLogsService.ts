@@ -15,9 +15,11 @@ export class AuditLogsService {
   public listAuditLogsApiV1AuditLogsGet({
     limit = 10,
     skip,
+    action,
   }: {
     limit?: number,
     skip?: number,
+    action?: ('create' | 'update' | 'delete' | 'read' | 'login' | 'logout' | 'error' | null),
   }): CancelablePromise<AuditLogListDto> {
     return this.httpRequest.request({
       method: 'GET',
@@ -25,6 +27,7 @@ export class AuditLogsService {
       query: {
         'limit': limit,
         'skip': skip,
+        'action': action,
       },
       errors: {
         422: `Validation Error`,

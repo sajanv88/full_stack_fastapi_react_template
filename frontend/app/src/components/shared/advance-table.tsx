@@ -28,15 +28,19 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "react-router";
 import { cn } from "@/lib/utils";
-import type { IResponseData } from "./iresponse-data.inteface";
-import { Loading } from "./loading";
-
+import type { IResponseData } from "@/components/shared/iresponse-data.inteface";
+import { Loading } from "@/components/shared/loading";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from "@/components/ui/select";
+import { IconFilter } from "@tabler/icons-react"
 interface Props<T> {
     data: IResponseData<T>;
     columns: ColumnDef<T, any>[];
     hasBottomBorder?: boolean;
     loading?: boolean;
     errorMsg?: string;
+    dropdownActions?: {
+        options: Array<{ name: string; value: string }>;
+    }
 }
 
 const DEFAULT_PAGE_LIMIT = 10;
@@ -46,16 +50,28 @@ export default function AdvanceTable<T>({
     columns,
     hasBottomBorder,
     loading,
-    errorMsg
+    errorMsg,
+    dropdownActions
 }: Props<T>) {
 
     const [searchParams, setSearchParams] = useSearchParams();
+    function onDropdownChange(value: string) {
+        // Handle dropdown action change
+        console.log("Selected action:", value);
+        searchParams.set("action", value);
+        setSearchParams(searchParams);
+    }
     const currentPage = useMemo(
         () => Number(searchParams.get("skip")),
         [searchParams],
     );
     const pageLimit = useMemo(
         () => Number(searchParams.get("limit")),
+        [searchParams],
+    );
+
+    const selectedAction = useMemo(
+        () => searchParams.get("action") || "",
         [searchParams],
     );
 
@@ -84,7 +100,12 @@ export default function AdvanceTable<T>({
 
     useEffect(() => {
         if (pagination.pageIndex !== Number(currentPage)) {
-            setSearchParams({ 'skip': pagination.pageIndex.toString(), 'limit': limit.toString() });
+            if (searchParams.get("action") && dropdownActions) {
+                setSearchParams({ 'skip': pagination.pageIndex.toString(), 'limit': limit.toString(), 'action': searchParams.get("action")! });
+            }
+            else {
+                setSearchParams({ 'skip': pagination.pageIndex.toString(), 'limit': limit.toString() });
+            }
         }
     }, [pagination.pageIndex]);
 
@@ -109,6 +130,25 @@ export default function AdvanceTable<T>({
 
     return (
         <div className="shadow max-w-[calc(100vw-1rem)] md:max-w-full overflow-hidden rounded-md border">
+            {dropdownActions && (
+                <div className="p-4 flex justify-end">
+                    <Select onValueChange={onDropdownChange} defaultValue={selectedAction}>
+                        <SelectTrigger className="w-[180px] ">
+                            <IconFilter className="w-4 h-4" />
+                            <SelectValue placeholder="Actions" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                {dropdownActions.options.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                        {option.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
             <Table>
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => {

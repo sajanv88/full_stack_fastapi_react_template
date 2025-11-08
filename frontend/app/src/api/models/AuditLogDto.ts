@@ -4,9 +4,9 @@
 /* eslint-disable */
 export type AuditLogDto = {
   entity: string;
-  action: 'create' | 'update' | 'delete' | 'read' | 'login' | 'logout';
+  action: 'create' | 'update' | 'delete' | 'read' | 'login' | 'logout' | 'error';
   changes?: Record<string, any>;
-  user_id: string;
+  user_id?: (string | null);
   timestamp?: string;
   tenant_id?: (string | null);
 };

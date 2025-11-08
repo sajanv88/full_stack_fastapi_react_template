@@ -1,8 +1,10 @@
 from beanie import PydanticObjectId
 from git import List
+from api.common.audit_logs_repository import AuditLogRepository
 from api.common.base_repository import BaseRepository
 from api.common.exceptions import ConflictException
 from api.common.utils import get_logger
+from api.domain.dtos.audit_logs_dto import AuditLogDto
 from api.domain.dtos.tenant_dto import CreateTenantDto, TenantDto, TenantListDto
 from api.domain.entities.tenant import Tenant
 from pymongo.errors import DuplicateKeyError
@@ -17,7 +19,7 @@ default_enable_features = [
         Feature(name=FeatureEnum.REPORT, enabled=True),
     ]
 
-class TenantRepository(BaseRepository[Tenant]):
+class TenantRepository(BaseRepository[Tenant], AuditLogRepository):
     def __init__(self):
         super().__init__(Tenant)
 
@@ -46,8 +48,22 @@ class TenantRepository(BaseRepository[Tenant]):
                 features=default_enable_features,
             )
             result = await super().create(new_tenant.model_dump(exclude_none=True))
+            await self.add_audit_log(AuditLogDto(
+                action="create",
+                entity="Tenant",
+                user_id=None,
+                changes={"Info": "Created new tenant with id " + str(result.id)},
+                tenant_id=None
+            ))
             return result.id
         except DuplicateKeyError as ex:
             logger.error(f"Error creating tenant: {str(ex)}")
+            await self.add_audit_log(AuditLogDto(
+                action="create",
+                entity="Tenant",
+                user_id=None,
+                changes={"Info": "Attempted to create duplicate tenant"},
+                tenant_id=None
+            ))
             raise ConflictException("Tenant", data.name)
     

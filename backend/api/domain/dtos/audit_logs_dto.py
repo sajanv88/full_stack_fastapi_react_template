@@ -2,12 +2,12 @@ from typing import Any, Dict, Literal, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
-
+AuditActionType = Literal["create", "update", "delete", "read", "login", "logout", "error"]
 class AuditLogDto(BaseModel):
     entity: str
-    action: Literal["create", "update", "delete", "read", "login", "logout"]
+    action: AuditActionType
     changes: Dict[str, Any] = {}
-    user_id: str
+    user_id: Optional[str] = None
     timestamp: str = datetime.now().isoformat()
     tenant_id: Optional[str] = None
 

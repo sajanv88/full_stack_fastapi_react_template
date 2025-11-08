@@ -1,9 +1,9 @@
 from collections import deque
 import glob
 import json
-from typing import List
+from typing import List, Optional
 from api.common.utils import capture_audit_log, get_logger
-from api.domain.dtos.audit_logs_dto import AuditLogDto, AuditLogListDto
+from api.domain.dtos.audit_logs_dto import AuditActionType, AuditLogDto, AuditLogListDto
 
 logger = get_logger(__name__)
 
@@ -11,7 +11,7 @@ class AuditLogRepository:
     async def add_audit_log(self, audit_log: AuditLogDto) -> None:
         await capture_audit_log(audit_log)
 
-    async def list_audit_logs(self, tenant_id: str | None = None, limit: int = 10, skip: int = 0) -> AuditLogListDto:
+    async def list_audit_logs(self, tenant_id: str | None = None, limit: int = 10, skip: int = 0, action: Optional[AuditActionType] = None) -> AuditLogListDto:
         file_path_pattern = "/tmp/audit_logs_forhost_*.jsonl"
         if tenant_id:
             file_path_pattern = f"/tmp/audit_logs_for{tenant_id}_*.jsonl"
@@ -32,8 +32,11 @@ class AuditLogRepository:
             try:
                 with open(file_path, "r") as f:
                     for line in f:
+                        obj = json.loads(line)
+                        if action and obj.get("action") != action:
+                            continue
                         total += 1
-                        ring.append(line)  # older ones drop automatically when full
+                        ring.append(obj)  # older ones drop automatically when full
             except FileNotFoundError:
                 continue
 
@@ -42,10 +45,10 @@ class AuditLogRepository:
         newest_first = list(ring)[::-1]
 
         # Slice for pagination
-        lines = newest_first[skip:skip + limit]
+        sliced = newest_first[skip:skip + limit]
 
         # Parse JSON and map to DTOs
-        logs: List[AuditLogDto] = [AuditLogDto(**json.loads(l)) for l in lines]
+        logs: List[AuditLogDto] = [AuditLogDto(**o) for o in sliced]
 
         return AuditLogListDto(
             total=total,

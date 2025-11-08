@@ -17,11 +17,14 @@ export function PageHeader({ title, subtitle, cta }: PageHeaderProps) {
                 <h1 className="text-2xl font-bold">{title}</h1>
                 {subtitle && <h2 className="text-sm text-muted-foreground">{subtitle}</h2>}
             </div>
-            {cta && <Button onClick={cta.onClick} disabled={cta.disabled}>
+            {cta && <Button onClick={cta.onClick} disabled={cta.disabled} className="hidden sm:inline-flex">
                 {cta.icon ? <>{cta.icon}</> : <Plus className="w-4 h-4" />}
                 {cta.label}
             </Button>
             }
+            {cta && <Button onClick={cta.onClick} disabled={cta.disabled} className="sm:hidden">
+                {cta.icon ? <>{cta.icon}</> : <Plus className="w-4 h-4" />}
+            </Button>}
         </header>
     );
 }

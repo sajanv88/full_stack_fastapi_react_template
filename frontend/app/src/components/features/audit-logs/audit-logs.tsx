@@ -1,6 +1,7 @@
 import { useAuditLogsContext } from "@/components/providers/audit-log-provider";
 import { PageHeader } from "@/components/shared/page-header";
 import { IconDownload } from "@tabler/icons-react";
+import { AuditTable } from "./audit-table";
 
 export function AuditLogs() {
     const { data, canDownloadAuditLogs } = useAuditLogsContext();
@@ -16,6 +17,7 @@ export function AuditLogs() {
                 disabled: !canDownloadAuditLogs,
                 icon: <IconDownload className="w-4 h-4" />
             }} />
+            <AuditTable logs={data} />
         </section>
     )
 
