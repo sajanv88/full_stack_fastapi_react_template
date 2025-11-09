@@ -1,5 +1,5 @@
 import { AISessionByUserIdDto } from "@/api";
-import { getApiClient } from "@/lib/utils";
+import { extractErrorMessage, getApiClient } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react"
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { toast } from "sonner";
@@ -47,9 +47,11 @@ export function AIChatProvider({ children }: AIChatProviderProps) {
         try {
             const response = await apiClient.ai.createNewSessionApiV1AiNewSessionGet();
             return response.session_id;
-        } catch (error) {
-            console.error("Failed to create new AI session:", error);
-            toast.error("Failed to create new AI session", { richColors: true, position: "top-right" });
+        } catch (error: unknown) {
+            const errMsg = extractErrorMessage(error);
+
+            console.error("Failed to create new AI session:", errMsg);
+            toast.error("Failed to create new AI session", { richColors: true, position: "top-right", description: errMsg });
             throw new Error("Failed to create new AI session");
         }
     }

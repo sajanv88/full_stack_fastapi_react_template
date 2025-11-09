@@ -76,3 +76,7 @@ export function getApiClient(accessToken?: string) {
 }
 
 
+export function extractErrorMessage(error: unknown): string {
+  const err = JSON.stringify(error);
+  return error instanceof Error ? JSON.parse(err).body.error : "Something went wrong.";
+}

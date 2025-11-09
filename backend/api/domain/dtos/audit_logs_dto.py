@@ -19,3 +19,6 @@ class AuditLogListDto(BaseModel):
     limit: int
     skip: int
 
+class DownloadAuditRequestDto(BaseModel):
+    action: Optional[AuditActionType] = None
+    total_records: int

@@ -56,8 +56,6 @@ export default function AdvanceTable<T>({
 
     const [searchParams, setSearchParams] = useSearchParams();
     function onDropdownChange(value: string) {
-        // Handle dropdown action change
-        console.log("Selected action:", value);
         searchParams.set("action", value);
         if (value === "all") {
             searchParams.delete("action");

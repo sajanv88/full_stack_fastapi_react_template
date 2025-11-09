@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AuditLogListDto } from '../models/AuditLogListDto';
+import type { DownloadAuditRequestDto } from '../models/DownloadAuditRequestDto';
 import type { DownloadResponseDto } from '../models/DownloadResponseDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
@@ -41,16 +42,15 @@ export class AuditLogsService {
    * @throws ApiError
    */
   public downloadAuditLogsApiV1AuditLogsDownloadPost({
-    action,
+    requestBody,
   }: {
-    action?: ('create' | 'update' | 'delete' | 'read' | 'login' | 'logout' | 'error' | 'download' | null),
+    requestBody: DownloadAuditRequestDto,
   }): CancelablePromise<DownloadResponseDto> {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/audit-logs/download',
-      query: {
-        'action': action,
-      },
+      body: requestBody,
+      mediaType: 'application/json',
       errors: {
         422: `Validation Error`,
       },

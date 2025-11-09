@@ -49,11 +49,13 @@ class RoleRepository(BaseRepository[Role], AuditLogRepository):
 
     async def update(self, role_id: str, data: UpdateRoleDto) -> Optional[Role]:
         existing_role = await super().get(role_id)
+
         updated_role = await super().update(id=role_id, data=data.model_dump(exclude_unset=True))
         if updated_role:
+            existing_role_doc = await existing_role.to_serializable_dict()
             await self.add_audit_log(AuditLogDto(
                 action="update",
-                changes={"new": data.model_dump(exclude_unset=True, exclude_none=True), "old": existing_role.model_dump(exclude_none=True, exclude_unset=True)},
+                changes={"new": data.model_dump(exclude_unset=True, exclude_none=True), "old": existing_role_doc},
                 entity="Role",
                 tenant_id=str(updated_role.tenant_id) if updated_role.tenant_id else None,
                 user_id=None # Todo: Need to add a new property in role.. to determine who updated it.
@@ -64,7 +66,7 @@ class RoleRepository(BaseRepository[Role], AuditLogRepository):
             action="update",
             changes={"Info": f"Attempted to update role with id {role_id}, but it was not found."},
             entity="Role",
-            tenant_id=str(existing_role.tenant_id) if existing_role.tenant_id else None,
+            tenant_id=str(data.tenant_id) if data.tenant_id else None,
             user_id=None # Todo: Need to add a new property in role.. to determine who updated it.
         ))
         return None
@@ -77,7 +79,7 @@ class RoleRepository(BaseRepository[Role], AuditLogRepository):
                 action="delete",
                 changes={"Info": f"Attempted to delete role with id {id}, but it was not found."},
                 entity="Role",
-                tenant_id=str(existing_role.tenant_id) if existing_role.tenant_id else None,
+                tenant_id=None,
                 user_id=None # Todo: Need to add a new property in role.. to determine who deleted it.
             ))
             return False
