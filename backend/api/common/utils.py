@@ -6,6 +6,7 @@ from typing import Optional
 
 from api.common.exceptions import InvalidOperationException
 from api.core.config import settings
+from api.domain.dtos.audit_logs_dto import AuditLogDto
 
 
 def get_utc_now():
@@ -91,3 +92,15 @@ def is_subdomain(host: str) -> bool:
     main_domain = get_host_main_domain_name().lower()
     host = host.lower()
     return host != main_domain and host.endswith(f".{main_domain}")
+
+
+
+async def capture_audit_log(
+    log_data: AuditLogDto
+) -> None:
+    """Capture an audit log entry."""
+
+    path = f"/tmp/audit_logs_for{log_data.tenant_id if log_data.tenant_id else 'host'}_{get_utc_now().strftime('%Y%m%d')}.jsonl"
+    with open(path, "a") as f:
+        f.write(log_data.model_dump_json() + "\n")
+    

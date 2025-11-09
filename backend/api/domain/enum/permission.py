@@ -27,3 +27,6 @@ class Permission(str, Enum):
     MANAGE_BILLING = "manage:billing"
     MANAGE_PAYMENTS_SETTINGS = "manage:payments_settings"
     MANAGE_PRODUCTS_AND_PRICING = "manage:products_and_pricing"
+
+    AUDIT_LOGS_VIEW_ONLY = "audit_logs:view_only"
+    AUDIT_LOGS_DOWNLOAD = "audit_logs:download"

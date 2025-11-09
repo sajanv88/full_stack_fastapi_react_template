@@ -1,10 +1,12 @@
 import asyncio
+from io import BytesIO
 import os
+from typing import Dict
 from celery import Celery
 
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_host_main_domain_name, get_logger
-from api.core.container import  get_dns_resolver, get_role_service, get_tenant_service, get_user_service, get_coolify_app_service
+from api.core.container import  get_audit_logs_service, get_dns_resolver, get_role_service, get_tenant_service, get_user_service, get_coolify_app_service
 from api.core.exceptions import CoolifyIntegrationException
 from api.domain.dtos.coolify_app_dto import UpdateDomainDto
 from api.domain.dtos.tenant_dto import TenantDto
@@ -13,8 +15,11 @@ from api.domain.entities.user import User
 from api.infrastructure.externals.dns_resolver import DnsResolver
 from api.infrastructure.persistence.mongodb import Database, models
 from api.infrastructure.background.post_tenant_creation_task_service import PostTenantCreationTaskService
+from api.usecases.audit_logs_service import AuditLogsService
 from api.usecases.coolify_app_service import CoolifyAppService
 from api.usecases.tenant_service import TenantService
+from api.usecases.user_service import UserService
+
 
 broker_url = os.getenv("CELERY_BROKER_URL")
 backend_url = os.getenv("CELERY_RESULT_BACKEND")
@@ -46,6 +51,10 @@ def handle_post_tenant_deletion(payload: str):
 def handle_tenant_dns_update(payload: str):
     asyncio.run(_handle_tenant_dns_update_async(payload))
 
+
+@celery_app.task(default_retry_delay=60, max_retries=5)
+def trigger_download_report(payload: str):
+    asyncio.run(_handle_download_report_shared_task_async(payload))
 
 
 async def _get_current_tenant_db(tenant_id: str) -> Database:
@@ -171,3 +180,54 @@ async def _update_coolify_domain(data: UpdateDomainDto):
                 logger.info("Coolify application restart initiated.")
     except CoolifyIntegrationException as e:
         logger.error(f"Caught error while updating Coolify domain: {str(e)}")
+
+
+
+async def _handle_download_report_shared_task_async(payload: str):
+    worker_payload = WorkerPayloadDto[Dict[str, str | None]].model_validate_json(payload)
+    logger.info(f"Handling task with label: {worker_payload.label}")
+    ct_id = str(worker_payload.tenant_id) if worker_payload.tenant_id else None
+    if worker_payload.label == "email-sending":
+
+        logger.info(f"Starting download report email sending for tenant_id: {ct_id}")
+        if ct_id is None:
+            db = Database(uri=mongo_uri, models=models)
+            await db.init_db(db_name=mongo_db_default, is_tenant=False)
+        else:
+            db = await _get_current_tenant_db(tenant_id=ct_id)
+
+        user_service: UserService = get_user_service()
+        audit_log_service: AuditLogsService = get_audit_logs_service()
+        requesting_user: User = await user_service.get_user_by_id(user_id=worker_payload.data["requested_by"])
+        from openpyxl import Workbook
+        from api.common.utils import get_utc_now
+        attachment_file_name = f"audit_logs_report_{ct_id or 'host_'}{get_utc_now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx"
+
+        res = await audit_log_service.generate_audit_logs_download(action=worker_payload.data.get("action", None), tenant_id=ct_id)
+        # Create Excel workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"Audit Logs Report from {ct_id or 'host_'} on {get_utc_now().strftime('%Y-%m-%d')}"
+        ws.append(["Timestamp", "Tenant", "User", "Action", "Entity", "Changes"])
+        for log in res:
+            ws.append([
+                log.timestamp,
+                log.tenant_id or "host",
+                log.user_id,
+                log.action,
+                log.entity,
+                str(log.changes)
+            ])
+        # Save workbook to a temporary file
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        logger.info(f"Completed download report email sending for tenant_id: {ct_id}")
+        logger.info(f"Sending audit log report to email: {requesting_user.email}")
+        await audit_log_service.send_audit_log_report_via_email(
+            to_email=requesting_user.email,
+            first_name=requesting_user.first_name,
+            attachment_data=buffer,
+            attachment_filename=attachment_file_name
+        )
+        await db.close()

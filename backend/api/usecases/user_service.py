@@ -89,7 +89,7 @@ class UserService:
 
     async def delete_user(self, user_id: str) -> None:
         """Delete user by ID. Returns None otherwise, Raises UserNotFoundException if user does not exist."""
-        if await self.user_repository.delete(id=user_id) is False:
+        if await self.user_repository.delete(user_id=user_id) is False:
             raise UserNotFoundException(user_id)
         
 

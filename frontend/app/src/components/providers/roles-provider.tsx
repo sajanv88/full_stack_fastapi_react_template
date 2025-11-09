@@ -77,9 +77,9 @@ export function RolesProvider({ children }: RolesProviderProps) {
 
             setRoleResponse({
                 items: res.roles,
-                hasNext: res.hasNext,
+                hasNext: res.has_next,
                 total: res.total,
-                hasPrevious: res.hasPrevious,
+                hasPrevious: res.has_previous,
                 limit: res.limit,
                 skip: res.skip,
             });

@@ -56,8 +56,8 @@ export function CheckoutOverview() {
                 skip: response.skip,
                 limit: response.limit,
                 total: response.total,
-                hasPrevious: response.hasPrevious,
-                hasNext: response.hasNext,
+                hasPrevious: response.has_previous,
+                hasNext: response.has_next,
             });
         } catch (error) {
             console.error("Error fetching checkout records:", error);

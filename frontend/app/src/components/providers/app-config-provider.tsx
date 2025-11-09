@@ -17,7 +17,6 @@ const appConfigContext = createContext<Configuration>({
     is_multi_tenant_enabled: false,
     multi_tenancy_strategy: "none",
     host_main_domain: "",
-    available_ai_models: [],
     is_user_logged_in: false,
     user_preferences: {
         preferences: {},
@@ -46,7 +45,6 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
         is_multi_tenant_enabled: false,
         multi_tenancy_strategy: "none",
         host_main_domain: "",
-        available_ai_models: [],
         is_user_logged_in: false,
         user_preferences: {
             preferences: {},

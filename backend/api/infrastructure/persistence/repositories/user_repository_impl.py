@@ -1,13 +1,16 @@
 from typing import Optional
 
 from beanie import PydanticObjectId
+from api.common.exceptions import NotFoundException
 from api.common.utils import get_logger
+from api.domain.dtos.audit_logs_dto import AuditLogDto
 from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto, UserListDto
 from api.domain.entities.user import User
 from api.common.base_repository import BaseRepository
+from api.common.audit_logs_repository import AuditLogRepository
 
 logger = get_logger(__name__)
-class UserRepository(BaseRepository[User]):
+class UserRepository(BaseRepository[User], AuditLogRepository):
     def __init__(self):
         super().__init__(User)
 
@@ -19,8 +22,8 @@ class UserRepository(BaseRepository[User]):
             skip=skip,
             limit=limit,
             total=total,
-            hasPrevious=skip > 0,
-            hasNext=skip + limit < total
+            has_previous=skip > 0,
+            has_next=skip + limit < total
         )
         return result
 
@@ -39,12 +42,71 @@ class UserRepository(BaseRepository[User]):
             role_id=data.role_id,
             tenant_id=data.tenant_id
         )
-        result = await super().create(new_user.model_dump())
+        d = new_user.model_dump()
+        result = await super().create(data=d)
+        await self.add_audit_log(AuditLogDto(
+            action="create",
+            entity="User",
+            user_id=str(result.id),
+            changes={"new": data.model_dump(exclude={"password", "email"}, exclude_none=True, exclude_unset=True)},
+            tenant_id=str(data.tenant_id) if data.tenant_id else None
+        ))
         return result.id
 
     async def update(self, user_id: str, data: UpdateUserDto) -> Optional[User]:
-        updated_user = await super().update(id=user_id, data=data.model_dump(exclude_unset=True))
-        if updated_user:
-            return updated_user
-        logger.warning(f"No user found for the given user id: {user_id}")
-        return None
+        try:
+            exising_user = await self.get(id=user_id)
+            if not exising_user:
+                raise NotFoundException("User not found")
+            updated_user = await super().update(id=user_id, data=data.model_dump(exclude_unset=True))
+            if updated_user:
+                await self.add_audit_log(AuditLogDto(
+                    action="update",
+                    entity="User",
+                    user_id=user_id,
+                    changes={
+                        "new": data.model_dump(exclude_unset=True, exclude={"email"}, exclude_none=True),
+                        "old": UpdateUserDto(**await exising_user.to_serializable_dict()).model_dump(exclude_unset=True, exclude={"email"}, exclude_none=True)
+                    },
+                    tenant_id=str(exising_user.tenant_id) if exising_user.tenant_id else None
+                ))
+                return updated_user
+        except NotFoundException as e:
+            logger.error(f"No user found for the given user id: {user_id}")
+            await self.add_audit_log(AuditLogDto(
+                action="update",
+                entity="User",
+                user_id=user_id,
+                changes={"error": f"No user found for the given user id: {user_id}"},
+                tenant_id=str(data.tenant_id) if data.tenant_id else None
+            ))
+            return None
+
+    async def delete(self, user_id: str) -> bool:
+        existing_user = await self.get(id=user_id)
+        try:
+            if not existing_user:
+                raise NotFoundException("User not found")
+
+            result = await super().delete(id=user_id)
+            if result:
+                await self.add_audit_log(AuditLogDto(
+                    action="delete",
+                    entity="User",
+                    user_id=user_id,
+                    changes={"info": f"User with id {user_id} deleted."},
+                    tenant_id=str(existing_user.tenant_id) if existing_user.tenant_id else None
+                ))
+            return result
+        except NotFoundException as e:
+            logger.error(f"No user found for the given user id: {user_id}")
+            await self.add_audit_log(AuditLogDto(
+                action="delete",
+                entity="User",
+                user_id=user_id,
+                changes={"error": f"No user found for the given user id: {user_id}"},
+                tenant_id=str(existing_user.tenant_id) if existing_user and existing_user.tenant_id else None
+            ))
+            return False
+          
+       

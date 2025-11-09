@@ -1,14 +1,16 @@
 
+from api.common.audit_logs_repository import AuditLogRepository
 from api.common.base_repository import BaseRepository
 from api.common.utils import get_logger
 from api.core.exceptions import StripeSettingsNotFoundException
+from api.domain.dtos.audit_logs_dto import AuditLogDto
 from api.domain.dtos.stripe_setting_dto import CreateStripeSettingDto
 from api.domain.entities.stripe_settings import  StripeSettings
 
 logger = get_logger(__name__)
 
 
-class StripeSettingsRepository(BaseRepository[StripeSettings]):
+class StripeSettingsRepository(BaseRepository[StripeSettings], AuditLogRepository):
     def __init__(self):
         super().__init__(StripeSettings)
 
@@ -29,11 +31,25 @@ class StripeSettingsRepository(BaseRepository[StripeSettings]):
             settings.trial_period_days = stripe_config.trial_period_days
             await settings.save()
             logger.info(f"Updated Stripe settings for tenant {settings.tenant_id}")
+            await self.add_audit_log(AuditLogDto(
+                action="update",
+                changes={"info": f"Updated Stripe settings for tenant {settings.tenant_id}"},
+                entity="StripeSettings",
+                tenant_id=str(settings.tenant_id) if settings.tenant_id else None,
+                user_id=None  # Todo: Need to add a new property in role.. to determine who updated it.
+            ))
         else:
             logger.info(f"Creating new Stripe settings for tenant")
             settings = StripeSettings(**stripe_config.model_dump())
             settings.tenant_id = stripe_config.tenant_id
             await self.create(settings.model_dump())
+            await self.add_audit_log(AuditLogDto(
+                action="create",
+                changes={"info": f"Created Stripe settings for tenant {settings.tenant_id}"},
+                entity="StripeSettings",
+                tenant_id=str(settings.tenant_id) if settings.tenant_id else None,
+                user_id=None  # Todo: Need to add a new property in role.. to determine who added it.
+            ))
 
     async def get_stored_stripe_settings(self) -> StripeSettings:
         """
@@ -50,6 +66,13 @@ class StripeSettingsRepository(BaseRepository[StripeSettings]):
             return result
         except Exception as e:
             logger.error(f"Error fetching stored Stripe settings: {e}")
+            await self.add_audit_log(AuditLogDto(
+                action="error",
+                changes={"info": f"Attempted to read Stripe settings, but an error occurred: {e}"},
+                entity="StripeSettings",
+                tenant_id=None,
+                user_id=None # Todo: Need to add a new property in role.. to determine who added it.
+            ))
             raise StripeSettingsNotFoundException("Stripe settings not found.")
     
 

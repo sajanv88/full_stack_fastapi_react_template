@@ -5,6 +5,7 @@ import { getApiClient } from '@/lib/utils';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/components/providers/auth-provider';
+import { NoPermissionToAccessResource } from '@/components/shared/no-permission-access-resource';
 
 export type TenantResponse = TenantListDto
 export type TenantsType = TenantResponse["tenants"][0]
@@ -68,8 +69,8 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
             setTenantResponse({
                 items: response.tenants,
                 total: response.total,
-                hasNext: response.hasNext,
-                hasPrevious: response.hasPrevious,
+                hasNext: response.has_next,
+                hasPrevious: response.has_previous,
                 limit: response.limit,
                 skip: response.skip
             });
@@ -157,9 +158,13 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
     }
 
     useEffect(() => {
+        if (!accessToken || !isHost) return;
         fetchTenants();
-    }, [searchParams, accessToken]);
+    }, [searchParams, accessToken, isHost]);
 
+    if (!isHost) {
+        return <NoPermissionToAccessResource message='Tenant Management' />;
+    }
 
 
     return (

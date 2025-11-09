@@ -23,7 +23,7 @@ import {
     Tent,
     Cog
 } from 'lucide-react';
-import { IconSettingsBolt, IconCurrencyEuro, IconNotification } from "@tabler/icons-react"
+import { IconSettingsBolt, IconCurrencyEuro, IconNotification, IconLogs } from "@tabler/icons-react"
 import { useAuthContext } from '../providers/auth-provider';
 import { useMemo } from 'react';
 import { cn, getApiClient } from '@/lib/utils';
@@ -34,6 +34,7 @@ const navLinks = [
     { href: "/users?skip=0&limit=10", label: "Users", icon: Users },
     { href: "/roles?skip=0&limit=10", label: "Roles", icon: Shield },
     { href: "/tenants?skip=0&limit=10", label: "Tenants", icon: Tent },
+    { href: "/audit-logs?skip=0&limit=10", label: "Audit Logs", icon: IconLogs },
     {
         href: "/settings",
         label: "Settings",

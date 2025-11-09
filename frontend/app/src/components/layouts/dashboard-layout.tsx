@@ -30,7 +30,7 @@ export function DashboardLayout() {
         if (!auth.isLoggedIn) {
             return;
         }
-        if (!current_tenant?.is_active && !isHost) {
+        if (current_tenant && !current_tenant?.is_active) {
             // Redirect to NonActiveTenantView
             navigate("/non-active");
         }

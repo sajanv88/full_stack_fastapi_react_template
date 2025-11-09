@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuthContext } from "@/components/providers/auth-provider";
-import { getApiClient } from "@/lib/utils";
+import { extractErrorMessage, getApiClient } from "@/lib/utils";
 import { NotificationBannerSettingDto } from "@/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -107,9 +107,12 @@ export function NotificationBanner() {
             }
 
             Promise.all([fetchNotificationBanner(), reloadAppConfig()]);
-        } catch (error) {
-            console.error("Error saving notification banner:", error);
-            toast.error("Failed to save notification banner", { richColors: true, position: "top-right" });
+        } catch (error: unknown) {
+            const errMsg = extractErrorMessage(error);
+            console.error("Error saving notification banner:", errMsg);
+            toast.error("Failed to save notification banner", {
+                richColors: true, position: "top-right", description: errMsg
+            });
         } finally {
             setSubmitting(false);
         }

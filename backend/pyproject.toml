@@ -19,6 +19,7 @@ dependencies = [
     "langchain-ollama>=0.3.8",
     "langchain-openai>=0.3.33",
     "motor>=3.7.1",
+    "openpyxl>=3.1.5",
     "passlib>=1.7.4",
     "punq>=0.7.0",
     "pydantic>=2.11.9",

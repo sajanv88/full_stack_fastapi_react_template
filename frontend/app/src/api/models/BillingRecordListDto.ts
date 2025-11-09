@@ -8,7 +8,7 @@ export type BillingRecordListDto = {
   skip: number;
   limit: number;
   total: number;
-  hasPrevious: boolean;
-  hasNext: boolean;
+  has_previous: boolean;
+  has_next: boolean;
 };
 

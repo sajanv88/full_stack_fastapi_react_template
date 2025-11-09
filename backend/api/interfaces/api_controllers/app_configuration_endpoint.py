@@ -7,7 +7,6 @@ from api.core.container import   get_passkey_service,  get_tenant_service, get_u
 from api.core.exceptions import  TenantNotFoundException
 from api.domain.dtos.tenant_dto import TenantDto
 from api.domain.entities.tenant import Tenant
-from api.infrastructure.externals.local_ai_model import OllamaModels
 from api.infrastructure.security.current_user import  CurrentUserOptional
 from api.infrastructure.security.passkey_service import PasskeyService
 from api.interfaces.middlewares.tenant_middleware import get_tenant_id
@@ -64,7 +63,6 @@ async def get_app_configuration(
         is_multi_tenant_enabled=is_tenancy_enabled(),
         multi_tenancy_strategy=get_tenancy_strategy(),
         host_main_domain=get_host_main_domain_name(),
-        available_ai_models=[],
         is_user_logged_in=is_user_logged_in,
         user_preferences=user_pref_doc,
         current_tenant=current_tenant,
