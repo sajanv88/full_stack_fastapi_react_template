@@ -4,6 +4,7 @@ import { useContext, createContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuthContext } from "./auth-provider";
 import { NoPermissionToAccessResource } from "@/components/shared/no-permission-access-resource";
+import { useAppConfig } from "./app-config-provider";
 
 export interface StorageFormData extends Omit<AvailableStorageProviderDto, 'id' | 'created_at' | 'updated_at'> { }
 interface SettingsContextProps {
@@ -28,11 +29,12 @@ interface SettingsProviderProps {
 }
 export function SettingsProvider({ children }: SettingsProviderProps) {
     const { accessToken, can } = useAuthContext();
+    const { current_tenant } = useAppConfig();
     const apiClient = getApiClient(accessToken);
     const [storages, setStorages] = useState<AvailableStorageProviderDto[]>([]);
     const [availableStorages, setAvailableStorages] = useState<Array<Record<string, string>>>([]);
     const [loading, setLoading] = useState(true);
-    const canManageSettings = can('manage:storage_settings') || can('full:access');
+    const canManageSettings = can('manage:storage_settings') || can('full:access') && current_tenant;
 
     async function fetchSettings() {
         setLoading(true);
