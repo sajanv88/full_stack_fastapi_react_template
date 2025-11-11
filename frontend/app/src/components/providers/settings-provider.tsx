@@ -34,7 +34,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     const [storages, setStorages] = useState<AvailableStorageProviderDto[]>([]);
     const [availableStorages, setAvailableStorages] = useState<Array<Record<string, string>>>([]);
     const [loading, setLoading] = useState(true);
-    const canManageSettings = can('manage:storage_settings') || can('full:access') && current_tenant;
+    const canManageSettings = can('manage:storage_settings') || can('full:access');
 
     async function fetchSettings() {
         setLoading(true);
@@ -81,11 +81,11 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }
 
     useEffect(() => {
-        if (!canManageSettings || !accessToken) return;
+        if ((!canManageSettings || !accessToken) && !current_tenant) return;
         fetchSettings();
     }, [accessToken, canManageSettings])
 
-    if (!canManageSettings) {
+    if (!canManageSettings || !current_tenant) {
         return <NoPermissionToAccessResource message='Storage Settings' />;
     }
 
