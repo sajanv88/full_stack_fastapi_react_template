@@ -20,11 +20,12 @@ router = APIRouter(
 )
 router.tags = ["Storage Settings"]
 
-@router.get("/", response_model=List[AvailableStorageProviderDto])
+@router.get("/", response_model=List[AvailableStorageProviderDto], response_model_exclude={"aws_access_key", "aws_secret_key", "azure_connection_string"})
 async def get_storage_settings(
     setting_service: StorageSettingsService = Depends(get_storage_settings_service)
 ):
-    return await setting_service.get_storages()
+    res = await setting_service.get_storages()
+    return [s for s in res]
 
 @router.get("/available", response_model=List[dict[str, str]])
 async def get_available_providers():
@@ -45,8 +46,12 @@ async def configure_storage(
             logger.error("Tenant ID is missing in the current user context.")
             return status.HTTP_400_BAD_REQUEST
         
-        await setting_service.configure_storage(setting=configuration)
+        configuration.updated_by_user_id = current_user.id
+        await setting_service.configure_storage(setting=configuration, tenant_id=current_user.tenant_id)
         return status.HTTP_201_CREATED
     except Exception as e:
         logger.error(f"Failed to configure storage: {e}")
         return status.HTTP_400_BAD_REQUEST
+
+
+

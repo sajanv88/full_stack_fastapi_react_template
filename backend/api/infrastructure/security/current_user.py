@@ -20,7 +20,7 @@ async def get_current_user(
         user_service: UserService = Depends(get_user_service),
         token_service: JwtTokenService = Depends(get_jwt_token_service),
         role_service: RoleService = Depends(get_role_service),
-        subscription_service: SubscriptionPlanService = Depends(get_subscription_plan_service),
+        subscription_service: SubscriptionPlanService = Depends(get_subscription_plan_service)
     ) -> MeResponseDto:
     payload = await token_service.decode_token(token, type="access_token")
     if payload is None:
@@ -37,7 +37,8 @@ async def get_current_user(
     role_doc = await role.to_serializable_dict()
     # Get subscription plan for the user
     subscription =  await subscription_service.get_subscription_plan_by_user_id(str(user.id))
-    return MeResponseDto(**user_dto.model_dump(), role=role_doc, subscription=subscription)
+    me_response = MeResponseDto(**user_dto.model_dump(), role=role_doc, subscription=subscription)
+    return me_response
 
 
 

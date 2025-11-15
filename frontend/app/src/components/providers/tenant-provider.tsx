@@ -6,6 +6,7 @@ import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/components/providers/auth-provider';
 import { NoPermissionToAccessResource } from '@/components/shared/no-permission-access-resource';
+import { useAppConfig } from '@/components/providers/app-config-provider';
 
 export type TenantResponse = TenantListDto
 export type TenantsType = TenantResponse["tenants"][0]
@@ -53,6 +54,7 @@ interface TenantsProviderProps {
 
 export function TenantsProvider({ children }: TenantsProviderProps) {
     const { accessToken, can } = useAuthContext();
+    const { current_tenant } = useAppConfig();
     const [tenantResponse, setTenantResponse] = useState<IResponseData<TenantsType>>(initialState.tenantResponse);
     const [searchParams] = useSearchParams();
     const [selectedTenant, setSelectedTenant] = useState<Action | undefined>(undefined);
@@ -162,7 +164,7 @@ export function TenantsProvider({ children }: TenantsProviderProps) {
         fetchTenants();
     }, [searchParams, accessToken, isHost]);
 
-    if (!isHost) {
+    if (!isHost && !current_tenant) {
         return <NoPermissionToAccessResource message='Tenant Management' />;
     }
 

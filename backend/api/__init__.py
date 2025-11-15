@@ -102,6 +102,8 @@ else:
 
 
 router = APIRouter(prefix="/api/v1")
+
+
 router.include_router(health_router)
 
 if is_tenancy_enabled():

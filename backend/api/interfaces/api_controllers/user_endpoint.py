@@ -77,9 +77,13 @@ async def get_profile_image(
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.USER_VIEW_ONLY])),
     file_service: FileService = Depends(get_file_service)
 ):
-    image_url = await file_service.get_file_url(image_key)
-    return UserProfileImageUpdateDto(image_url=image_url)
-
+    try:
+        image_url = await file_service.get_file_url(image_key)
+        return UserProfileImageUpdateDto(image_url=image_url)
+    except Exception as e:
+        logger.error(f"Error fetching profile image: {e}")
+        return UserProfileImageUpdateDto(image_url="")
+    
 @router.delete("/{user_id}", status_code=status.HTTP_202_ACCEPTED)
 async def delete_user(
     user_id: str,

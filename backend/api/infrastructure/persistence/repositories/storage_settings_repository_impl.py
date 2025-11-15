@@ -20,22 +20,30 @@ class StorageSettingsRepository(BaseRepository[StorageSettings], AuditLogReposit
             sett: StorageSettings = await super().get(result.id)
             await self.add_audit_log(AuditLogDto(
                 action="create",
-                changes={"Info": f"Create new storage settings with {setting.provider.value} and {result.id}"},
+                changes={"Info": f"Created a new storage settings with {setting.provider.value} and {result.id}"},
                 entity="StorageSettings",
                 tenant_id=str(sett.tenant_id) if sett.tenant_id else None,
-                user_id=None # Todo: Need to add a new property in storage settings.. to determine who added it.
+                user_id=setting.updated_by_user_id
             ))
             return result.id
         
         logger.info(f"Updating existing setting for provider: {setting.provider.value}")
         result = await super().update(id=str(existing.id), data=setting.model_dump())
         logger.info(f"Update result: {result.id} document(s) modified.")
+        is_enabled_change = existing.is_enabled != setting.is_enabled
+        region_change = existing.region != setting.region
+        changes = {}
+        if is_enabled_change:
+            changes["is_enabled"] = {"from": existing.is_enabled, "to": setting.is_enabled}
+        if region_change:
+            changes["region"] = {"from": existing.region, "to": setting.region}
+
         await self.add_audit_log(AuditLogDto(
                 action="update",
-                changes={"Info": f"Create new storage settings with {setting.provider.value} and {result.id}"},
+                changes={"Info": f"Updated storage settings with {setting.provider.value} and {result.id}" , **changes},
                 entity="StorageSettings",
-                tenant_id=str(sett.tenant_id) if sett.tenant_id else None,
-                user_id=None # Todo: Need to add a new property in storage settings.. to determine who added it.
+                tenant_id=str(setting.tenant_id) if setting.tenant_id else None,
+                user_id=setting.updated_by_user_id
             ))
         return result.id
     
