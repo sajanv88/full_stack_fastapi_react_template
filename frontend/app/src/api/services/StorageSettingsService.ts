@@ -50,4 +50,25 @@ export class StorageSettingsService {
       },
     });
   }
+  /**
+   * Reset Storage
+   * @returns void
+   * @throws ApiError
+   */
+  public resetStorageApiV1StorageStorageIdResetPatch({
+    storageId,
+  }: {
+    storageId: string,
+  }): CancelablePromise<void> {
+    return this.httpRequest.request({
+      method: 'PATCH',
+      url: '/api/v1/storage/{storage_id}/reset',
+      path: {
+        'storage_id': storageId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

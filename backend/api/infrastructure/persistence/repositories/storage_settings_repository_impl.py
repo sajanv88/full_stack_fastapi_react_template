@@ -23,10 +23,17 @@ class StorageSettingsRepository(BaseRepository[StorageSettings], AuditLogReposit
 
     async def configure_storage(self, setting: StorageSettings) -> PydanticObjectId:
         await self.disable_all_active_storages()
-        
+        if setting.provider.value == StorageProvider.AWS_S3.value:
+            setting.azure_connection_string = None
+            setting.azure_container_name = None
+        elif setting.provider.value == StorageProvider.AZURE_BLOB.value:
+            setting.aws_access_key = None
+            setting.aws_secret_key = None
+            setting.aws_bucket_name = None
         existing: StorageSettings | None = await self.single_or_none(provider=setting.provider.value)
         if existing is None:
             logger.info(f"Creating new storage setting for provider: {setting.provider.value}")
+        
             result = await super().create(data=setting.model_dump())
             sett: StorageSettings = await super().get(result.id)
             await self.add_audit_log(AuditLogDto(
@@ -39,6 +46,7 @@ class StorageSettingsRepository(BaseRepository[StorageSettings], AuditLogReposit
             return result.id
         
         logger.info(f"Updating existing setting for provider: {setting.provider.value}")
+        
         result = await super().update(id=str(existing.id), data=setting.model_dump())
         logger.info(f"Update result: {result.id} document(s) modified.")
         is_enabled_change = existing.is_enabled != setting.is_enabled
@@ -74,3 +82,13 @@ class StorageSettingsRepository(BaseRepository[StorageSettings], AuditLogReposit
         return setting
     
 
+    async def reset_storage(self, id: str, data: StorageSettings) -> None:
+        result = await super().update(id=id, data=data.model_dump())
+        logger.info(f"Reset storage setting with ID: {id}. Update result: {result.id} document(s) modified.")
+        await self.add_audit_log(AuditLogDto(
+                action="update",
+                changes={"Info": f"Reset storage settings with {data.provider.value} and {result.id}"},
+                entity="StorageSettings",
+                tenant_id=str(data.tenant_id) if data.tenant_id else None,
+                user_id=data.updated_by_user_id
+            ))
