@@ -11,6 +11,7 @@ export type AvailableStorageProviderDto = {
   aws_bucket_name?: (string | null);
   azure_connection_string?: (string | null);
   azure_container_name?: (string | null);
+  updated_by_user_id?: (string | null);
   id: string;
   created_at: string;
   updated_at: string;

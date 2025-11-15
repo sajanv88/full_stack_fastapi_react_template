@@ -108,6 +108,7 @@ container.register(StorageSettingsService, scope=punq.Scope.singleton)
 ## File Service
 container.register(FileService, scope=punq.Scope.singleton)
 
+
 ## AI Components
 container.register(ChatSessionAIRepository)
 container.register(ChatHistoryAIRepository)
@@ -136,6 +137,8 @@ container.register(NotificationBannerService, scope=punq.Scope.singleton)
 ## Audit Log Components
 container.register(AuditLogRepository, scope=punq.Scope.singleton)
 container.register(AuditLogsService, scope=punq.Scope.singleton)
+
+
 
 
 ## Dependency resolver functions

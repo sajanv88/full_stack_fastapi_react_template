@@ -20,6 +20,7 @@ class StorageSettings(ApiBaseModel):
     aws_bucket_name: Optional[str] | None = None
     azure_connection_string: Optional[str] | None = None
     azure_container_name: Optional[str] | None = None
+    updated_by_user_id: Optional[str] | None = None
 
 
     async def to_serializable_dict(self) -> AvailableStorageProviderDto:
@@ -33,11 +34,17 @@ class StorageSettings(ApiBaseModel):
             "aws_secret_key": self.aws_secret_key,
             "aws_bucket_name": self.aws_bucket_name,
             "azure_connection_string": self.azure_connection_string,
-            "azure_container_name": self.azure_container_name
+            "azure_container_name": self.azure_container_name,
+            "updated_by_user_id": self.updated_by_user_id
         }
         return AvailableStorageProviderDto(**result)
        
     class Settings:
-        name = "settings"
+        name = "storage_settings"
+        indexes = [
+            "provider",
+            "is_enabled",
+            ("tenant_id", "provider")
+        ]
 
 

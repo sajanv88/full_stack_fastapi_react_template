@@ -17,7 +17,8 @@ class BaseRepository(Generic[T]):
         return result
     
     async def get(self, id: str) -> Optional[T]:
-        result = await self.model.get(PydanticObjectId(id))
+        result = await self.model.find_one({"_id": PydanticObjectId(id)})
+        logger.debug(f"Get result for id {id}: {result}")
         return result
 
     async def list(self) -> List[T]:
@@ -35,14 +36,14 @@ class BaseRepository(Generic[T]):
 
 
     async def update(self, id: str, data: dict) -> Optional[T]:
-        doc = await self.get(PydanticObjectId(id))
+        doc = await self.get(id)
         if not doc:
             return None
         await doc.update(Set(data))
         return doc
 
     async def delete(self, id: str) -> bool:
-        doc = await self.get(PydanticObjectId(id))
+        doc = await self.get(id)
         logger.info(f"Deleting document with id: {id}, Found doc: {doc is not None}")
         if not doc:
             return False

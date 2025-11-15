@@ -20,7 +20,7 @@ type StorageProvider = AvailableStorageProviderDto["provider"];
 
 
 export function Settings() {
-    const { storages, onConfigureStorage, loading } = useSettings();
+    const { storages, onConfigureStorage, loading, onResetStorage } = useSettings();
     const { can } = useAuthContext();
     const canManageSettings = can('manage:storage_settings');
     const isAdminWithFullAccess = can('full:access');
@@ -48,6 +48,7 @@ export function Settings() {
         const storageProvider = provider as StorageProvider;
         setActiveTab(provider);
         const existingConfig = getStorageConfig(storageProvider);
+        console.log("Existing Config:", existingConfig);
         if (existingConfig) {
             setFormData({
                 provider: existingConfig.provider,
@@ -59,17 +60,6 @@ export function Settings() {
                 azure_connection_string: existingConfig.azure_connection_string || '',
                 azure_container_name: existingConfig.azure_container_name || ''
             });
-        } else {
-            setFormData({
-                provider: storageProvider,
-                is_enabled: false,
-                region: '',
-                aws_access_key: '',
-                aws_secret_key: '',
-                aws_bucket_name: '',
-                azure_connection_string: '',
-                azure_container_name: ''
-            });
         }
     };
 
@@ -78,7 +68,6 @@ export function Settings() {
         e.preventDefault();
         setIsLoading(true);
         try {
-            console.log("Form Data to be submitted:", formData);
             await onConfigureStorage(formData);
         } catch (error) {
             console.error('Failed to configure storage:', error);
@@ -143,7 +132,10 @@ export function Settings() {
         )
     }
 
-
+    const azure_storage_active = getStorageConfig('azure_blob')?.is_enabled;
+    const s3_storage_active = getStorageConfig('s3')?.is_enabled;
+    const s3_configured = s3_storage_active || (!!getStorageConfig('s3')?.region && !!getStorageConfig('s3')?.aws_bucket_name && !!getStorageConfig('s3')?.aws_access_key && !!getStorageConfig('s3')?.aws_secret_key);
+    const azure_configured = azure_storage_active || (!!getStorageConfig('azure_blob')?.region && !!getStorageConfig('azure_blob')?.azure_container_name && !!getStorageConfig('azure_blob')?.azure_connection_string);
     return (
         <div className="w-full xl:container xl:mx-auto xl:max-w-4xl">
             <div className="space-y-6">
@@ -166,14 +158,14 @@ export function Settings() {
                         <TabsTrigger value="s3" className="flex items-center space-x-2">
                             <Cloud className="h-4 w-4" />
                             <span>AWS S3</span>
-                            {getStorageConfig('s3')?.is_enabled && (
+                            {s3_storage_active && (
                                 <CheckCircle className="h-4 w-4 text-green-500" />
                             )}
                         </TabsTrigger>
                         <TabsTrigger value="azure_blob" className="flex items-center space-x-2">
                             <Database className="h-4 w-4" />
                             <span>Azure Blob</span>
-                            {getStorageConfig('azure_blob')?.is_enabled && (
+                            {azure_storage_active && (
                                 <CheckCircle className="h-4 w-4 text-green-500" />
                             )}
                         </TabsTrigger>
@@ -186,7 +178,7 @@ export function Settings() {
                                 <CardTitle className="flex items-center space-x-2">
                                     <Cloud className="h-5 w-5 text-orange-500" />
                                     <span>Amazon S3 Configuration</span>
-                                    {getStorageConfig('s3')?.is_enabled && (
+                                    {s3_storage_active && (
                                         <Badge variant="secondary" className="ml-2">
                                             <CheckCircle className="h-3 w-3 mr-1" />
                                             Active
@@ -219,7 +211,7 @@ export function Settings() {
                                             <Label htmlFor="region">AWS Region</Label>
                                             <Select
                                                 key={formData?.region}
-                                                defaultValue={formData?.region}
+                                                defaultValue={getStorageConfig("s3")?.region}
                                                 onValueChange={(value) => updateField('region', value)}
                                             >
                                                 <SelectTrigger>
@@ -249,7 +241,7 @@ export function Settings() {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {!s3_configured && (<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {/* Access Key */}
                                         <div className="space-y-2">
                                             <Label htmlFor="access-key">Access Key ID</Label>
@@ -274,6 +266,23 @@ export function Settings() {
                                             />
                                         </div>
                                     </div>
+                                    )}
+                                    {s3_configured && (
+                                        <div className="space-y-2 flex flex-col items-center">
+                                            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg w-full">
+                                                <p className="text-sm text-yellow-800">
+                                                    AWS credentials are already configured. To update them, please reset the storage settings first.
+                                                </p>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="mt-2" onClick={() => onResetStorage(getStorageConfig('s3')?.id!)} >
+                                                Reset S3 Configuration
+                                            </Button>
+                                        </div>
+                                    )}
 
                                     <Alert>
                                         <AlertCircle className="h-4 w-4" />
@@ -301,7 +310,7 @@ export function Settings() {
                                 <CardTitle className="flex items-center space-x-2">
                                     <Database className="h-5 w-5 text-blue-500" />
                                     <span>Azure Blob Storage Configuration</span>
-                                    {getStorageConfig('azure_blob')?.is_enabled && (
+                                    {azure_storage_active && (
                                         <Badge variant="secondary" className="ml-2">
                                             <CheckCircle className="h-3 w-3 mr-1" />
                                             Active
@@ -334,6 +343,7 @@ export function Settings() {
                                             <Label htmlFor="azure-region">Azure Region</Label>
                                             <Select
                                                 value={formData.region}
+                                                defaultValue={getStorageConfig("azure_blob")?.region}
                                                 onValueChange={(value) => updateField('region', value)}
                                             >
                                                 <SelectTrigger>
@@ -364,19 +374,37 @@ export function Settings() {
                                     </div>
 
                                     {/* Connection String */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="connection-string">Connection String</Label>
-                                        <Input
-                                            id="connection-string"
-                                            type="password"
-                                            placeholder="DefaultEndpointsProtocol=https;AccountName=..."
-                                            value={formData.azure_connection_string || ''}
-                                            onChange={(e) => updateField('azure_connection_string', e.target.value)}
-                                        />
-                                        <p className="text-xs text-muted-foreground">
-                                            You can find this in your Azure Storage Account's Access Keys section
-                                        </p>
-                                    </div>
+                                    {!azure_configured && (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="connection-string">Connection String</Label>
+                                            <Input
+                                                id="connection-string"
+                                                type="password"
+                                                placeholder="DefaultEndpointsProtocol=https;AccountName=..."
+                                                value={formData.azure_connection_string || ''}
+                                                onChange={(e) => updateField('azure_connection_string', e.target.value)}
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                You can find this in your Azure Storage Account's Access Keys section
+                                            </p>
+                                        </div>
+                                    )}
+                                    {azure_configured && (
+                                        <div className="space-y-2 flex flex-col items-center">
+                                            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg w-full">
+                                                <p className="text-sm text-yellow-800">
+                                                    Azure credentials are already configured. To update them, please reset the storage settings first.
+                                                </p>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="mt-2" onClick={() => onResetStorage(getStorageConfig('azure_blob')?.id!)} >
+                                                Reset Azure Configuration
+                                            </Button>
+                                        </div>
+                                    )}
 
                                     <Alert>
                                         <AlertCircle className="h-4 w-4" />

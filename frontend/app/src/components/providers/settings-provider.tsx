@@ -12,6 +12,7 @@ interface SettingsContextProps {
     availableStorages: Array<Record<string, string>>
     onConfigureStorage: (settings: StorageFormData) => Promise<void>;
     loading: boolean;
+    onResetStorage: (storageId: string) => Promise<void>;
 }
 
 
@@ -19,7 +20,8 @@ const initialState: SettingsContextProps = {
     storages: [],
     availableStorages: [],
     onConfigureStorage: async () => { },
-    loading: true
+    loading: true,
+    onResetStorage: async () => { }
 };
 
 const SettingsContext = createContext<SettingsContextProps>(initialState);
@@ -47,6 +49,24 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         setLoading(false);
     }
 
+    async function onResetStorage(storageId: string) {
+        try {
+            await apiClient.storageSettings.resetStorageApiV1StorageStorageIdResetPatch({
+                storageId: storageId
+            });
+            toast.success("Storage reset successfully", {
+                richColors: true,
+                position: "top-right",
+            });
+            await fetchSettings();
+        } catch (error) {
+            toast.error("Failed to reset storage", {
+                description: (error as Error).message,
+                richColors: true,
+                position: "top-right",
+            });
+        }
+    }
     async function onConfigureStorage(settings: StorageFormData) {
         try {
             const update = { ...storages.find(s => s.provider === settings.provider), ...settings };
@@ -65,13 +85,14 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
             });
             const updatedStorages = await apiClient.storageSettings.getStorageSettingsApiV1StorageGet();
             setStorages(updatedStorages);
-            toast.success("Storage settings updated successfully", {
+            toast.success(`Storage: ${settings.provider}`, {
+                description: "The storage settings have been updated successfully.",
                 richColors: true,
                 position: "top-right",
             });
             await fetchSettings();
         } catch (error) {
-            toast.error("Failed to update storage settings", {
+            toast.error(`Storage: ${settings.provider}`, {
                 description: (error as Error).message,
                 richColors: true,
                 position: "top-right",
@@ -90,7 +111,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }
 
     return (
-        <SettingsContext.Provider value={{ loading, onConfigureStorage, storages, availableStorages }}>
+        <SettingsContext.Provider value={{ loading, onConfigureStorage, storages, availableStorages, onResetStorage }}>
             {children}
         </SettingsContext.Provider>
     );
