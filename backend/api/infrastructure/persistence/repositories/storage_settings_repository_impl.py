@@ -12,10 +12,21 @@ class StorageSettingsRepository(BaseRepository[StorageSettings], AuditLogReposit
     def __init__(self):
         super().__init__(StorageSettings)
 
+    async def disable_all_active_storages(self) -> None:
+        total = await super().count({"is_enabled": True})
+        if total > 0:
+            logger.warning(f"Creating multiple storage settings. Existing count: {total}")
+            for s in await super().search({"is_enabled": True}):
+                s.is_enabled = False
+                await super().update(id=str(s.id), data=s.model_dump())
+                logger.info(f"Disabled storage setting with ID: {s.id} for provider: {s.provider.value}")
 
     async def configure_storage(self, setting: StorageSettings) -> PydanticObjectId:
+        await self.disable_all_active_storages()
+        
         existing: StorageSettings | None = await self.single_or_none(provider=setting.provider.value)
         if existing is None:
+            logger.info(f"Creating new storage setting for provider: {setting.provider.value}")
             result = await super().create(data=setting.model_dump())
             sett: StorageSettings = await super().get(result.id)
             await self.add_audit_log(AuditLogDto(

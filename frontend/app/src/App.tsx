@@ -32,6 +32,7 @@ import { CheckoutOverview } from "@/components/features/billings/stripe/checkout
 import { AppSettings } from "@/components/features/settings/app-settings";
 import { AuditLogProvider } from "@/components/providers/audit-log-provider";
 import { AuditLogs } from "@/components/features/audit-logs/audit-logs";
+import { SettingsLayout } from "./components/features/settings/settings-layout";
 
 function App() {
   const { user } = useAuthContext();
@@ -76,29 +77,33 @@ function App() {
         }
         />
 
-        <Route path="settings" element={
-          <SettingsProvider>
-            <Settings />
-          </SettingsProvider>
-        } />
+        <Route path="settings" element={<SettingsLayout />}>
+          <Route index element={<Navigate to="/settings/storage" />} />
+          <Route path="storage" element={
+            <SettingsProvider>
+              <Settings />
+            </SettingsProvider>
+          } />
 
-        <Route path="settings/general" element={
-          <SettingsProvider>
-            <TenantsProvider>
-              <TenantSetting />
-            </TenantsProvider>
-          </SettingsProvider>
-        } />
+          <Route path="general" element={
+            <SettingsProvider>
+              <TenantsProvider>
+                <TenantSetting />
+              </TenantsProvider>
+            </SettingsProvider>
+          } />
 
-        <Route path="settings/payment" element={
-          <StripeProvider>
-            <ConfigureStripe />
-          </StripeProvider>
-        } />
+          <Route path="payment" element={
+            <StripeProvider>
+              <ConfigureStripe />
+            </StripeProvider>
+          } />
 
-        <Route path="settings/notifications" element={
-          <AppSettings />
-        } />
+          <Route path="notifications" element={
+            <AppSettings />
+          } />
+
+        </Route>
 
         <Route path="billing" element={<Billing />}>
           <Route index element={<BillingOverview />} />

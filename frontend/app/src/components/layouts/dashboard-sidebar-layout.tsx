@@ -21,7 +21,8 @@ import {
     LogOut,
     ChevronRight,
     Tent,
-    Cog
+    Cog,
+    HardDriveIcon
 } from 'lucide-react';
 import { IconSettingsBolt, IconCurrencyEuro, IconNotification, IconLogs } from "@tabler/icons-react"
 import { useAuthContext } from '../providers/auth-provider';
@@ -40,6 +41,7 @@ const navLinks = [
         label: "Settings",
         icon: Cog,
         children: [
+            { href: "/settings/storage", label: "Storage", icon: HardDriveIcon, visibility: "tenants" },
             { href: "/settings/general", label: "General", icon: IconSettingsBolt, visibility: "tenants" },
             { href: "/settings/payment", label: "Payment", icon: IconCurrencyEuro, visibility: "tenants" },
             { href: "/settings/notifications", label: "Notifications", icon: IconNotification, visibility: "both" },
