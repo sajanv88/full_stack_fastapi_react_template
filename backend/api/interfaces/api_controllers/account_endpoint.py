@@ -266,21 +266,25 @@ async def passkey_login(
     passkey_service: PasskeyService = Depends(get_passkey_service),
     auth_service: AuthService = Depends(get_auth_service)
 ):
-    result = await passkey_service.complete_auth_login(email, credential)
-    if result is False:
-        raise PassKeyException("Passkey authentication failed.")
-    
-    token_set: TokenSetDto = await auth_service.login_with_passkey(email=email)
-    
-    response.set_cookie(
-        key="refresh_token",
-        value=token_set.refresh_token,
-        httponly=True,
-        secure=settings.fastapi_env == "production",
-        samesite="lax",
-        max_age=settings.refresh_token_expire_days
-    )
-    return token_set
+    try:
+        result = await passkey_service.complete_auth_login(email, credential)
+        if result is False:
+            raise PassKeyException("Passkey authentication failed.")
+        
+        token_set: TokenSetDto = await auth_service.login_with_passkey(email=email)
+        
+        response.set_cookie(
+            key="refresh_token",
+            value=token_set.refresh_token,
+            httponly=True,
+            secure=settings.fastapi_env == "production",
+            samesite="lax",
+            max_age=settings.refresh_token_expire_days
+        )
+        return token_set
+    except Exception as e:
+        logger.error(f"Passkey login failed for email: {email} with error: {e}")
+        raise PassKeyException("Passkey authentication failed.") from e
     
 
 @router.post("/passkey/has_passkeys", response_model=HasPasskeysDto, status_code=status.HTTP_200_OK)

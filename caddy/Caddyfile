@@ -5,16 +5,16 @@
 }
 
 demo.dev.xyz {
-	reverse_proxy host.docker.internal:8000
+	reverse_proxy host.docker.internal:3000
 }
 
 
 
 netflix.demo.dev.xyz {
-	reverse_proxy host.docker.internal:8000
+	reverse_proxy host.docker.internal:3000
 }
 
 fsrapp.netflix.com {
-	reverse_proxy host.docker.internal:8000
+	reverse_proxy host.docker.internal:3000
 
 }
