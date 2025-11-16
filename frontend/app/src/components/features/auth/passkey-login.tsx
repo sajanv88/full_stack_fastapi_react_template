@@ -82,6 +82,7 @@ export function PasskeyLogin() {
             description: "You can now use your passkey for future logins.",
             richColors: true
         });
+
     }
     const handleEmailSubmit = async (data: PasskeyEmailForm) => {
         setIsLoading(true);
@@ -90,15 +91,13 @@ export function PasskeyLogin() {
             const res = await apiClient.account.hasPasskeysApiV1AccountPasskeyHasPasskeysPost({
                 requestBody: data.email
             });
-            console.log({ res }, "Passkey Support Check");
             if (res.has_passkeys) {
                 await loginFlow(data.email);
                 return;
             }
             await registerFlow(data.email);
-            setShowEmailDialog(false);
-            form.reset();
-            toast.success("Passkey authentication successful!");
+            toast.success("Passkey registration successful!");
+            await loginFlow(data.email);
 
         } catch (error) {
             if (error instanceof WebAuthnError) {
@@ -110,21 +109,18 @@ export function PasskeyLogin() {
                 return;
             }
 
-            console.error("Passkey error:", error);
-            toast.error("Passkey authentication failed. Please ensure you have a registered passkey.", {
+            toast.error("Authentication failed!", {
+                description: "Please ensure you have a registered passkey. Or Try different method.",
                 richColors: true,
                 position: "top-right"
             });
 
         }
         finally {
+            form.reset();
             setShowEmailDialog(false);
             setIsLoading(false);
-
         }
-
-
-
     };
 
     const handleDialogClose = () => {

@@ -114,7 +114,7 @@ class PasskeyService():
             raise PassKeyException("No expected challenge found or challenge expired.")
 
         rep = await self._get_rep_id_and_name(expected_challenge.tenant_id)
-
+        logger.info(f"Completing registration for user {email} with RP ID {rep.rp_id}.")
 
         verified = verify_registration_response(
             credential=credential,
@@ -196,7 +196,7 @@ class PasskeyService():
         rep = await self._get_rep_id_and_name(expected_challenge.tenant_id)
 
         user_credentials = user_passkey.credentials
-
+        logger.info(f"Completing authentication for user {email} with RP ID {rep.rp_id}.")
         verified = verify_authentication_response(
             credential=credential,
             expected_challenge=decode_base64url(expected_challenge.challenge),

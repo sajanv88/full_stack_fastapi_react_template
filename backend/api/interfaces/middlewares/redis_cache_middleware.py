@@ -19,7 +19,8 @@ not_allowed_cache_paths = [
     "/api/v1/account/logout",
     "/api/v1/account/register",
     "/api/v1/account/refresh_token",
-    "/api/v1/app_configuration/"
+    "/api/v1/app_configuration/",
+    "/api/v1/security/passkeys",
 ]
 
 

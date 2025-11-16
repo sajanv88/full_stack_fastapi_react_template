@@ -7,6 +7,9 @@
 		{
 			"name": "app",
 			"path": "frontend/app"
+		},
+		{
+			"path": "caddy"
 		}
 	],
 	"settings": {}
