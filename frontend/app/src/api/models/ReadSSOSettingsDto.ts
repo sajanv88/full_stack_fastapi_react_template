@@ -8,6 +8,7 @@ export type ReadSSOSettingsDto = {
   provider: SSOProvider;
   client_id: string;
   client_secret?: (string | null);
+  scopes?: (Array<string> | null);
   id: string;
 };
 

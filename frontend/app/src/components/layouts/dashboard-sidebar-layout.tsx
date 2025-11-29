@@ -22,9 +22,9 @@ import {
     ChevronRight,
     Tent,
     Cog,
-    HardDriveIcon
+    HardDriveIcon,
 } from 'lucide-react';
-import { IconSettingsBolt, IconCurrencyEuro, IconNotification, IconLogs } from "@tabler/icons-react"
+import { IconSettingsBolt, IconCurrencyEuro, IconNotification, IconLogs, IconBrandAuth0 } from "@tabler/icons-react"
 import { useAuthContext } from '../providers/auth-provider';
 import { useMemo } from 'react';
 import { cn, getApiClient } from '@/lib/utils';
@@ -45,6 +45,7 @@ const navLinks = [
             { href: "/settings/general", label: "General", icon: IconSettingsBolt, visibility: "tenants" },
             { href: "/settings/payment", label: "Payment", icon: IconCurrencyEuro, visibility: "tenants" },
             { href: "/settings/notifications", label: "Notifications", icon: IconNotification, visibility: "both" },
+            { href: "/settings/sso", label: "SSO", icon: IconBrandAuth0, visibility: "both" },
         ]
     },
 ];

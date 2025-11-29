@@ -8,5 +8,6 @@ export type UpdateSSOSettingsDto = {
   provider?: (SSOProvider | null);
   client_id?: (string | null);
   client_secret?: (string | null);
+  scopes?: (Array<string> | null);
 };
 

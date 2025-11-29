@@ -77,6 +77,7 @@ export type { RoleDto } from './models/RoleDto';
 export type { RoleListDto } from './models/RoleListDto';
 export type { SSOProvider } from './models/SSOProvider';
 export type { SSOSettingsListDto } from './models/SSOSettingsListDto';
+export type { SSOSettingsResponseDto } from './models/SSOSettingsResponseDto';
 export type { StorageSettingsDto } from './models/StorageSettingsDto';
 export type { StripeSettingDto } from './models/StripeSettingDto';
 export type { SubdomainAvailabilityDto } from './models/SubdomainAvailabilityDto';

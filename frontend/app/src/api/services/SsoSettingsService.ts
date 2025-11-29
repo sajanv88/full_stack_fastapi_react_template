@@ -5,6 +5,7 @@
 import type { CreateSSOSettingsDto } from '../models/CreateSSOSettingsDto';
 import type { ReadSSOSettingsDto } from '../models/ReadSSOSettingsDto';
 import type { SSOSettingsListDto } from '../models/SSOSettingsListDto';
+import type { SSOSettingsResponseDto } from '../models/SSOSettingsResponseDto';
 import type { UpdateSSOSettingsDto } from '../models/UpdateSSOSettingsDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
@@ -23,14 +24,14 @@ export class SsoSettingsService {
   }
   /**
    * Create Sso Settings
-   * @returns string Successful Response
+   * @returns SSOSettingsResponseDto Successful Response
    * @throws ApiError
    */
   public createSsoSettingsApiV1SsosPost({
     requestBody,
   }: {
     requestBody: CreateSSOSettingsDto,
-  }): CancelablePromise<string> {
+  }): CancelablePromise<SSOSettingsResponseDto> {
     return this.httpRequest.request({
       method: 'POST',
       url: '/api/v1/ssos/',
@@ -85,7 +86,7 @@ export class SsoSettingsService {
   }
   /**
    * Update Sso Settings
-   * @returns any Successful Response
+   * @returns void
    * @throws ApiError
    */
   public updateSsoSettingsApiV1SsosSsoIdPatch({
@@ -94,7 +95,7 @@ export class SsoSettingsService {
   }: {
     ssoId: string,
     requestBody: UpdateSSOSettingsDto,
-  }): CancelablePromise<any> {
+  }): CancelablePromise<void> {
     return this.httpRequest.request({
       method: 'PATCH',
       url: '/api/v1/ssos/{sso_id}',

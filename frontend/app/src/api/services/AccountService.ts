@@ -15,6 +15,7 @@ import type { MeResponseDto } from '../models/MeResponseDto';
 import type { PasswordResetConfirmRequestDto } from '../models/PasswordResetConfirmRequestDto';
 import type { PasswordResetRequestDto } from '../models/PasswordResetRequestDto';
 import type { PasswordResetResponseDto } from '../models/PasswordResetResponseDto';
+import type { SSOProvider } from '../models/SSOProvider';
 import type { TokenSetDto } from '../models/TokenSetDto';
 import type { UserActivationRequestDto } from '../models/UserActivationRequestDto';
 import type { UserResendActivationEmailRequestDto } from '../models/UserResendActivationEmailRequestDto';
@@ -403,6 +404,49 @@ export class AccountService {
         'token': token,
         'user_id': userId,
         'tenant_id': tenantId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Sso Provider Login
+   * @returns void
+   * @throws ApiError
+   */
+  public ssoProviderLoginApiV1AccountSsoProviderNameLoginGet({
+    providerName,
+  }: {
+    providerName: SSOProvider,
+  }): CancelablePromise<void> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/account/sso/{provider_name}/login',
+      path: {
+        'provider_name': providerName,
+      },
+      errors: {
+        307: `Successful Response`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Sso Provider Callback
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public ssoProviderCallbackApiV1AccountSsoProviderNameCallbackGet({
+    providerName,
+  }: {
+    providerName: SSOProvider,
+  }): CancelablePromise<any> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/account/sso/{provider_name}/callback',
+      path: {
+        'provider_name': providerName,
       },
       errors: {
         422: `Validation Error`,
