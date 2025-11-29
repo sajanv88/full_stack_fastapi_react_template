@@ -1,7 +1,10 @@
-from api.domain.dtos.sso_settings_dto import CreateSSOSettingsDto, ReadSSOSettingsDto, SSOSettingsDto, SSOSettingsListDto, UpdateSSOSettingsDto
+from typing import List
+from api.common.utils import get_logger
+from api.domain.dtos.sso_settings_dto import CreateSSOSettingsDto, ReadSSOSettingsDto, SSOSettingsListDto, UpdateSSOSettingsDto
 from api.domain.entities.sso_settings import SSOSettings
 from api.infrastructure.persistence.repositories.sso_settings_provider_respository_impl import SSOSettingsProviderRepository
 
+logger = get_logger(__name__)
 
 class SSOSettingsService:
     def __init__(self, sso_settings_provider_repository: SSOSettingsProviderRepository):
@@ -20,7 +23,9 @@ class SSOSettingsService:
     async def delete_sso_settings(self, id: str) -> bool:
         return await self.sso_settings_provider_repository.delete_sso_settings(id)
     
-    async def list_sso_settings(self) -> SSOSettingsListDto:
-        ssos = await self.sso_settings_provider_repository.list_sso_settings()
-        items = [ReadSSOSettingsDto(**sso.model_dump(exclude={"client_secret"})) for sso in ssos]
+    async def list(self) -> SSOSettingsListDto:
+        ssos: List[SSOSettings] = await self.sso_settings_provider_repository.list_sso_settings()
+        logger.info(f"Retrieved {len(ssos)} SSO settings from repository")
+        logger.debug(f"SSO Settings: {ssos}")
+        items = [ReadSSOSettingsDto(**sso.model_dump(exclude={"client_secret": True})) for sso in ssos]
         return SSOSettingsListDto(items=items)

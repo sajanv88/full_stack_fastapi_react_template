@@ -12,15 +12,15 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/ssos", tags=["SSO Settings"], dependencies=[Depends(check_permissions_for_current_role(required_permissions=[Permission.FULL_ACCESS]))])
 
-@router.get("/", response_model=List[SSOSettingsListDto], response_model_exclude={"client_secret"})
-async def list_sso_settings(
+@router.get("/", response_model=SSOSettingsListDto, response_model_exclude_none=True)
+async def list(
     sso_settings_service: SSOSettingsService = Depends(get_sso_settings_service)
 ):
     logger.info("Listing SSO settings")
-    return await sso_settings_service.list_sso_settings()
+    return await sso_settings_service.list()
 
 
-@router.get("/{sso_id}", response_model=ReadSSOSettingsDto, response_model_exclude={"client_secret"})
+@router.get("/{sso_id}", response_model=ReadSSOSettingsDto, response_model_exclude_none=True)
 async def get_sso_settings_by_id(
     sso_id: str,
     sso_settings_service: SSOSettingsService = Depends(get_sso_settings_service)

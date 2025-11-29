@@ -9,7 +9,7 @@ class SSOSettingsDto(BaseModel):
     enabled: bool
     provider: SSOProvider
     client_id: str
-    client_secret: str
+    client_secret: Optional[str] | None = None
 
 class CreateSSOSettingsDto(SSOSettingsDto):
     tenant_id: Optional[str] | None = None
@@ -23,9 +23,7 @@ class UpdateSSOSettingsDto(BaseModel):
 
 class ReadSSOSettingsDto(SSOSettingsDto):
     id: str
-    @field_serializer("id")
-    def serialize_id(self, v: PydanticObjectId) -> str:
-        return str(v)
+
 
 class SSOSettingsListDto(BaseModel):
     items: list[ReadSSOSettingsDto]

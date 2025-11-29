@@ -16,6 +16,7 @@ import { ManageSecurityService } from './services/ManageSecurityService';
 import { NotificationsService } from './services/NotificationsService';
 import { PermissionsService } from './services/PermissionsService';
 import { RolesService } from './services/RolesService';
+import { SsoSettingsService } from './services/SsoSettingsService';
 import { StorageSettingsService } from './services/StorageSettingsService';
 import { StripeService } from './services/StripeService';
 import { StripeBillingService } from './services/StripeBillingService';
@@ -38,6 +39,7 @@ export class ApiClient {
   public readonly notifications: NotificationsService;
   public readonly permissions: PermissionsService;
   public readonly roles: RolesService;
+  public readonly ssoSettings: SsoSettingsService;
   public readonly storageSettings: StorageSettingsService;
   public readonly stripe: StripeService;
   public readonly stripeBilling: StripeBillingService;
@@ -71,6 +73,7 @@ export class ApiClient {
     this.notifications = new NotificationsService(this.request);
     this.permissions = new PermissionsService(this.request);
     this.roles = new RolesService(this.request);
+    this.ssoSettings = new SsoSettingsService(this.request);
     this.storageSettings = new StorageSettingsService(this.request);
     this.stripe = new StripeService(this.request);
     this.stripeBilling = new StripeBillingService(this.request);
