@@ -32,6 +32,7 @@ from api.interfaces.api_controllers.invoice_endpoint import router as invoice_ro
 from api.interfaces.api_controllers.checkout_endpoint import router as checkout_router
 from api.interfaces.api_controllers.notification_endpoint import router as notification_router
 from api.interfaces.api_controllers.audit_logs_endpoint import router as audit_logs_router
+from api.interfaces.api_controllers.sso_settings_endpoint import router as sso_router
 
 from api.common.logging import configure_logging
 from api.core.config import settings
@@ -128,6 +129,7 @@ router.include_router(invoice_router)
 router.include_router(checkout_router)
 router.include_router(notification_router)
 router.include_router(audit_logs_router)
+router.include_router(sso_router)
 app.include_router(router)
 
 

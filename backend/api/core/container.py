@@ -10,6 +10,7 @@ from api.infrastructure.persistence.repositories.chat_history_ai_repository_impl
 from api.infrastructure.persistence.repositories.chat_session_ai_repository_impl import ChatSessionAIRepository
 from api.infrastructure.persistence.repositories.payment_repository_impl import PaymentRepository, StripeSettingsRepository
 from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
+from api.infrastructure.persistence.repositories.sso_settings_provider_respository_impl import SSOSettingsProviderRepository
 from api.infrastructure.persistence.repositories.storage_settings_repository_impl import StorageSettingsRepository
 from api.infrastructure.persistence.repositories.subscription_plan_repository_impl import SubscriptionPlanRepository
 from api.infrastructure.persistence.repositories.tenant_repository_impl import TenantRepository
@@ -33,6 +34,7 @@ from api.usecases.magic_link_service import EmailMagicLinkService
 from api.usecases.pricing_service import PricingService
 from api.usecases.product_service import ProductService
 from api.usecases.role_service import RoleService
+from api.usecases.sso_settings_service import SSOSettingsService
 from api.usecases.storage_settings_service import StorageSettingsService
 from api.usecases.stripe_setting_service import StripeSettingService
 from api.usecases.subscription_plan_service import SubscriptionPlanService
@@ -139,6 +141,9 @@ container.register(AuditLogRepository, scope=punq.Scope.singleton)
 container.register(AuditLogsService, scope=punq.Scope.singleton)
 
 
+## SSO Settings Components
+container.register(SSOSettingsProviderRepository, scope=punq.Scope.singleton)
+container.register(SSOSettingsService, scope=punq.Scope.singleton)
 
 
 ## Dependency resolver functions
@@ -223,5 +228,11 @@ def get_notification_banner_service() -> NotificationBannerService:
 
 def get_audit_logs_service() -> AuditLogsService:
     return container.resolve(AuditLogsService)
+
+
+def get_sso_settings_service() -> SSOSettingsService:
+    return container.resolve(SSOSettingsService)
+
+
 
 print("Dependency injection container configured.")
