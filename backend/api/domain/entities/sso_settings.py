@@ -11,12 +11,13 @@ class SSOSettings(ApiBaseModel):
     provider: Optional[SSOProvider] = None
     client_id: str | None = None
     client_secret: str | None = None
-
+    scopes: Optional[list[str]] = []
+    
     @field_serializer("id")
     def serialize_id(self, v: PydanticObjectId) -> Optional[str]:
         return str(v) if v else None
     
-    
+
     class Settings:
         name = "sso_settings"
         indexes = ["enabled", "provider", "tenant_id"]
