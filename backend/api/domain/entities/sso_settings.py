@@ -13,6 +13,7 @@ class SSOSettings(ApiBaseModel):
     client_id: str | None = None
     client_secret: str | None = None
     scopes: Optional[list[str]] = []
+    redirect_uris: Optional[list[str]] = []
     
     @field_serializer("id")
     def serialize_id(self, v: PydanticObjectId) -> Optional[str]:

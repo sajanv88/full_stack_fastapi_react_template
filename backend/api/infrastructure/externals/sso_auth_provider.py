@@ -28,6 +28,7 @@ class SSOAuthProvider:
 
         allow_insecure_http = settings.fastapi_env != "production"
         redirect_uri = f"{domain}/api/v1/account/sso/{provider_name}/callback"
+
         self.redirect_uri_to_app = domain
 
         sso: fastapi_sso.SSOBase = None

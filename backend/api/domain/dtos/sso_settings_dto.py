@@ -11,6 +11,7 @@ class SSOSettingsDto(BaseModel):
     client_id: str
     client_secret: Optional[str] | None = None
     scopes: Optional[list[str]] = []
+    redirect_uris: Optional[list[str]] = []
 
 class CreateSSOSettingsDto(SSOSettingsDto):
     tenant_id: Optional[str] | None = None

@@ -74,7 +74,7 @@ export const providerConfig: Record<
     discord: { label: 'Discord', icon: IconBrandDiscord, color: 'text-indigo-500' },
     microsoft: { label: 'Microsoft', icon: IconBrandAzure, color: 'text-blue-500' },
     linkedin: { label: 'LinkedIn', icon: IconBrandLinkedin, color: 'text-blue-600' },
-    x: { label: 'X (Twitter)', icon: IconBrandX, color: 'text-gray-900' },
+    x: { label: 'X (Twitter)', icon: IconBrandX, color: 'text-gray-600' },
     notion: { label: 'Notion', icon: IconBrandNotion, color: 'text-gray-800' },
     gitlab: { label: 'GitLab', icon: IconBrandGitlab, color: 'text-orange-500' },
     bitbucket: { label: 'Bitbucket', icon: IconBrandBitbucket, color: 'text-blue-500' },
