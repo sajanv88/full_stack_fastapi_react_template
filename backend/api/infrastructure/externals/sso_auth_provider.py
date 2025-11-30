@@ -15,6 +15,7 @@ class SSOAuthProvider:
     def __init__(self, sso_settings_service: SSOSettingsService, tenant_service: TenantService):
         self.sso_settings_service: SSOSettingsService = sso_settings_service
         self.tenant_service: TenantService = tenant_service
+        self.redirect_uri_to_app = None
     
     async def _provider_instance(self, provider_name: SSOProvider, sso_provider: SSOSettings) -> fastapi_sso.SSOBase:
         domain = None
@@ -27,6 +28,7 @@ class SSOAuthProvider:
 
         allow_insecure_http = settings.fastapi_env != "production"
         redirect_uri = f"{domain}/api/v1/account/sso/{provider_name}/callback"
+        self.redirect_uri_to_app = domain
 
         sso: fastapi_sso.SSOBase = None
         match provider_name:
@@ -133,9 +135,14 @@ class SSOAuthProvider:
         return redirect
     
 
-    async def callback(self, provider_name: SSOProvider, req: Request) -> Dict:
+    async def callback(self, provider_name: SSOProvider, req: Request) -> fastapi_sso.OpenID:
         sso_provider = await self._get_sso_settings(provider_name)
         sso = await self._provider_instance(provider_name, sso_provider)
         user = await sso.verify_and_process(req)
         logger.info(f"SSO callback processed for provider: {provider_name}")
         return user
+    
+    def get_redirect_uri_to_app(self) -> str:
+        if not self.redirect_uri_to_app:
+            raise InvalidOperationException("Redirect URI to app is not set.")
+        return self.redirect_uri_to_app

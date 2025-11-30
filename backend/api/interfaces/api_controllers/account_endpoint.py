@@ -2,6 +2,7 @@ from typing import Annotated
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.params import Query
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from api.common.dtos.passkey_rep_dto import HasPasskeysDto
@@ -353,12 +354,29 @@ async def sso_provider_login(
 ):
     return await sso_auth_provider.login(provider_name)
     
-@router.get("/sso/{provider_name}/callback", status_code=status.HTTP_200_OK)
+@router.get("/sso/{provider_name}/callback", status_code=status.HTTP_308_PERMANENT_REDIRECT)
 async def sso_provider_callback(
     provider_name: SSOProvider,
     req: Request,
-    sso_auth_provider: SSOAuthProvider = Depends(get_sso_auth_provider)
+    sso_auth_provider: SSOAuthProvider = Depends(get_sso_auth_provider),
+    auth_service: AuthService = Depends(get_auth_service)
+
 ):
     user = await sso_auth_provider.callback(provider_name, req)
-    return user
+    token_set = await auth_service.login_with_sso(provider_name=str(provider_name), user_info=user)
+    response = RedirectResponse(url=f"{sso_auth_provider.get_redirect_uri_to_app()}/dashboard", status_code=status.HTTP_308_PERMANENT_REDIRECT)
+    response.set_cookie(
+        key="refresh_token",
+        value=token_set.refresh_token,
+        httponly=True,
+        secure=settings.fastapi_env == "production",
+        samesite="lax",
+        max_age=settings.refresh_token_expire_days
+    )
+   
+    
+    return response
+    
+
+    
 
