@@ -63,7 +63,7 @@ class UserRepository(BaseRepository[User], AuditLogRepository):
                 await self.add_audit_log(AuditLogDto(
                     action="update",
                     entity="User",
-                    user_id=user_id,
+                    user_id=str(user_id),
                     changes={
                         "new": data.model_dump(exclude_unset=True, exclude={"email"}, exclude_none=True),
                         "old": UpdateUserDto(**await exising_user.to_serializable_dict()).model_dump(exclude_unset=True, exclude={"email"}, exclude_none=True)
@@ -76,7 +76,7 @@ class UserRepository(BaseRepository[User], AuditLogRepository):
             await self.add_audit_log(AuditLogDto(
                 action="update",
                 entity="User",
-                user_id=user_id,
+                user_id=str(user_id),
                 changes={"error": f"No user found for the given user id: {user_id}"},
                 tenant_id=str(data.tenant_id) if data.tenant_id else None
             ))
