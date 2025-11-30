@@ -1,4 +1,5 @@
 from fastapi_mail import MessageType
+from fastapi_sso import OpenID
 from pydantic import EmailStr
 from api.common.dtos.token_dto import ActivationTokenPayloadDto, RefreshTokenPayloadDto, TokenPayloadDto, TokenRefreshRequestDto, TokenSetDto
 from api.common.exceptions import ForbiddenException, InvalidOperationException, UnauthorizedException
@@ -10,9 +11,11 @@ from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.role_dto import RoleDto
 from api.domain.dtos.tenant_dto import CreateTenantDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserResendActivationEmailRequestDto
+from api.domain.entities.role import Role
 from api.domain.entities.tenant import validate_subdomain
 from api.domain.entities.user import User
 from api.domain.enum.permission import Permission
+from api.domain.enum.role import RoleType
 from api.domain.interfaces.email_service import IEmailService
 from api.infrastructure.security.jwt_token_service import JwtTokenService
 from api.interfaces.email_templates.password_reset_email_template_html import password_reset_email_template_html
@@ -136,6 +139,33 @@ class AuthService:
 
         return await self._get_token_set(user)
     
+    async def login_with_sso(self, provider_name: str, user_info: OpenID) -> TokenSetDto:
+        email = user_info.email
+        display_name = user_info.display_name
+        first_name = user_info.first_name
+        last_name = user_info.last_name
+        provider_id = provider_name
+        if email is None:
+            raise InvalidOperationException("SSO provider did not return an email address.")
+        try:
+            user = await self.user_service.find_by_email(email=email)
+            return await self._get_token_set(user)
+        except UserNotFoundException:
+            logger.error(f"User not found for email: {email}")
+            role: Role = await self.role_service.find_by_name(name=RoleType.GUEST)  # Ensure default role exists
+            await self.user_service.create_user(user_data=CreateUserDto(
+                email=email,
+                first_name=first_name or display_name or "N/A",
+                last_name=last_name or display_name or "N/A",
+                password=f"signed_up_via_sso_{provider_id}",
+                sso_provider_id=provider_id,
+                gender="prefer_not_to_say",
+                role_id=role.id if role else None
+            ))
+        
+        user = await self.user_service.find_by_email(email=email)
+        return await self._get_token_set(user)
+
 
     async def register(self, new_user: CreateUserDto, cb: Callable) -> None:
         """

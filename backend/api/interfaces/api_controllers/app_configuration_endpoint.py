@@ -3,13 +3,14 @@ from fastapi import APIRouter, Depends, status
 
 from api.common.dtos.app_configuration_dto import AppConfigurationDto
 from api.common.utils import get_host_main_domain_name, get_logger, get_tenancy_strategy, is_tenancy_enabled
-from api.core.container import   get_passkey_service,  get_tenant_service, get_user_preference_service
+from api.core.container import   get_passkey_service, get_sso_settings_service,  get_tenant_service, get_user_preference_service
 from api.core.exceptions import  TenantNotFoundException
 from api.domain.dtos.tenant_dto import TenantDto
 from api.domain.entities.tenant import Tenant
 from api.infrastructure.security.current_user import  CurrentUserOptional
 from api.infrastructure.security.passkey_service import PasskeyService
 from api.interfaces.middlewares.tenant_middleware import get_tenant_id
+from api.usecases.sso_settings_service import SSOSettingsService
 from api.usecases.tenant_service import TenantService
 from api.usecases.user_preference_service import UserPreferenceService
 from api.core.config import settings
@@ -37,7 +38,8 @@ async def get_app_configuration(
     tenant_id =  Depends(get_tenant_id),
     user_pref_service: UserPreferenceService = Depends(get_user_preference_service),
     tenant_service: TenantService = Depends(get_tenant_service),
-    passkey_service: PasskeyService = Depends(get_passkey_service)
+    passkey_service: PasskeyService = Depends(get_passkey_service),
+    sso_settings_service: SSOSettingsService = Depends(get_sso_settings_service)
 ):
     user_pref_doc = None
     current_tenant = None
@@ -54,7 +56,8 @@ async def get_app_configuration(
     t = await get_tenant(tenant_service, str(tenant_id))
     current_tenant = TenantDto(**t.model_dump()) if t else None
 
-   
+    enabled_sso_provider = await sso_settings_service.get_only_enabled_providers()
+    enabled_sso_provider_names = [str(sso.provider) for sso in enabled_sso_provider.items]
     
 
     # Fetch available AI models from Ollama
@@ -67,6 +70,8 @@ async def get_app_configuration(
         user_preferences=user_pref_doc,
         current_tenant=current_tenant,
         environment = settings.fastapi_env,
+        enabled_sso_providers=enabled_sso_provider_names
+
 
     )
 

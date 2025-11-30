@@ -161,7 +161,7 @@ export function PasskeyLogin() {
 
             {/* Email Dialog for Passkey */}
             <Dialog open={showEmailDialog} onOpenChange={handleDialogClose}>
-                <DialogContent className="sm:max-w-md" isFullBlack>
+                <DialogContent className="sm:max-w-md" >
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Fingerprint className="w-5 h-5 text-primary" />
