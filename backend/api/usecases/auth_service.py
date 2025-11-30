@@ -12,6 +12,7 @@ from api.domain.dtos.role_dto import RoleDto
 from api.domain.dtos.tenant_dto import CreateTenantDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserResendActivationEmailRequestDto
 from api.domain.entities.role import Role
+from api.domain.entities.sso_settings import SSOProvider
 from api.domain.entities.tenant import validate_subdomain
 from api.domain.entities.user import User
 from api.domain.enum.permission import Permission
@@ -25,9 +26,10 @@ from api.interfaces.email_templates.email_changes_confirmation_template_html imp
 from api.interfaces.email_templates.notify_email_changes_template_html import notify_email_change_template_html
 from api.usecases.audit_logs_service import AuditLogsService
 from api.usecases.role_service import RoleService
+from api.usecases.sso_settings_service import SSOSettingsService
 from api.usecases.tenant_service import TenantService
 from api.usecases.user_service import UserService
-from typing import Callable
+from typing import Callable, Optional
 
 logger = get_logger(__name__)
 
@@ -38,7 +40,8 @@ class AuthService:
             role_service: RoleService,
             jwt_token_service: JwtTokenService,
             email_service: IEmailService,
-            audit_log_service: AuditLogsService
+            audit_log_service: AuditLogsService,
+            sso_settings_service: SSOSettingsService
         ):
         self.user_service: UserService = user_service
         self.tenant_service: TenantService = tenant_service
@@ -46,6 +49,7 @@ class AuthService:
         self.jwt_token_service: JwtTokenService = jwt_token_service
         self.email_service: IEmailService = email_service
         self.audit_log_service: AuditLogsService = audit_log_service
+        self.sso_settings_service: SSOSettingsService = sso_settings_service
         logger.info("Initialized.")
         print(self.email_service, "email service in auth service")
 
@@ -139,16 +143,19 @@ class AuthService:
 
         return await self._get_token_set(user)
     
-    async def login_with_sso(self, provider_name: str, user_info: OpenID) -> TokenSetDto:
+    async def login_with_sso(self, provider_name: SSOProvider, user_info: OpenID) -> TokenSetDto:
         email = user_info.email
         display_name = user_info.display_name
         first_name = user_info.first_name
         last_name = user_info.last_name
-        provider_id = provider_name
+        
         if email is None:
             raise InvalidOperationException("SSO provider did not return an email address.")
         try:
             user = await self.user_service.find_by_email(email=email)
+            if user.sso_provider_id != provider_name:
+                user.sso_provider_id = provider_name
+                await user.save()
             return await self._get_token_set(user)
         except UserNotFoundException:
             logger.error(f"User not found for email: {email}")
@@ -157,14 +164,36 @@ class AuthService:
                 email=email,
                 first_name=first_name or display_name or "N/A",
                 last_name=last_name or display_name or "N/A",
-                password=f"signed_up_via_sso_{provider_id}",
-                sso_provider_id=provider_id,
+                password=f"signed_up_via_sso_{provider_name}",
                 gender="prefer_not_to_say",
                 role_id=role.id if role else None
             ))
         
         user = await self.user_service.find_by_email(email=email)
+        if user.is_active is False:
+            user.is_active = True
+            user.activated_at = get_utc_now()
+            user.sso_provider_id = provider_name
+            await user.save()
         return await self._get_token_set(user)
+
+    async def new_user_creation(self, new_user: CreateUserDto, tenant_id: Optional[str] = None) -> None:
+            new_user.tenant_id = tenant_id
+            not_found = True
+            try:
+                enabled_sso = await self.sso_settings_service.get_only_enabled_providers()
+                if len(enabled_sso.items) > 0:
+                    user = await self.user_service.find_by_email(email = new_user.email)
+                    logger.debug(f"found user {user.sso_provider_id}")
+                    if user.sso_provider_id:
+                        logger.debug(f"This email already has logged using sso {user.sso_provider_id} hence, skip the new user creation.")
+                        not_found = False
+            except UserNotFoundException as u:                
+                logger.debug("No user found! Hence creating a new user..")
+                not_found = True
+
+            if not_found:
+                await self.user_service.create_user(user_data=new_user)    
 
 
     async def register(self, new_user: CreateUserDto, cb: Callable) -> None:
@@ -177,8 +206,7 @@ class AuthService:
         """
 
         if is_tenancy_enabled() is False:
-            new_user.tenant_id = None
-            await self.user_service.create_user(user_data=new_user)
+            await self.new_user_creation(new_user=new_user)
             logger.info("New user registered in single-tenant mode.")
             return
 
@@ -216,6 +244,8 @@ class AuthService:
                 newly_created_tenant_id = await self.tenant_service.create_tenant(tenant_data=create_new_tenant)
                 logger.info(f"New tenant created with ID: {newly_created_tenant_id} for subdomain '{new_user.sub_domain}' and user creation will be procssed...")
                 cb(newly_created_tenant_id)
+
+
 
     async def logout(self, user_id: str, tenant_id: str | None) -> None:
         await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(

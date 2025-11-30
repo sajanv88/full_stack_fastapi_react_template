@@ -140,6 +140,7 @@ class SSOAuthProvider:
         sso = await self._provider_instance(provider_name, sso_provider)
         user = await sso.verify_and_process(req)
         logger.info(f"SSO callback processed for provider: {provider_name}")
+        logger.debug(f"User information retrieved from SSO: {user}")
         return user
     
     def get_redirect_uri_to_app(self) -> str:
