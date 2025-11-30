@@ -43,6 +43,17 @@ export class SsoSettingsService {
     });
   }
   /**
+   * Get Available Sso Providers
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public getAvailableSsoProvidersApiV1SsosAvailableProvidersGet(): CancelablePromise<Array<any>> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/ssos/available-providers',
+    });
+  }
+  /**
    * Get Sso Settings By Id
    * @returns ReadSSOSettingsDto Successful Response
    * @throws ApiError

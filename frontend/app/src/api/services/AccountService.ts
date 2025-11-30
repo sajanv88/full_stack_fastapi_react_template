@@ -15,7 +15,6 @@ import type { MeResponseDto } from '../models/MeResponseDto';
 import type { PasswordResetConfirmRequestDto } from '../models/PasswordResetConfirmRequestDto';
 import type { PasswordResetRequestDto } from '../models/PasswordResetRequestDto';
 import type { PasswordResetResponseDto } from '../models/PasswordResetResponseDto';
-import type { SSOProvider } from '../models/SSOProvider';
 import type { TokenSetDto } from '../models/TokenSetDto';
 import type { UserActivationRequestDto } from '../models/UserActivationRequestDto';
 import type { UserResendActivationEmailRequestDto } from '../models/UserResendActivationEmailRequestDto';
@@ -418,7 +417,7 @@ export class AccountService {
   public ssoProviderLoginApiV1AccountSsoProviderNameLoginGet({
     providerName,
   }: {
-    providerName: SSOProvider,
+    providerName: 'google' | 'github' | 'discord' | 'microsoft' | 'linkedin' | 'x' | 'notion' | 'gitlab' | 'bitbucket' | 'facebook',
   }): CancelablePromise<void> {
     return this.httpRequest.request({
       method: 'GET',
@@ -440,7 +439,7 @@ export class AccountService {
   public ssoProviderCallbackApiV1AccountSsoProviderNameCallbackGet({
     providerName,
   }: {
-    providerName: SSOProvider,
+    providerName: 'google' | 'github' | 'discord' | 'microsoft' | 'linkedin' | 'x' | 'notion' | 'gitlab' | 'bitbucket' | 'facebook',
   }): CancelablePromise<any> {
     return this.httpRequest.request({
       method: 'GET',

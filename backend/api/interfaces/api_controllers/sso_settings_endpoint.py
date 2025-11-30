@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, status
 from api.common.utils import get_logger
 from api.core.container import get_sso_settings_service
@@ -18,6 +19,11 @@ async def list(
 ):
     return await sso_settings_service.list()
 
+@router.get("/available-providers", response_model=List)
+async def get_available_sso_providers(
+    sso_settings_service: SSOSettingsService = Depends(get_sso_settings_service)
+):
+    return await sso_settings_service.get_available_sso_providers()
 
 @router.get("/{sso_id}", response_model=ReadSSOSettingsDto, response_model_exclude_none=True)
 async def get_sso_settings_by_id(

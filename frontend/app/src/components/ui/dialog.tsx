@@ -58,8 +58,9 @@ function DialogContent({
 }) {
   return (
     <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay className={cn({
-        "bg-black": isFullBlack
+      <DialogOverlay className={cn("backdrop-blur-sm", {
+        "bg-black": isFullBlack,
+
       })} />
       <DialogPrimitive.Content
         data-slot="dialog-content"

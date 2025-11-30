@@ -4,7 +4,8 @@ from beanie import PydanticObjectId
 from api.domain.entities.api_base_model import ApiBaseModel
 from pydantic import field_serializer
 
-type SSOProvider = Literal["google", "github", "discord", "microsoft", "linkedin", "x", "notion", "gitlab", "bitbucket", "facebook"]
+
+SSOProvider = Literal["google", "github", "discord", "microsoft", "linkedin", "x", "notion", "gitlab", "bitbucket", "facebook"]
 
 class SSOSettings(ApiBaseModel):
     enabled: bool = False

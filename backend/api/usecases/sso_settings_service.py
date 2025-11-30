@@ -1,4 +1,5 @@
 from typing import List
+from typing_extensions import get_args
 from api.common.utils import get_logger
 from api.domain.dtos.sso_settings_dto import CreateSSOSettingsDto, ReadSSOSettingsDto, SSOSettingsListDto, UpdateSSOSettingsDto
 from api.domain.entities.sso_settings import SSOProvider, SSOSettings
@@ -15,7 +16,7 @@ class SSOSettingsService:
         return ReadSSOSettingsDto(**res.model_dump(exclude={"client_secret"}))
 
     async def update_sso_settings(self, id: str, sso_settings: UpdateSSOSettingsDto) -> None:
-        await self.sso_settings_provider_repository.update_sso_settings(id, SSOSettings(**sso_settings.model_dump()))
+        await self.sso_settings_provider_repository.update_sso_settings(id, SSOSettings(**sso_settings.model_dump(exclude_none=True, exclude_unset=True)))
 
     async def create_sso_settings(self, sso_settings: CreateSSOSettingsDto) -> str:
         return str(await self.sso_settings_provider_repository.create_sso_settings(SSOSettings(**sso_settings.model_dump())))
@@ -42,3 +43,6 @@ class SSOSettingsService:
         enabled_ssos = [sso for sso in ssos if sso.enabled]
         items = [ReadSSOSettingsDto(**sso.model_dump(exclude={"client_secret": True})) for sso in enabled_ssos]
         return SSOSettingsListDto(items=items)
+    
+    async def get_available_sso_providers(self) -> List[str]:
+        return list(get_args(SSOProvider))

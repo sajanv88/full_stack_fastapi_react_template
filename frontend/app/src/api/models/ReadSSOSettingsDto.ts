@@ -2,10 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SSOProvider } from './SSOProvider';
 export type ReadSSOSettingsDto = {
   enabled: boolean;
-  provider: SSOProvider;
+  provider: 'google' | 'github' | 'discord' | 'microsoft' | 'linkedin' | 'x' | 'notion' | 'gitlab' | 'bitbucket' | 'facebook';
   client_id: string;
   client_secret?: (string | null);
   scopes?: (Array<string> | null);
