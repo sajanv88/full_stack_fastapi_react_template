@@ -50,7 +50,7 @@ export default function CreateNewSSODialog() {
     const form = useForm<SSOFormValues>({
         resolver: zodResolver(ssoFormSchema) as any,
         defaultValues: {
-            provider: 'google',
+            provider: undefined,
             client_id: '',
             client_secret: '',
             scopes: '',

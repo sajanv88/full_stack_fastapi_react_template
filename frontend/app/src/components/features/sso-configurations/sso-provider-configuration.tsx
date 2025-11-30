@@ -40,20 +40,22 @@ import type { ReadSSOSettingsDto } from '@/api';
 import DeleteSSOConfigurationDialog from './delete-sso-configuration-dialog';
 import SSOConfigurationEditDialog from './sso-configuration-edit-dialog';
 import CreateNewSSODialog from './create-new-sso-dialog';
+import { cn } from '@/lib/utils';
 
+const providerTypeEnum = [
+    'google',
+    'github',
+    'discord',
+    'microsoft',
+    'linkedin',
+    'x',
+    'notion',
+    'gitlab',
+    'bitbucket',
+    'facebook',
+] as const
 export const ssoFormSchema = z.object({
-    provider: z.enum([
-        'google',
-        'github',
-        'discord',
-        'microsoft',
-        'linkedin',
-        'x',
-        'notion',
-        'gitlab',
-        'bitbucket',
-        'facebook',
-    ]),
+    provider: z.enum(providerTypeEnum),
     client_id: z.string().min(1, 'Client ID is required'),
     client_secret: z.string().default(''),
     scopes: z.string().default(''),
@@ -68,7 +70,7 @@ export const providerConfig: Record<
     { label: string; icon: typeof IconBrandGithub; color: string }
 > = {
     google: { label: 'Google', icon: IconBrandGoogle, color: 'text-red-500' },
-    github: { label: 'GitHub', icon: IconBrandGithub, color: 'text-gray-900' },
+    github: { label: 'GitHub', icon: IconBrandGithub, color: 'text-gray-600' },
     discord: { label: 'Discord', icon: IconBrandDiscord, color: 'text-indigo-500' },
     microsoft: { label: 'Microsoft', icon: IconBrandAzure, color: 'text-blue-500' },
     linkedin: { label: 'LinkedIn', icon: IconBrandLinkedin, color: 'text-blue-600' },
@@ -81,7 +83,6 @@ export const providerConfig: Record<
 
 export function SSOProviderConfiguration() {
     const {
-        onRefreshSSOConfigurations,
         providers,
         availableProviders,
         onEnableOrDisableSSOLogin,
@@ -118,18 +119,18 @@ export function SSOProviderConfiguration() {
 
     const handleDelete = (provider: ReadSSOSettingsDto) => {
         setProviderToDelete(provider);
-        console.log("Set provider to delete:", provider);
     };
 
 
 
     const handleToggleEnabled = async (provider: ReadSSOSettingsDto) => {
-        console.log("Toggling enabled for provider:", provider);
         await onEnableOrDisableSSOLogin(provider.id, !provider.enabled);
-        await onRefreshSSOConfigurations();
 
     };
 
+    async function onUpdateProviderClose() {
+        setEditingProvider(null)
+    }
 
     return (
         <div className="space-y-6 ">
@@ -141,7 +142,7 @@ export function SSOProviderConfiguration() {
                         Configure single sign-on providers for your application
                     </p>
                 </div>
-                {editingProvider && <SSOConfigurationEditDialog editSSOProvider={editingProvider} onClose={() => setEditingProvider(null)} />}
+                {editingProvider && <SSOConfigurationEditDialog editSSOProvider={editingProvider} onClose={onUpdateProviderClose} />}
                 <CreateNewSSODialog />
             </div>
 
@@ -222,7 +223,7 @@ export function SSOProviderConfiguration() {
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center space-x-3">
-                                            <ProviderIcon className={`h-6 w-6`} />
+                                            <ProviderIcon className={cn('h-8 w-8', config.color)} />
                                             <div>
                                                 <CardTitle className="text-base">
                                                     {config.label}

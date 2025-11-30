@@ -1,12 +1,17 @@
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { providerConfig } from "@/components/features/sso-configurations/sso-provider-configuration";
-import React from "react";
 import { Button } from "@/components/ui/button";
 import { IconBrandAuth0 } from "@tabler/icons-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 export function SSOLoginDialog() {
     const { enabled_sso_providers } = useAppConfig()
+
+    function renderIcon(provider: typeof providerConfig[keyof typeof providerConfig]) {
+        const IconComponent = provider.icon;
+        return <IconComponent className={cn('h-8 w-8', provider.color)} />
+    }
     if (!enabled_sso_providers || enabled_sso_providers.length === 0) {
         return null
     }
@@ -19,22 +24,15 @@ export function SSOLoginDialog() {
                         Login with SSO
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-sm">
+                <DialogContent className="max-w-sm">
                     <div className="text-lg font-medium mb-4">Single Sign-On (SSO) Login</div>
-                    <div className="flex flex-col gap-3">
+                    <div className="grid sm:grid-cols-2 gap-4">
                         {enabled_sso_providers.map((provider) => (
-                            <Button
-                                asChild
-                                key={provider}
-                                variant="link"
-                                size="lg"
+                            <a href={`/api/v1/account/sso/${provider}/login`} className="flex items-center space-x-2 bg-primary/90 dark:bg-primary p-1 text-primary-foreground justify-center rounded-2xl dark:hover:bg-primary/90 hover:bg-primary/80 transition-all">
+                                {renderIcon(providerConfig[provider])}
+                                <span className="capitalize text-md">Continue with {provider}</span>
+                            </a>
 
-                            >
-                                <a href={`/api/v1/account/sso/${provider}/login`} className="text-2xl">
-                                    {providerConfig[provider]?.icon && React.createElement(providerConfig[provider].icon, { className: "w-10 h-10" })}
-                                    Continue with {provider}
-                                </a>
-                            </Button>
                         ))}
                     </div>
                 </DialogContent>

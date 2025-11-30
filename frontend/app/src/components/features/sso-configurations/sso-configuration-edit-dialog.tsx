@@ -17,13 +17,7 @@ import {
     FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,46 +27,43 @@ import {
 } from "@tabler/icons-react"
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { providerConfig, ssoFormSchema, SSOFormValues } from './sso-provider-configuration';
+import { ssoFormSchema, SSOFormValues } from './sso-provider-configuration';
 import { useSSOConfiguration } from '@/components/providers/sso-configuration-provider';
 import { Switch } from '@/components/ui/switch';
 
 interface SSOConfigurationEditDialogProps {
-    editSSOProvider: ReadSSOSettingsDto | null;
+    editSSOProvider: ReadSSOSettingsDto;
     onClose?: () => void;
 }
 export default function SSOConfigurationEditDialog({ editSSOProvider, onClose }: SSOConfigurationEditDialogProps) {
     const {
-        availableProviders,
         onUpdateSSOConfiguration
 
     } = useSSOConfiguration();
 
     const [loading, setLoading] = useState(false);
-    const [editingProvider, setEditingProvider] =
-        useState<ReadSSOSettingsDto | null>(editSSOProvider);
+
 
     const form = useForm<SSOFormValues>({
         resolver: zodResolver(ssoFormSchema) as any,
         defaultValues: {
-            provider: editingProvider ? editingProvider.provider : 'google',
-            client_id: editingProvider ? editingProvider.client_id : '',
-            client_secret: editingProvider && editingProvider.client_secret || '',
-            scopes: editingProvider && editingProvider.scopes?.join(', ') || '',
-            enabled: editingProvider && editingProvider.enabled || false,
+            provider: editSSOProvider.provider,
+            client_id: editSSOProvider.client_id,
+            client_secret: '',
+            scopes: editSSOProvider.scopes?.join(', ') || '',
+            enabled: editSSOProvider.enabled || false,
         },
     });
 
     function handleDialogClose() {
         form.reset();
-        setEditingProvider(null);
         if (onClose) {
             onClose();
         }
     };
 
     async function handleUpdate(data: SSOFormValues) {
-        if (!editingProvider) return;
+        if (!editSSOProvider) return;
         setLoading(true);
         const scopesArray = data.scopes
             ? data.scopes.split(',').map((s) => s.trim()).filter(Boolean)
@@ -84,17 +75,20 @@ export default function SSOConfigurationEditDialog({ editSSOProvider, onClose }:
             scopes: scopesArray.length > 0 ? scopesArray : null,
             enabled: data.enabled,
         };
-        await onUpdateSSOConfiguration(editingProvider.id, updateData);
+        await onUpdateSSOConfiguration(editSSOProvider.id, updateData);
         setLoading(false);
         handleDialogClose();
     }
+
+
+
 
     return (
         <Dialog open={editSSOProvider !== null} onOpenChange={handleDialogClose}>
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
-                    <DialogTitle>
-                        Edit SSO Provider
+                    <DialogTitle className='capitalize'>
+                        Update {editSSOProvider.provider}
                     </DialogTitle>
                     <DialogDescription>
                         Configure OAuth 2.0 credentials for your SSO provider
@@ -105,37 +99,6 @@ export default function SSOConfigurationEditDialog({ editSSOProvider, onClose }:
                         onSubmit={form.handleSubmit(handleUpdate)}
                         className="space-y-4"
                     >
-                        <FormField
-                            control={form.control}
-                            name="provider"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Provider</FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                        disabled={!!editingProvider}
-                                    >
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a provider" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {availableProviders.map((provider) => (
-                                                <SelectItem key={provider} value={provider}>
-                                                    {providerConfig[provider]?.label || provider}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormDescription>
-                                        Choose the OAuth provider you want to configure
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
 
                         <FormField
                             control={form.control}

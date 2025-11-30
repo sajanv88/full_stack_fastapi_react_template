@@ -4,6 +4,7 @@ import { useAuthContext } from "./auth-provider";
 import { getApiClient } from "@/lib/utils";
 import { toast } from "sonner";
 import { NoPermissionToAccessResource } from "../shared/no-permission-access-resource";
+import { useAppConfig } from "./app-config-provider";
 
 type ProviderType = SSOSettingsListDto["items"]
 interface SSOConfigurationContextProps {
@@ -36,6 +37,7 @@ interface SSOConfigurationProviderProps {
 export default function SSOConfigurationProvider({ children }: SSOConfigurationProviderProps) {
     const [providers, setProviders] = useState<ProviderType>([])
     const { accessToken, can } = useAuthContext();
+    const { enabled_sso_providers, reloadAppConfig } = useAppConfig()
     const [availableProviders, setAvailableProviders] = useState<string[]>([]);
     const canManageSSOSettings = can('full:access');
 
@@ -46,16 +48,21 @@ export default function SSOConfigurationProvider({ children }: SSOConfigurationP
                 apiClient.ssoSettings.getAvailableSsoProvidersApiV1SsosAvailableProvidersGet(),
                 apiClient.ssoSettings.listApiV1SsosGet()
             ]);
-            setAvailableProviders(availableProvidersResponse);
+            // setAvailableProviders(availableProvidersResponse);
             setProviders(ssoProvidersResponse.items);
-            // const filteredProviders = availableProvidersResponse.map(item => ssoProvidersResponse.items.filter(sso => sso.provider !== item));
-            // setAvailableProviders(filteredProviders);
+            const notEnabledProviders = ssoProvidersResponse.items.filter(item => !item.enabled).map(item => item.provider)
+            const filteredProviders = availableProvidersResponse
+                .filter(item => !enabled_sso_providers?.includes(item))
+                .filter(provider_name => !notEnabledProviders.includes(provider_name));
+
+            setAvailableProviders(filteredProviders);
         } catch (error) {
             console.error("Failed to fetch SSO providers:", error);
             toast.error("Failed to fetch SSO providers", { richColors: true, position: "top-right" });
         }
     }
     async function refreshSSOConfigurations() {
+        await reloadAppConfig();
         await fetchAllSSOProviders();
     }
     async function createSSOConfiguration(params: CreateSSOSettingsDto) {
@@ -65,7 +72,7 @@ export default function SSOConfigurationProvider({ children }: SSOConfigurationP
                 requestBody: params
             });
             toast.success("SSO configuration created successfully", { richColors: true, position: "top-right" });
-            await fetchAllSSOProviders();
+            await refreshSSOConfigurations();
         } catch (error) {
             console.error("Failed to create SSO configuration:", error);
             toast.error("Failed to create SSO configuration", { richColors: true, position: "top-right" });
@@ -85,7 +92,7 @@ export default function SSOConfigurationProvider({ children }: SSOConfigurationP
                 requestBody: { ...existing, enabled }
             });
             toast.success(`SSO configuration ${enabled ? "enabled" : "disabled"} successfully`, { richColors: true, position: "top-right" });
-            await fetchAllSSOProviders();
+            await refreshSSOConfigurations();
         } catch (error) {
             console.error("Failed to toggle SSO configuration:", error);
             toast.error("Failed to toggle SSO configuration", { richColors: true, position: "top-right" });
@@ -99,7 +106,7 @@ export default function SSOConfigurationProvider({ children }: SSOConfigurationP
                 ssoId
             });
             toast.success("SSO configuration deleted successfully", { richColors: true, position: "top-right" });
-            await fetchAllSSOProviders();
+            await refreshSSOConfigurations();
         } catch (error) {
             console.error("Failed to delete SSO configuration:", error);
             toast.error("Failed to delete SSO configuration", { richColors: true, position: "top-right" });
@@ -114,7 +121,7 @@ export default function SSOConfigurationProvider({ children }: SSOConfigurationP
                 requestBody: params
             });
             toast.success("SSO configuration updated successfully", { richColors: true, position: "top-right" });
-            await fetchAllSSOProviders();
+            await refreshSSOConfigurations();
         } catch (error) {
             console.error("Failed to update SSO configuration:", error);
             toast.error("Failed to update SSO configuration", { richColors: true, position: "top-right" });
@@ -122,10 +129,10 @@ export default function SSOConfigurationProvider({ children }: SSOConfigurationP
     }
 
     useEffect(() => {
-        if (accessToken && canManageSSOSettings) {
+        if (accessToken && canManageSSOSettings && enabled_sso_providers) {
             fetchAllSSOProviders();
         }
-    }, [accessToken, canManageSSOSettings])
+    }, [accessToken, canManageSSOSettings, enabled_sso_providers])
 
     if (!canManageSSOSettings) {
         return <NoPermissionToAccessResource message='SSO Settings' />;
