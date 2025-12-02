@@ -102,6 +102,9 @@ function App() {
           <Route path="notifications" element={
             <AppSettings />
           } />
+          <Route path="sso" element={
+            <AppSettings />
+          } />
 
         </Route>
 

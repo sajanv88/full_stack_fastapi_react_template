@@ -102,7 +102,7 @@ export function MagicLinkLogin() {
 
 
             <Dialog open={showEmailDialog} onOpenChange={closeDialog}>
-                <DialogContent className="sm:max-w-lg" isFullBlack>
+                <DialogContent className="sm:max-w-lg">
                     {emailSent && (
                         <>
                             <DialogHeader>

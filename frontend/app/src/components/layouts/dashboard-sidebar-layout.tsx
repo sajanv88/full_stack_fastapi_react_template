@@ -22,13 +22,14 @@ import {
     ChevronRight,
     Tent,
     Cog,
-    HardDriveIcon
+    HardDriveIcon,
 } from 'lucide-react';
-import { IconSettingsBolt, IconCurrencyEuro, IconNotification, IconLogs } from "@tabler/icons-react"
+import { IconSettingsBolt, IconCurrencyEuro, IconNotification, IconLogs, IconBrandAuth0 } from "@tabler/icons-react"
 import { useAuthContext } from '../providers/auth-provider';
 import { useMemo } from 'react';
 import { cn, getApiClient } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAppConfig } from '../providers/app-config-provider';
 
 const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -45,6 +46,7 @@ const navLinks = [
             { href: "/settings/general", label: "General", icon: IconSettingsBolt, visibility: "tenants" },
             { href: "/settings/payment", label: "Payment", icon: IconCurrencyEuro, visibility: "tenants" },
             { href: "/settings/notifications", label: "Notifications", icon: IconNotification, visibility: "both" },
+            { href: "/settings/sso", label: "SSO", icon: IconBrandAuth0, visibility: "both" },
         ]
     },
 ];
@@ -64,6 +66,7 @@ export function DashboardSidebar() {
     const navigate = useNavigate();
     const { user, accessToken } = useAuthContext();
     const isTenant = user?.tenant_id;
+    const { is_multi_tenant_enabled } = useAppConfig()
 
     function isLinkActive(href: string) {
         if (href.includes('?')) {
@@ -89,7 +92,12 @@ export function DashboardSidebar() {
         }
     };
 
-    const mainNavLinksToRender = useMemo(() => isTenant ? navLinks.filter(link => !link.href.includes('/tenants')) : navLinks, [isTenant]);
+    const mainNavLinksToRender = useMemo(() => {
+        if (isTenant || !is_multi_tenant_enabled) {
+            return navLinks.filter(link => !link.href.includes('/tenants'));
+        }
+        return navLinks
+    }, [isTenant]);
     function renderMainNavLinks(link: LinkType) {
 
         return (

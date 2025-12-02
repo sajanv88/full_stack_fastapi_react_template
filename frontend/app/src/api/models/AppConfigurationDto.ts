@@ -12,5 +12,6 @@ export type AppConfigurationDto = {
   user_preferences?: (UserPreferenceDto | null);
   current_tenant?: (TenantDto | null);
   environment: string;
+  enabled_sso_providers?: (Array<string> | null);
 };
 
