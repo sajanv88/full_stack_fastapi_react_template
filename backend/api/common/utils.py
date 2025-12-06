@@ -1,8 +1,11 @@
 import logging
-from fastapi import logger
-from datetime import datetime, timezone, timedelta
 import re
+import tempfile
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Optional
+
+from fastapi import logger
 
 from api.common.exceptions import InvalidOperationException
 from api.core.config import settings
@@ -94,13 +97,26 @@ def is_subdomain(host: str) -> bool:
     return host != main_domain and host.endswith(f".{main_domain}")
 
 
+def create_temp_file(file_name: str) -> Path:
+    """Create a temporary file and return its path."""
+
+    temp_dir = Path(tempfile.gettempdir())
+
+    path = temp_dir / file_name
+
+    # Ensure directory exists (temp directories always exist, but safe to include)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    return path
+
 
 async def capture_audit_log(
     log_data: AuditLogDto
 ) -> None:
     """Capture an audit log entry."""
-
-    path = f"/tmp/audit_logs_for{log_data.tenant_id if log_data.tenant_id else 'host'}_{get_utc_now().strftime('%Y%m%d')}.jsonl"
-    with open(path, "a") as f:
-        f.write(log_data.model_dump_json() + "\n")
+    file_name = f"audit_logs_for{log_data.tenant_id if log_data.tenant_id else 'host'}_{get_utc_now().strftime('%Y%m%d')}.jsonl"
     
+    file_path = create_temp_file(file_name)
+
+    with open(file_path, "a") as f:
+        f.write(log_data.model_dump_json() + "\n")

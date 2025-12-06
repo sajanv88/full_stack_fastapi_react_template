@@ -7,7 +7,7 @@ from api.domain.entities.api_base_model import ApiBaseModel
 PaymentType = Literal["one_time", "recurring", "both"]
 ScopeType = Literal["host", "tenant"]
 StatusType = Literal[
-    "pending", "requires_payment_method", "requires_action",
+    "paid", "pending", "requires_payment_method", "requires_action",
     "active", "succeeded", "payment_failed", "canceled", "incomplete"
 ]
 ActorType = Literal["tenant", "end_user"] # who is being billed
