@@ -8,7 +8,7 @@ from api.domain.dtos.billing_dto import (BillingRecordDto,
                                          InvoiceListDto, PlanDto, PlanListDto,
                                          UpdatePlanDto)
 from api.domain.dtos.checkout_dto import CheckoutRequestDto
-from api.domain.entities.stripe_settings import (ActorType, BillingRecord,
+from api.domain.entities.stripe_settings import (BillingRecord,
                                                  ScopeType)
 from api.infrastructure.externals.stripe_resolver import StripeResolver
 from api.infrastructure.persistence.repositories.billing_record_repository_impl import \
@@ -303,7 +303,7 @@ class BillingRecordService:
         invoice: dict[str, Any],
         scope: Literal["tenant", "host"],
         tenant_id: Optional[str] = None,
-    ) -> Optional[BillingRecordDto]:
+    ) -> Optional[BillingRecord]:
         """
         Converts a Stripe `invoice.paid` event into a BillingRecordDto.
         Returns None if not applicable (e.g. no subscription).
@@ -322,8 +322,8 @@ class BillingRecordService:
         if scope == "tenant" and not tenant_id:
             return None
 
-        # Build DTO
-        return BillingRecordDto(
+        # Build Object
+        return BillingRecord(
             scope="tenant" if tenant_id else "host",
             actor="tenant" if tenant_id else "end_user",
             tenant_id=PydanticObjectId(tenant_id) if tenant_id else None,
@@ -351,7 +351,7 @@ class BillingRecordService:
             },
         )
 
-    async def create_billing_record(self, billing_record: BillingRecordDto) -> None:
+    async def create_billing_record(self, billing_record: BillingRecord) -> None:
         """
         Create a billing record in the database
         """

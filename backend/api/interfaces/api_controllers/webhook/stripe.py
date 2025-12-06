@@ -81,18 +81,18 @@ async def handle_invoice_paid(
 ) -> None:
     tenant_id = invoice.get("metadata", {}).get("tenant_id")
 
-    billing_dto = await billing_record_service.from_stripe_invoice_paid(
+    billing_record = await billing_record_service.from_stripe_invoice_paid(
         invoice=invoice,
         scope="tenant",
         tenant_id=tenant_id
     )
 
-    if not billing_dto:
+    if not billing_record:
         logger.warning(f"Could not convert invoice to BillingRecordDto: {invoice['id']}")
         return
 
     try:
-        await billing_record_service.create_billing_record(billing_dto)
+        await billing_record_service.create_billing_record(billing_record)
         logger.info(f"BillingRecord created for tenant {tenant_id} – invoice {invoice['id']}")
     except Exception as e:
         logger.exception(f"Failed to save BillingRecord for invoice {invoice['id']}: {e}")
