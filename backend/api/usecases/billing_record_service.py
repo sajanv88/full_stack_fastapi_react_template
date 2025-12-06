@@ -1,55 +1,115 @@
-from stripe import StripeClient
+from typing import Any, Literal, Optional
+
 from api.common.utils import get_logger
-from api.core.exceptions import BillingRecordException, BillingRecordNotFoundException
-from api.domain.dtos.billing_dto import BillingRecordListDto, CreatePlanDto, InvoiceListDto, PlanDto, PlanListDto, UpdatePlanDto
+from api.core.exceptions import (BillingRecordException,
+                                 BillingRecordNotFoundException)
+from api.domain.dtos.billing_dto import (BillingRecordDto,
+                                         BillingRecordListDto, CreatePlanDto,
+                                         InvoiceListDto, PlanDto, PlanListDto,
+                                         UpdatePlanDto)
 from api.domain.dtos.checkout_dto import CheckoutRequestDto
-from api.domain.entities.stripe_settings import ActorType, BillingRecord, ScopeType
+from api.domain.entities.stripe_settings import (ActorType, BillingRecord,
+                                                 ScopeType)
 from api.infrastructure.externals.stripe_resolver import StripeResolver
-from api.infrastructure.persistence.repositories.billing_record_repository_impl import BillingRecordRepository
-from api.infrastructure.persistence.repositories.payment_repository_impl import PaymentRepository
+from api.infrastructure.persistence.repositories.billing_record_repository_impl import \
+    BillingRecordRepository
+from api.infrastructure.persistence.repositories.payment_repository_impl import \
+    PaymentRepository
+from beanie import PydanticObjectId
+from stripe import StripeClient
 
 logger = get_logger(__name__)
 
+
 class BillingRecordService:
     def __init__(
-            self, 
-            payment_repository: PaymentRepository,
-            billing_record_repository: BillingRecordRepository,
-            stripe_resolver: StripeResolver
-        ):
-
+        self,
+        payment_repository: PaymentRepository,
+        billing_record_repository: BillingRecordRepository,
+        stripe_resolver: StripeResolver,
+    ):
         self.payment_repository: PaymentRepository = payment_repository
-        self.billing_record_repository: BillingRecordRepository = billing_record_repository
+        self.billing_record_repository: BillingRecordRepository = (
+            billing_record_repository
+        )
         self.stripe_resolver: StripeResolver = stripe_resolver
+
+    # Helper methods
+    def _extract_period(
+        self, line: dict[str, Any]
+    ) -> tuple[Optional[int], Optional[int]]:
+        period = line.get("period", {})
+        return period.get("start"), period.get("end")
+
+    def _extract_pricing(
+        self, line: dict[str, Any]
+    ) -> tuple[Optional[str], Optional[str]]:
+        pricing = line.get("pricing") or line.get("price")
+        if not pricing or not isinstance(pricing, dict):
+            return None, None
+
+        # New Stripe format
+        details = pricing["price_details"]
+        return details.get("price"), details.get("product")
+
+    def _extract_tenant_id(self, line: dict[str, Any], scope: str) -> Optional[str]:
+        if scope != "tenant":
+            return None
+
+        # Most reliable: line metadata
+        tenant_id = line.get("metadata", {}).get("tenant_id")
+        if tenant_id:
+            return tenant_id
+
+        # Fallback: subscription metadata
+        parent = line.get("parent") or {}
+        sub_details = parent.get("subscription_details") or {}
+        metadata = sub_details.get("metadata") or {}
+
+        if isinstance(metadata, dict):
+            return metadata.get("tenant_id")
+
+        return None
+
+    # Helper methods end here
 
     async def list_plans(self, scope: ScopeType) -> PlanListDto:
         sc = await self.stripe_resolver.get_stripe_client(scope=scope)
         result = await sc.v1.plans.list_async(params={"limit": 100})
         if len(result.data) == 0:
             return PlanListDto(plans=[], has_more=False)
-        return PlanListDto(plans=[plan for plan in result.data],  has_more=result.has_more)
+        return PlanListDto(
+            plans=[plan for plan in result.data], has_more=result.has_more
+        )
 
     async def create_plan(self, new_plan: CreatePlanDto, scope: ScopeType) -> None:
         try:
             sc = await self.stripe_resolver.get_stripe_client(scope=scope)
-            await sc.v1.plans.create_async(params={
-                "amount": new_plan.amount,
-                "interval": new_plan.interval,
-                "currency": new_plan.currency,
-                "product": new_plan.product_id
-            })
+            await sc.v1.plans.create_async(
+                params={
+                    "amount": new_plan.amount,
+                    "interval": new_plan.interval,
+                    "currency": new_plan.currency,
+                    "product": new_plan.product_id,
+                }
+            )
         except Exception as e:
             logger.error(f"Error creating plan : {e}")
             raise BillingRecordException(str(e))
 
-    async def update_plan(self, plan_id: str, update_plan: UpdatePlanDto, scope: ScopeType) -> None:
+    async def update_plan(
+        self, plan_id: str, update_plan: UpdatePlanDto, scope: ScopeType
+    ) -> None:
         try:
             sc = await self.stripe_resolver.get_stripe_client(scope=scope)
-            await sc.v1.plans.update_async(plan=plan_id, params={
-                "active": update_plan.active,
-                "trial_period_days": update_plan.trial_period_days,
-                "metadata": update_plan.metadata or {}
-            })
+            await sc.v1.plans.update_async(
+                plan=plan_id,
+                params={
+                    "active": update_plan.active,
+                    "trial_period_days": update_plan.trial_period_days,
+                    "metadata": update_plan.metadata or {},
+                },
+            )
         except Exception as e:
             logger.error(f"Error updating plan {plan_id}: {e}")
             raise BillingRecordNotFoundException(plan_id)
@@ -67,36 +127,37 @@ class BillingRecordService:
         result = await sc.v1.plans.delete_async(plan=plan_id)
         if result.deleted is False:
             raise BillingRecordException(f"Unable to delete the plan {plan_id}.")
-        
+
     async def list_invoices(self, scope: ScopeType) -> InvoiceListDto:
         sc = await self.stripe_resolver.get_stripe_client(scope=scope)
         result = await sc.v1.invoices.list_async(params={"limit": 100})
-        return InvoiceListDto(invoices=[invoice for invoice in result.data], has_more=result.has_more)
-    
+        return InvoiceListDto(
+            invoices=[invoice for invoice in result.data], has_more=result.has_more
+        )
 
-
-    async def create_host_check_out_session_for_tenant(self, frontend_url: str, checkout_req: CheckoutRequestDto) -> str:
+    async def create_host_check_out_session_for_tenant(
+        self, frontend_url: str, checkout_req: CheckoutRequestDto
+    ) -> str:
         """
         Create a Stripe checkout session for host scope for a tenant
         """
         sc: StripeClient = await self.stripe_resolver.get_stripe_client(scope="host")
-        customer = await sc.v1.customers.create_async(params={
-            "metadata": {
-                "tenant_id": checkout_req.tenant_id
-            },
-            "email": checkout_req.email
-        })
-        
-        checkout_session = await sc.v1.checkout.sessions.create_async(params={
-            "mode": checkout_req.mode,
-            "customer": customer.id,
-            "line_items": [{
-                "price": checkout_req.price_id,
-                "quantity": 1
-            }],
-            "success_url": f"{frontend_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}&tenant_id={checkout_req.tenant_id}",
-            "cancel_url": f"{frontend_url}/checkout/cancel?tenant_id={checkout_req.tenant_id}",
-        })
+        customer = await sc.v1.customers.create_async(
+            params={
+                "metadata": {"tenant_id": checkout_req.tenant_id},
+                "email": checkout_req.email,
+            }
+        )
+
+        checkout_session = await sc.v1.checkout.sessions.create_async(
+            params={
+                "mode": checkout_req.mode,
+                "customer": customer.id,
+                "line_items": [{"price": checkout_req.price_id, "quantity": 1}],
+                "success_url": f"{frontend_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}&tenant_id={checkout_req.tenant_id}",
+                "cancel_url": f"{frontend_url}/checkout/cancel?tenant_id={checkout_req.tenant_id}",
+            }
+        )
         billing_record = BillingRecord(
             scope="host",
             actor="tenant",
@@ -111,31 +172,29 @@ class BillingRecordService:
         await self.billing_record_repository.create(billing_record.model_dump())
         return checkout_session.url
 
-
-
-    async def create_tenant_check_out_session_for_tenant_users(self, frontend_url: str, user_id: str, checkout_req: CheckoutRequestDto) -> str:
+    async def create_tenant_check_out_session_for_tenant_users(
+        self, frontend_url: str, user_id: str, checkout_req: CheckoutRequestDto
+    ) -> str:
         """
         Create a Stripe checkout session for tenant scope for tenant's users
         """
         sc: StripeClient = await self.stripe_resolver.get_stripe_client(scope="tenant")
-        customer = await sc.v1.customers.create_async(params={
-            "email": checkout_req.email,
-            "metadata":{
-                "tenant_id": checkout_req.tenant_id,
-                "user_id": user_id
+        customer = await sc.v1.customers.create_async(
+            params={
+                "email": checkout_req.email,
+                "metadata": {"tenant_id": checkout_req.tenant_id, "user_id": user_id},
             }
-        })
-        
-        checkout_session = await sc.v1.checkout.sessions.create_async(params={
-            "mode": checkout_req.mode,
-            "customer": customer.id,
-            "line_items": [{
-                "price": checkout_req.price_id,
-                "quantity": 1
-            }],
-            "success_url": f"{frontend_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}&user_id={user_id}",
-            "cancel_url": f"{frontend_url}/checkout/cancel?user_id={user_id}",
-        })
+        )
+
+        checkout_session = await sc.v1.checkout.sessions.create_async(
+            params={
+                "mode": checkout_req.mode,
+                "customer": customer.id,
+                "line_items": [{"price": checkout_req.price_id, "quantity": 1}],
+                "success_url": f"{frontend_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}&user_id={user_id}",
+                "cancel_url": f"{frontend_url}/checkout/cancel?user_id={user_id}",
+            }
+        )
 
         billing_record = BillingRecord(
             scope="tenant",
@@ -149,74 +208,151 @@ class BillingRecordService:
             currency=checkout_session.currency if checkout_session.currency else "eur",
             status="pending",
         )
-    
+
         await self.billing_record_repository.create(billing_record.model_dump())
         return checkout_session.url
 
-
-
-    async def handle_host_checkout_success(self, session_id: str, tenant_id: str) -> None:
+    async def handle_host_checkout_success(
+        self, session_id: str, tenant_id: str
+    ) -> None:
         """
         Handle successful checkout for host scope
         """
         sc: StripeClient = await self.stripe_resolver.get_stripe_client(scope="host")
         session = await sc.v1.checkout.sessions.retrieve_async(session=session_id)
         if session.payment_status != "paid":
-            raise BillingRecordException(f"Payment not completed for session {session_id}")
+            raise BillingRecordException(
+                f"Payment not completed for session {session_id}"
+            )
 
-        billing_record = await self.billing_record_repository.single_or_none(session_id=session_id)
+        billing_record = await self.billing_record_repository.single_or_none(
+            session_id=session_id
+        )
         if billing_record is None:
             raise BillingRecordNotFoundException(session_id)
         if billing_record.tenant_id != tenant_id:
-            raise BillingRecordException(f"Tenant ID mismatch for the billing record {session_id}")
+            raise BillingRecordException(
+                f"Tenant ID mismatch for the billing record {session_id}"
+            )
 
         billing_record.status = "succeeded"
-        await self.billing_record_repository.update(billing_record.id, billing_record.model_dump())
-
-
+        await self.billing_record_repository.update(
+            billing_record.id, billing_record.model_dump()
+        )
 
     async def handle_host_checkout_canceled(self, tenant_id: str) -> None:
         """
         Handle cancelled checkout for host scope
         """
-        billing_records = await self.billing_record_repository.search({"tenant_id": tenant_id, "status": "pending"})
+        billing_records = await self.billing_record_repository.search(
+            {"tenant_id": tenant_id, "status": "pending"}
+        )
         for record in billing_records:
             record.status = "canceled"
             await self.billing_record_repository.update(record.id, record.model_dump())
 
-
-
-    async def handle_tenant_checkout_success(self, session_id: str, user_id: str) -> None:
+    async def handle_tenant_checkout_success(
+        self, session_id: str, user_id: str
+    ) -> None:
         """
         Handle successful checkout for tenant scope
         """
         sc: StripeClient = await self.stripe_resolver.get_stripe_client(scope="tenant")
         session = await sc.v1.checkout.sessions.retrieve_async(session=session_id)
         if session.payment_status != "paid":
-            raise BillingRecordException(f"Payment not completed for session {session_id}")
+            raise BillingRecordException(
+                f"Payment not completed for session {session_id}"
+            )
 
-        billing_record = await self.billing_record_repository.single_or_none(session_id=session_id)
+        billing_record = await self.billing_record_repository.single_or_none(
+            session_id=session_id
+        )
         if billing_record is None:
             raise BillingRecordNotFoundException(session_id)
         if str(billing_record.user_id) != user_id:
-            raise BillingRecordException(f"User ID mismatch for the billing record {session_id}")
+            raise BillingRecordException(
+                f"User ID mismatch for the billing record {session_id}"
+            )
 
         billing_record.status = "succeeded"
-        await self.billing_record_repository.update(billing_record.id, billing_record.model_dump())
-
+        await self.billing_record_repository.update(
+            billing_record.id, billing_record.model_dump()
+        )
 
     async def handle_tenant_checkout_canceled(self, user_id: str) -> None:
         """
         Handle cancelled checkout for tenant scope
         """
-        billing_records = await self.billing_record_repository.list({"user_id": user_id, "status": "pending"})
+        billing_records = await self.billing_record_repository.list(
+            {"user_id": user_id, "status": "pending"}
+        )
         for record in billing_records:
             record.status = "canceled"
             await self.billing_record_repository.update(record.id, record.model_dump())
 
-
-    async def list_checkout_records(self, skip: int = 0, limit: int = 100) -> BillingRecordListDto:
+    async def list_checkout_records(
+        self, skip: int = 0, limit: int = 100
+    ) -> BillingRecordListDto:
         """
-            List checkout records
+        List checkout records
         """
         return await self.billing_record_repository.list(skip=skip, limit=limit)
+
+    async def from_stripe_invoice_paid(
+        self,
+        invoice: dict[str, Any],
+        scope: Literal["tenant", "host"],
+        tenant_id: Optional[str] = None,
+    ) -> Optional[BillingRecordDto]:
+        """
+        Converts a Stripe `invoice.paid` event into a BillingRecordDto.
+        Returns None if not applicable (e.g. no subscription).
+        """
+        # Extract first line item (99.9% of cases there's only one)
+        lines = invoice.get("lines", {}).get("data", [])
+        if not lines:
+            return None
+
+        line = lines[0]
+
+        period_start, period_end = self._extract_period(line)
+        price_id, product_id = self._extract_pricing(line)
+        tenant_id = tenant_id or self._extract_tenant_id(line, scope)
+
+        if scope == "tenant" and not tenant_id:
+            return None
+
+        # Build DTO
+        return BillingRecordDto(
+            scope="tenant" if tenant_id else "host",
+            actor="tenant" if tenant_id else "end_user",
+            tenant_id=PydanticObjectId(tenant_id) if tenant_id else None,
+            user_id=None,
+            payment_type="card",
+            currency=invoice["currency"].upper(),
+            amount=invoice["amount_paid"],
+            stripe_customer_id=invoice["customer"],
+            stripe_subscription_id=invoice.get("subscription"),
+            stripe_session_id=None,
+            product_id=product_id,
+            price_id=price_id,
+            status=invoice["status"],
+            current_period_end=period_end,
+            canceled_at=None,
+            cancellation_reason=None,
+            metadata={
+                "invoice_id": invoice["id"],
+                "stripe_event_id": invoice["id"],
+                "billing_reason": invoice.get("billing_reason"),
+                "hosted_invoice_url": invoice.get("hosted_invoice_url"),
+                "invoice_pdf": invoice.get("invoice_pdf"),
+                "period_start": str(period_start),
+                "period_end": str(period_end),
+            },
+        )
+
+    async def create_billing_record(self, billing_record: BillingRecordDto) -> None:
+        """
+        Create a billing record in the database
+        """
+        await self.billing_record_repository.create(billing_record.model_dump())

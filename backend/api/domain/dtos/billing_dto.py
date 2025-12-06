@@ -52,7 +52,7 @@ class InvoiceDto(BaseModel):
   created: int
   currency: str
   customer: str
-  customer_name: Optional[str] = None
+  customer_name: str
   status: str
   total: int
   receipt_number: Optional[str] = None
