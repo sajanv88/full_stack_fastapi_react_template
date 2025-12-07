@@ -83,7 +83,7 @@ async def handle_invoice_paid(
 
     billing_record = await billing_record_service.from_stripe_invoice_paid(
         invoice=invoice,
-        scope="tenant",
+        scope="tenant" if tenant_id else "host",
         tenant_id=tenant_id
     )
 
