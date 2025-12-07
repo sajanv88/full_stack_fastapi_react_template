@@ -16,6 +16,7 @@ class User(ApiBaseModel):
     activated_at: Optional[datetime] = None
     image_url: Optional[str] = None
     password: str  # hashed password
+    sso_provider_id: Optional[str] = None
 
     async def to_serializable_dict(self):
         base_doc = await super().to_serializable_dict()
@@ -29,8 +30,8 @@ class User(ApiBaseModel):
             "is_active": self.is_active,
             "activated_at": str(self.activated_at) if self.activated_at else None,
             "image_url": str(self.image_url) if self.image_url else None,
+            "sso_provider_id": self.sso_provider_id if self.sso_provider_id else None
         }
-    
 
     class Settings:
         name = "users"
