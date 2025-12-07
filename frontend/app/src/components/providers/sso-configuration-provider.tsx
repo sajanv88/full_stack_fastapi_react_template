@@ -89,7 +89,7 @@ export default function SSOConfigurationProvider({ children }: SSOConfigurationP
             }
             await apiClient.ssoSettings.updateSsoSettingsApiV1SsosSsoIdPatch({
                 ssoId,
-                requestBody: { ...existing, enabled }
+                requestBody: { enabled }
             });
             toast.success(`SSO configuration ${enabled ? "enabled" : "disabled"} successfully`, { richColors: true, position: "top-right" });
             await refreshSSOConfigurations();
