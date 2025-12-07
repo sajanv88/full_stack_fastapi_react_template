@@ -433,14 +433,14 @@ export class AccountService {
   }
   /**
    * Sso Provider Callback
-   * @returns any Successful Response
+   * @returns void
    * @throws ApiError
    */
   public ssoProviderCallbackApiV1AccountSsoProviderNameCallbackGet({
     providerName,
   }: {
     providerName: 'google' | 'github' | 'discord' | 'microsoft' | 'linkedin' | 'x' | 'notion' | 'gitlab' | 'bitbucket' | 'facebook',
-  }): CancelablePromise<any> {
+  }): CancelablePromise<void> {
     return this.httpRequest.request({
       method: 'GET',
       url: '/api/v1/account/sso/{provider_name}/callback',
@@ -448,6 +448,7 @@ export class AccountService {
         'provider_name': providerName,
       },
       errors: {
+        308: `Successful Response`,
         422: `Validation Error`,
       },
     });

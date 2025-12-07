@@ -8,6 +8,7 @@ export type ReadSSOSettingsDto = {
   client_id: string;
   client_secret?: (string | null);
   scopes?: (Array<string> | null);
+  redirect_uris?: (Array<string> | null);
   id: string;
 };
 

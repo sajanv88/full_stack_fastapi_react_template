@@ -13,5 +13,6 @@ export type UpdateUserDto = {
   role_id?: (string | null);
   is_active?: (boolean | null);
   tenant_id?: (PydanticObjectId | null);
+  sso_provider_id?: (string | null);
 };
 

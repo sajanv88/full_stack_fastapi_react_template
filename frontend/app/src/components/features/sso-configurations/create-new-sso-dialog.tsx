@@ -87,7 +87,7 @@ export default function CreateNewSSODialog() {
     return (
         <Dialog open={open} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
-                <>
+                <div>
                     <Button onClick={() => setOpen(true)} className="hidden sm:flex">
                         <IconPlus className="mr-2 h-4 w-4" />
                         Add New SSO Provider
@@ -95,7 +95,7 @@ export default function CreateNewSSODialog() {
                     <Button onClick={() => setOpen(true)} className="flex sm:hidden p-2">
                         <IconPlus className="h-4 w-4" />
                     </Button>
-                </>
+                </div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>

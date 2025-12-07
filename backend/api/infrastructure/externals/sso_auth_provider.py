@@ -1,7 +1,6 @@
-from typing import Dict
 from fastapi import Request
 from api.common.exceptions import InvalidOperationException
-from api.common.utils import get_host_main_domain_name, get_logger
+from api.common.utils import get_logger, get_sso_redirect_uri
 from api.domain.entities.sso_settings import SSOProvider, SSOSettings
 import fastapi_sso
 from api.core.config import settings
@@ -19,15 +18,12 @@ class SSOAuthProvider:
     
     async def _provider_instance(self, provider_name: SSOProvider, sso_provider: SSOSettings) -> fastapi_sso.SSOBase:
         domain = None
-        http_protocol = "https" if settings.fastapi_env == "production" else "http"
         if sso_provider.tenant_id:
             tenant = await self.tenant_service.get_tenant_by_id(tenant_id=sso_provider.tenant_id)
-            domain = f"{http_protocol}://{tenant.custom_domain}" if tenant.custom_domain else f"{http_protocol}://{tenant.subdomain}"
-        else:
-            domain = f"{http_protocol}://{get_host_main_domain_name()}"
+            domain = tenant.custom_domain if tenant.custom_domain else tenant.subdomain
 
         allow_insecure_http = settings.fastapi_env != "production"
-        redirect_uri = f"{domain}/api/v1/account/sso/{provider_name}/callback"
+        redirect_uri = get_sso_redirect_uri(provider_name, domain)
 
         self.redirect_uri_to_app = domain
 

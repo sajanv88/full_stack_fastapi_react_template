@@ -8,6 +8,7 @@ export type CreateSSOSettingsDto = {
   client_id: string;
   client_secret?: (string | null);
   scopes?: (Array<string> | null);
+  redirect_uris?: (Array<string> | null);
   tenant_id?: (string | null);
 };
 

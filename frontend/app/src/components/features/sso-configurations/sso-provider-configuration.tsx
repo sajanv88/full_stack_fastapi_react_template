@@ -37,10 +37,11 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useState } from 'react';
 import type { ReadSSOSettingsDto } from '@/api';
-import DeleteSSOConfigurationDialog from './delete-sso-configuration-dialog';
-import SSOConfigurationEditDialog from './sso-configuration-edit-dialog';
-import CreateNewSSODialog from './create-new-sso-dialog';
+import DeleteSSOConfigurationDialog from '@/components/features/sso-configurations/delete-sso-configuration-dialog';
+import SSOConfigurationEditDialog from '@/components/features/sso-configurations/sso-configuration-edit-dialog';
+import CreateNewSSODialog from '@/components/features/sso-configurations/create-new-sso-dialog';
 import { cn } from '@/lib/utils';
+import { CopyText } from '@/components/shared/copy-text';
 
 const providerTypeEnum = [
     'google',
@@ -60,6 +61,7 @@ export const ssoFormSchema = z.object({
     client_secret: z.string().default(''),
     scopes: z.string().default(''),
     enabled: z.boolean().default(true),
+    redirect_uris: z.array(z.string()).optional(),
 });
 
 export type SSOFormValues = z.infer<typeof ssoFormSchema>;
@@ -114,6 +116,7 @@ export function SSOProviderConfiguration() {
             client_secret: provider.client_secret || '',
             scopes: provider.scopes ? provider.scopes.join(', ') : '',
             enabled: provider.enabled,
+
         });
     };
 
@@ -131,6 +134,8 @@ export function SSOProviderConfiguration() {
     async function onUpdateProviderClose() {
         setEditingProvider(null)
     }
+
+
 
     return (
         <div className="space-y-6 ">
@@ -247,6 +252,21 @@ export function SSOProviderConfiguration() {
                                             <p className="text-sm font-mono truncate">
                                                 {provider.client_id}
                                             </p>
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs text-muted-foreground">
+                                                Redirect URIs
+                                            </Label>
+                                            <div className="flex flex-col space-y-1 mt-1">
+                                                {provider?.redirect_uris?.map((uri) => (
+                                                    <CopyText key={uri} text={uri} />
+                                                ))}
+                                                {!provider?.redirect_uris || provider.redirect_uris.length === 0 && (
+                                                    <p className="text-sm text-muted-foreground">
+                                                        No redirect URIs configured.
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                         {provider.scopes && provider.scopes.length > 0 && (
                                             <div>
