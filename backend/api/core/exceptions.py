@@ -107,3 +107,9 @@ class BillingRecordException(InvalidOperationException):
 class BillingRecordNotFoundException(NotFoundException):
     def __init__(self, record_id: str):
         super().__init__("BillingRecord", record_id)
+
+
+class BrandingException(InvalidOperationException):
+    def __init__(self, message: str):
+        local_message = f"Branding Error: {message}"
+        super().__init__(local_message)
