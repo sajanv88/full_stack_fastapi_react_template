@@ -1,3 +1,4 @@
+from beanie import PydanticObjectId
 from fastapi_mail import MessageType
 from fastapi_sso import OpenID
 from pydantic import EmailStr
@@ -142,8 +143,8 @@ class AuthService:
             raise UnauthorizedException("Authentication failed. Please check your credentials.")
 
         return await self._get_token_set(user)
-    
-    async def login_with_sso(self, provider_name: SSOProvider, user_info: OpenID) -> TokenSetDto:
+
+    async def login_with_sso(self, provider_name: SSOProvider, user_info: OpenID, tenant_id: PydanticObjectId | None) -> TokenSetDto:
         email = user_info.email
         display_name = user_info.display_name
         first_name = user_info.first_name
@@ -166,7 +167,8 @@ class AuthService:
                 last_name=last_name or display_name or "N/A",
                 password=f"signed_up_via_sso_{provider_name}",
                 gender="prefer_not_to_say",
-                role_id=role.id if role else None
+                role_id=role.id if role else None,
+                tenant_id=tenant_id if tenant_id else None,
             ))
         
         user = await self.user_service.find_by_email(email=email)

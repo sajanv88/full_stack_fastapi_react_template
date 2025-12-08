@@ -89,10 +89,10 @@ def get_tenant_host(request: Request) -> Optional[str]:
     logger.debug(f"Extracted host: {host}")
     return host
 
-async def get_tenant_id(request: Request) -> PydanticObjectId | None:
+def get_tenant_id(request: Request) -> PydanticObjectId | None:
     return getattr(request.state, "tenant_id", None)
 
-async def frontend_dynamic_host(request: Request) -> str:
+def frontend_dynamic_host(request: Request) -> str:
    return getattr(request.state, "frontend_host", get_host_main_domain_name())
 
 
