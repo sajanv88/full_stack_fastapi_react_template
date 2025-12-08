@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BrandingDto } from './BrandingDto';
 import type { TenantDto } from './TenantDto';
 import type { UserPreferenceDto } from './UserPreferenceDto';
 export type AppConfigurationDto = {
@@ -13,5 +14,6 @@ export type AppConfigurationDto = {
   current_tenant?: (TenantDto | null);
   environment: string;
   enabled_sso_providers?: (Array<string> | null);
+  branding?: (BrandingDto | null);
 };
 

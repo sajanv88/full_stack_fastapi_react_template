@@ -1,3 +1,5 @@
+import inspect
+from typing import Callable, Type, TypeVar
 import punq
 from api.common.audit_logs_repository import AuditLogRepository
 from api.domain.interfaces.email_service import IEmailService
@@ -7,6 +9,7 @@ from api.infrastructure.externals.smtp_email import SmtpEmail
 
 from api.infrastructure.externals.sso_auth_provider import SSOAuthProvider
 from api.infrastructure.externals.stripe_resolver import StripeResolver
+from api.infrastructure.persistence.repositories.branding_repository_impl import BrandingRepository
 from api.infrastructure.persistence.repositories.chat_history_ai_repository_impl import ChatHistoryAIRepository
 from api.infrastructure.persistence.repositories.chat_session_ai_repository_impl import ChatSessionAIRepository
 from api.infrastructure.persistence.repositories.payment_repository_impl import PaymentRepository, StripeSettingsRepository
@@ -27,6 +30,7 @@ from api.infrastructure.security.jwt_token_service import JwtTokenService
 from api.infrastructure.security.passkey_service import PasskeyService
 from api.usecases.audit_logs_service import AuditLogsService
 from api.usecases.billing_record_service import BillingRecordService
+from api.usecases.branding_service import BrandingService
 from api.usecases.coolify_app_service import CoolifyAppService
 from api.usecases.local_ai_service import LocalAIService
 from api.usecases.auth_service import AuthService
@@ -45,6 +49,7 @@ from api.usecases.tenant_service import TenantService
 from api.usecases.notification_banner_service import NotificationBannerService
 
 from api.infrastructure.persistence.mongodb import Database, mongo_client
+
 
 container = punq.Container()
 
@@ -147,8 +152,34 @@ container.register(SSOSettingsProviderRepository, scope=punq.Scope.singleton)
 container.register(SSOSettingsService, scope=punq.Scope.singleton)
 container.register(SSOAuthProvider, scope=punq.Scope.singleton)
 
+## Branding components
+container.register(BrandingRepository, scope=punq.Scope.singleton)
+container.register(BrandingService, scope=punq.Scope.singleton)
+
+
+DT = TypeVar("DT")
+async def get_registered_dependency(dep_type: Type[DT]) -> DT:
+    """Get a dependency from the DI container. Raises RuntimeError if resolution fails."""
+    try:
+        instance = container.resolve(dep_type)
+        if inspect.isawaitable(instance):
+            instance = await instance
+        if not isinstance(instance, dep_type):
+            raise TypeError(f"Resolved dependency is not of type {dep_type.__name__}")
+        return instance
+    except Exception as e:
+        raise RuntimeError(f"Failed to resolve dependency {dep_type.__name__}: {e}")
+
+
+# Use this function in endpoints fast api Depends
+def get_deps(dep_type: Type[DT]) -> Callable:
+    async def _get_dep_wrapper() -> DT:
+        return await get_registered_dependency(dep_type)
+    return _get_dep_wrapper
+
 
 ## Dependency resolver functions
+## Todo: Remove these functions and use generic get_deps instead
 
 def get_database() -> Database:
     return container.resolve(Database)
@@ -231,11 +262,13 @@ def get_notification_banner_service() -> NotificationBannerService:
 def get_audit_logs_service() -> AuditLogsService:
     return container.resolve(AuditLogsService)
 
-
 def get_sso_settings_service() -> SSOSettingsService:
     return container.resolve(SSOSettingsService)
 
 def get_sso_auth_provider() -> SSOAuthProvider:
     return container.resolve(SSOAuthProvider)
 
-print("Dependency injection container configured.")
+
+
+
+
