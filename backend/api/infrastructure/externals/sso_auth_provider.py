@@ -141,6 +141,7 @@ class SSOAuthProvider:
         return user
     
     def get_redirect_uri_to_app(self) -> str:
+        logger.debug(f"Retrieving redirect URI to app: {self.redirect_uri_to_app}")
         if not self.redirect_uri_to_app:
             raise InvalidOperationException("Redirect URI to app is not set.")
         return self.redirect_uri_to_app
