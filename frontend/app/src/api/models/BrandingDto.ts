@@ -12,5 +12,7 @@ export type BrandingDto = {
   tenant_id: string;
   created_at: string;
   updated_at: string;
+  app_name?: string;
+  favicon_url?: (string | null);
 };
 

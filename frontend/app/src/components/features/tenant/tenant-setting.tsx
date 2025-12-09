@@ -24,6 +24,7 @@ import { getApiClient } from "@/lib/utils";
 import { TenantDto, UpdateTenantDto } from "@/api";
 import { Building2, Globe, CheckCircle, Clock, XCircle, Plus, AlertTriangle } from "lucide-react";
 import { NavLink } from "react-router";
+import BrandingConfiguration from "../branding/branding-configuration";
 
 const tenantFormSchema = z.object({
     custom_domain: z.string().optional().refine((val) => {
@@ -368,6 +369,7 @@ export function TenantSetting() {
                     </CardContent>
                 </Card>
             )}
+            <BrandingConfiguration />
         </div>
     );
 }

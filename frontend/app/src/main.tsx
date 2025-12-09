@@ -6,15 +6,18 @@ import './index.css'
 import { BrowserRouter } from "react-router";
 import { AuthProvider } from './components/providers/auth-provider.tsx'
 import { AppConfigProvider } from '@/components/providers/app-config-provider.tsx'
+import { BrandingProvider } from '@/components/providers/branding-provider.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename='/'>
       <AuthProvider>
         <AppConfigProvider>
-          <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-            <App />
-          </ThemeProvider>
+          <BrandingProvider>
+            <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+              <App />
+            </ThemeProvider>
+          </BrandingProvider>
         </AppConfigProvider>
       </AuthProvider>
     </BrowserRouter>
