@@ -13,6 +13,8 @@ class BrandingDto(BaseModel):
     tenant_id: str
     created_at: str
     updated_at: str
+    app_name: str = "SaaS Org"
+    favicon_url: Optional[str] = None
 
     @field_serializer("id", "created_at", "updated_at", "tenant_id")
     def serialize_id(self, id: PydanticObjectId) -> str:

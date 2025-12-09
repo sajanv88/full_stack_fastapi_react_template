@@ -27,4 +27,29 @@ export class BrandingsService {
       },
     });
   }
+  /**
+   * Partial Update Branding
+   * @returns void
+   * @throws ApiError
+   */
+  public partialUpdateBrandingApiV1BrandingsBrandingIdPatch({
+    brandingId,
+    requestBody,
+  }: {
+    brandingId: string,
+    requestBody: UpdateBrandingDto,
+  }): CancelablePromise<void> {
+    return this.httpRequest.request({
+      method: 'PATCH',
+      url: '/api/v1/brandings/{branding_id}',
+      path: {
+        'branding_id': brandingId,
+      },
+      body: requestBody,
+      mediaType: 'application/json',
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

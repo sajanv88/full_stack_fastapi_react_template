@@ -1,6 +1,5 @@
 from typing import Literal, Optional
 
-from beanie import PydanticObjectId
 from pydantic import BaseModel, EmailStr, Field, field_serializer
 from api.domain.entities.api_base_model import ApiBaseModel
 
@@ -112,8 +111,11 @@ class ContactInfo(BaseModel):
 class Branding(ApiBaseModel):
     logo_url: str
     logo_type: LogoType
+    favicon_url: Optional[str] = None
+    app_name: str = "SaaS Org"
     contact_info: Optional[ContactInfo] = None
     theme_config: ThemeConfig = Field(default_factory=ThemeConfig)
 
     class Settings:
-        name = "branding"
+        name = "branding_configuration"
+        indexes = ["tenant_id"]

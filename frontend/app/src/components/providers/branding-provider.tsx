@@ -1,5 +1,9 @@
+import { createContext, useContext, useState, useEffect } from "react";
+import { toast } from "sonner";
 import { BrandingDto, UpdateBrandingDto } from "@/api";
-import { createContext, useContext } from "react";
+import { useAuthContext } from "@/components/providers/auth-provider";
+import { getApiClient } from "@/lib/utils";
+import { useAppConfig } from "@/components/providers/app-config-provider";
 
 interface BrandingProviderState {
     branding?: BrandingDto
@@ -16,9 +20,34 @@ interface BrandingProviderProps {
 }
 
 export function BrandingProvider({ children }: BrandingProviderProps) {
-    // const [branding, setBranding] = useState<BrandingDto | undefined>(undefined);
+    const { branding: initialBranding, reloadAppConfig } = useAppConfig();
+    const [branding, setBranding] = useState<BrandingDto | undefined>(undefined);
+    const { accessToken } = useAuthContext();
+
+
+    async function onUpdateBranding(data: UpdateBrandingDto) {
+        try {
+            const apiClient = getApiClient(accessToken);
+            await apiClient.brandings.updateBrandingApiV1BrandingsPost({
+                requestBody: data
+            });
+            toast.success("Branding updated successfully", { richColors: true, position: "top-right" });
+            await reloadAppConfig();
+        } catch (error) {
+            console.error("Failed to update branding", error);
+            toast.error("Failed to update branding", { richColors: true, position: "top-right" });
+        }
+    }
+
+    useEffect(() => {
+        if (initialBranding) {
+            setBranding(initialBranding);
+        }
+    }, [initialBranding]);
+
+
     return (
-        <BrandingContext.Provider value={initialState}>
+        <BrandingContext.Provider value={{ branding, onUpdateBranding }}>
             {children}
         </BrandingContext.Provider>
     )
