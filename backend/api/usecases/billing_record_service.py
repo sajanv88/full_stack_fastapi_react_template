@@ -319,12 +319,9 @@ class BillingRecordService:
         price_id, product_id = self._extract_pricing(line)
         tenant_id = tenant_id or self._extract_tenant_id(line, scope)
 
-        if scope == "tenant" and not tenant_id:
-            return None
-
         # Build Object
         return BillingRecord(
-            scope="tenant" if tenant_id else "host",
+            scope=scope,
             actor="tenant" if tenant_id else "end_user",
             tenant_id=PydanticObjectId(tenant_id) if tenant_id else None,
             user_id=None,
