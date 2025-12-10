@@ -73,6 +73,7 @@ class Settings(BaseSettings):
     stripe_api_key: str
     stripe_publishable_key: str
     stripe_secret_key: str
+    stripe_webhook_secret: str
 
 # Instantiate settings once
 settings = Settings()

@@ -14,6 +14,7 @@ from api.usecases.billing_record_service import BillingRecordService
 from api.usecases.stripe_setting_service import StripeSettingService
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
+from api.core.config import settings
 
 router = APIRouter(
     prefix="/configurations",
@@ -75,15 +76,22 @@ async def stripe_webhook(
     billing_record_service: BillingRecordService = Depends(get_billing_record_service),
 ):
     event = None
+    stripe_webhook_secret = None
     payload = await request.body()
     stripe_settings = await stripe_setting_service.get_stripe_secret()
 
-    # If there is no Stripe settings. Return early
-    if not stripe_settings or not stripe_settings.stripe_webhook_secret:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Webhook secret not set on server",
-        )
+    # Check the request context for tenant or host. If tenant then get tenant webhook secret otherwise use host from env
+    if request.state.tenant_id:
+        # Tenant-scoped webhook
+        if not stripe_settings or not stripe_settings.stripe_webhook_secret:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Tenant webhook secret not configured",
+            )
+        stripe_webhook_secret = stripe_settings.stripe_webhook_secret
+    else:
+        # Host-scoped webhook
+        stripe_webhook_secret = settings.stripe_webhook_secret
 
     try:
         sig_header = request.headers.get("stripe-signature")
@@ -91,7 +99,7 @@ async def stripe_webhook(
         event = stripe.Webhook.construct_event(
             payload=payload,
             sig_header=sig_header,
-            secret=stripe_settings.stripe_webhook_secret,
+            secret=stripe_webhook_secret,
         )
     except ValueError:
         # Invalid payload
