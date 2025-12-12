@@ -409,4 +409,48 @@ export class AccountService {
       },
     });
   }
+  /**
+   * Sso Provider Login
+   * @returns void
+   * @throws ApiError
+   */
+  public ssoProviderLoginApiV1AccountSsoProviderNameLoginGet({
+    providerName,
+  }: {
+    providerName: 'google' | 'github' | 'discord' | 'microsoft' | 'linkedin' | 'x' | 'notion' | 'gitlab' | 'bitbucket' | 'facebook',
+  }): CancelablePromise<void> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/account/sso/{provider_name}/login',
+      path: {
+        'provider_name': providerName,
+      },
+      errors: {
+        307: `Successful Response`,
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Sso Provider Callback
+   * @returns void
+   * @throws ApiError
+   */
+  public ssoProviderCallbackApiV1AccountSsoProviderNameCallbackGet({
+    providerName,
+  }: {
+    providerName: 'google' | 'github' | 'discord' | 'microsoft' | 'linkedin' | 'x' | 'notion' | 'gitlab' | 'bitbucket' | 'facebook',
+  }): CancelablePromise<void> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/api/v1/account/sso/{provider_name}/callback',
+      path: {
+        'provider_name': providerName,
+      },
+      errors: {
+        308: `Successful Response`,
+        422: `Validation Error`,
+      },
+    });
+  }
 }

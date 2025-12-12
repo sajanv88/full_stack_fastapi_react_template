@@ -120,3 +120,12 @@ async def capture_audit_log(
 
     with open(file_path, "a") as f:
         f.write(log_data.model_dump_json() + "\n")
+    
+
+def get_sso_redirect_uri(provider_name: str, domain: Optional[str] = None) -> str:
+    local_domain = domain if domain else get_host_main_domain_name()
+    if settings.fastapi_env == "production":
+        return f"https://{local_domain}/api/v1/account/sso/{provider_name}/callback"
+        
+    return f"http://{local_domain}:3000/api/v1/account/sso/{provider_name}/callback"
+    

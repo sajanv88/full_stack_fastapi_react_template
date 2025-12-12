@@ -11,6 +11,7 @@ export type CreateUserDto = {
   gender: Gender;
   tenant_id?: (PydanticObjectId | null);
   role_id?: (PydanticObjectId | null);
+  sso_provider_id?: (string | null);
   password: string;
   sub_domain?: (string | null);
 };

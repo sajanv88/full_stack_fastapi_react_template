@@ -1,7 +1,8 @@
 from typing import Annotated
 from beanie import PydanticObjectId
-from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.params import Query
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from api.common.dtos.passkey_rep_dto import HasPasskeysDto
@@ -9,12 +10,14 @@ from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.exceptions import ApiBaseException, ForbiddenException, InvalidOperationException
 from api.common.utils import get_logger
-from api.core.container import get_auth_service, get_email_magic_link_service, get_passkey_service, get_role_service, get_user_magic_link_repository
+from api.core.container import get_auth_service, get_email_magic_link_service, get_passkey_service, get_role_service, get_sso_auth_provider, get_user_magic_link_repository
 from api.core.exceptions import PassKeyException, UserNotFoundException
 from api.domain.dtos.auth_dto import ChangeEmailConfirmRequestDto, ChangeEmailRequestDto, ChangeEmailResponseDto, MagicLinkResponseDto, MeResponseDto, PasswordResetConfirmRequestDto, PasswordResetRequestDto, PasswordResetResponseDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserDto, UserResendActivationEmailRequestDto
+from api.domain.entities.sso_settings import SSOProvider
 from api.domain.enum.permission import Permission
+from api.infrastructure.externals.sso_auth_provider import SSOAuthProvider
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation
 from api.infrastructure.persistence.repositories.user_magic_link_repository_impl import UserMagicLinkRepository
 from api.infrastructure.security.current_user import CurrentUser
@@ -123,9 +126,6 @@ async def read_users_me(
     current_user: CurrentUser
 ):
     return current_user
-
-
-
 
 
 @router.post("/password_reset_request", response_model=PasswordResetResponseDto, status_code=status.HTTP_200_OK)
@@ -318,7 +318,6 @@ async def email_magic_link_login(
         return MagicLinkResponseDto(message="If the email exists, a magic link has been sent.")
     
        
-
 @router.get("/email_magic_link_validate", response_model=TokenSetDto, status_code=status.HTTP_200_OK)
 async def email_magic_link_validate(
     response: Response,
@@ -346,3 +345,39 @@ async def email_magic_link_validate(
         max_age=settings.refresh_token_expire_days
     )
     return token_set
+
+
+@router.get("/sso/{provider_name}/login", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+async def sso_provider_login(
+    provider_name: SSOProvider,
+    sso_auth_provider: SSOAuthProvider = Depends(get_sso_auth_provider)
+):
+    return await sso_auth_provider.login(provider_name)
+    
+@router.get("/sso/{provider_name}/callback", status_code=status.HTTP_308_PERMANENT_REDIRECT)
+async def sso_provider_callback(
+    provider_name: SSOProvider,
+    req: Request,
+    tenant_id: PydanticObjectId | None = Depends(get_tenant_id),
+    sso_auth_provider: SSOAuthProvider = Depends(get_sso_auth_provider),
+    auth_service: AuthService = Depends(get_auth_service)
+
+):
+    user = await sso_auth_provider.callback(provider_name, req)
+    token_set = await auth_service.login_with_sso(provider_name=provider_name, user_info=user , tenant_id=tenant_id)
+    response = RedirectResponse(url=f"{sso_auth_provider.get_redirect_uri_to_app()}/dashboard", status_code=status.HTTP_308_PERMANENT_REDIRECT)
+    response.set_cookie(
+        key="refresh_token",
+        value=token_set.refresh_token,
+        httponly=True,
+        secure=settings.fastapi_env == "production",
+        samesite="lax",
+        max_age=settings.refresh_token_expire_days
+    )
+   
+    
+    return response
+    
+
+    
+

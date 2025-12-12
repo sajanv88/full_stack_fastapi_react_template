@@ -25,6 +25,7 @@ import {
     Shield,
 } from "lucide-react";
 import { MagicLinkLogin } from "./magic-link-login";
+import { SSOLoginDialog } from "./sso-login-dialog";
 
 
 const loginSchema = z.object({
@@ -160,6 +161,7 @@ export function Login() {
 
                             <PasskeyLogin />
                             <MagicLinkLogin />
+                            <SSOLoginDialog />
                             {/* Security Notice */}
                             <div className="text-xs text-muted-foreground text-center mt-4 p-3 bg-muted/50 rounded-lg">
                                 <Shield className="w-3 h-3 inline mr-1" />

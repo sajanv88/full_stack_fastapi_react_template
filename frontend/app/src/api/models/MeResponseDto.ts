@@ -18,6 +18,7 @@ export type MeResponseDto = {
   created_at: string;
   updated_at: string;
   tenant_id?: (string | null);
+  sso_provider_id?: (string | null);
   role: RoleDto;
   subscription: (SubscriptionPlanDto | null);
 };

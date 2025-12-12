@@ -12,6 +12,7 @@ class BaseUserDto(BaseModel):
     gender: Gender
     tenant_id: PydanticObjectId | None = None
     role_id: PydanticObjectId | None = None
+    sso_provider_id: Optional[str] = None
 
 class CreateUserDto(BaseUserDto):
     password: str
@@ -33,7 +34,7 @@ class UpdateUserDto(BaseModel):
     role_id: Optional[str] = None
     is_active: Optional[bool] = None
     tenant_id: PydanticObjectId | None = None
-
+    sso_provider_id: Optional[str] = None
 
 class UserDto(BaseModel):
     id: str
@@ -48,6 +49,7 @@ class UserDto(BaseModel):
     created_at: str
     updated_at: str
     tenant_id: Optional[str] = None
+    sso_provider_id: Optional[str] = None
 
 
 class UserListDto(BaseModel):
