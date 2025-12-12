@@ -1,4 +1,4 @@
-from api.domain.dtos.stripe_setting_dto import CreateStripeSettingDto, StripeSettingDto
+from api.domain.dtos.stripe_setting_dto import CreateStripeSettingDto, StripeSettingDto, StripeSettingSecretDto
 from api.infrastructure.externals.stripe_resolver import StripeResolver
 from api.infrastructure.persistence.repositories.payment_repository_impl import PaymentRepository
 from api.usecases.tenant_service import TenantService
@@ -37,4 +37,17 @@ class StripeSettingService:
             default_currency=result.default_currency,
             mode=result.mode,
             trial_period_days=result.trial_period_days
+        )
+    
+    async def get_stripe_secret(self) -> StripeSettingSecretDto:
+        """
+        Get the Stripe Webhook Secret.
+        Returns:
+            StripeSettingSecretDto: The Webhook secret from Stripe settings.
+        Raises:
+            StripeSettingsNotFoundException: If there is an error retrieving the settings.
+        """
+        result = await self.payment_repository.get_stored_stripe_settings()
+        return StripeSettingSecretDto(
+            stripe_webhook_secret=result.stripe_webhook_secret,
         )

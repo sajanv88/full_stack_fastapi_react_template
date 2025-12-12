@@ -38,7 +38,7 @@ class UpdatePlanDto(BaseModel):
 
 class InvoiceDto(BaseModel):
   id: str
-  amount_country: str
+  account_country: str
   account_name: str
   amount_due: int = 0
   amount_paid: int = 0

@@ -1,23 +1,26 @@
-from api.common.utils import get_logger, get_utc_now, get_utc_now
-from faker import Faker
-from api.core.config import settings
-from api.core.container import get_role_service, get_user_service
-from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto
-from api.common.enums.gender import Gender
-from api.common.seeder_utils import get_seed_roles
-from api.domain.dtos.role_dto import CreateRoleDto, UpdateRoleDto
-from api.domain.enum.role import RoleType
-from api.common.security import hash_it
-from api.domain.enum.permission import Permission
 import os
 
-from api.infrastructure.persistence.repositories.role_repository_impl import RoleRepository
-from api.infrastructure.persistence.repositories.user_repository_impl import UserRepository
+from faker import Faker
+
+from api.common.enums.gender import Gender
+from api.common.security import hash_it
+from api.common.seeder_utils import get_seed_roles
+from api.common.utils import create_temp_file, get_logger, get_utc_now
+from api.core.config import settings
+from api.core.container import get_role_service, get_user_service
+from api.domain.dtos.role_dto import CreateRoleDto, UpdateRoleDto
+from api.domain.dtos.user_dto import CreateUserDto, UpdateUserDto
+from api.domain.enum.permission import Permission
+from api.domain.enum.role import RoleType
+from api.infrastructure.persistence.repositories.role_repository_impl import \
+    RoleRepository
+from api.infrastructure.persistence.repositories.user_repository_impl import \
+    UserRepository
 
 fake = Faker()
 
 logger = get_logger(__name__)
-LOCK_FILE = "/tmp/seed.lock"
+LOCK_FILE = "seed.lock"
 
 async def seed_initial_data():
     if settings.fastapi_env != "development":
@@ -27,7 +30,7 @@ async def seed_initial_data():
     if settings.mongo_db_name == "myapp":
         logger.warning("Using default database name 'myapp'. Please change it in production environments.")
     
-    if os.path.exists(LOCK_FILE):
+    if os.path.exists(create_temp_file(LOCK_FILE)):
         logger.info("Seeding has already been completed. Skipping...")
         return
 
@@ -99,5 +102,5 @@ async def seed_initial_data():
         logger.info("Seeded fake users.")
     
     # Create lock file to indicate seeding is done
-    with open(LOCK_FILE, "w") as f:
+    with open(create_temp_file(LOCK_FILE), "w") as f:
         f.write("seeding completed")
