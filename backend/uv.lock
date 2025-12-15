@@ -4,11 +4,11 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "aiosmtplib"
-version = "4.0.2"
+version = "5.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/0f/e1/cc58e0be242f0b410707e001ed22c689435964fcaab42108887426e44fff/aiosmtplib-4.0.2.tar.gz", hash = "sha256:f0b4933e7270a8be2b588761e5b12b7334c11890ee91987c2fb057e72f566da6", size = 61052, upload-time = "2025-08-25T02:39:07.249Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/15/c2dc93a58d716bce64b53918d3cf667d86c96a56a9f3a239a9f104643637/aiosmtplib-5.0.0.tar.gz", hash = "sha256:514ac11c31cb767c764077eb3c2eb2ae48df6f63f1e847aeb36119c4fc42b52d", size = 61057, upload-time = "2025-10-19T19:12:31.426Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f1/2f/db9414bbeacee48ab0c7421a0319b361b7c15b5c3feebcd38684f5d5f849/aiosmtplib-4.0.2-py3-none-any.whl", hash = "sha256:72491f96e6de035c28d29870186782eccb2f651db9c5f8a32c9db689327f5742", size = 27048, upload-time = "2025-08-25T02:39:06.089Z" },
+    { url = "https://files.pythonhosted.org/packages/99/42/b997c306dc54e6ac62a251787f6b5ec730797eea08e0336d8f0d7b899d5f/aiosmtplib-5.0.0-py3-none-any.whl", hash = "sha256:95eb0f81189780845363ab0627e7f130bca2d0060d46cd3eeb459f066eb7df32", size = 27048, upload-time = "2025-10-19T19:12:30.124Z" },
 ]
 
 [[package]]
@@ -637,7 +637,7 @@ wheels = [
 
 [[package]]
 name = "fastapi-mail"
-version = "1.5.8"
+version = "1.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiosmtplib" },
@@ -651,9 +651,9 @@ dependencies = [
     { name = "starlette" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/26/05/c50b2530b6fae758d712963a33b1af37a114ee1c56b02918bfc005d10f88/fastapi_mail-1.5.8.tar.gz", hash = "sha256:4758a8e236670b594387992e98dce219a19495ffbe801c71344c1819c1e3e938", size = 13469, upload-time = "2025-11-04T07:02:48.17Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cf/29/c1ab34550cb3cde7761e7884829a2c56717cca5b771b326589ace545617e/fastapi_mail-1.6.1.tar.gz", hash = "sha256:438cb1558f77d5ed4048be4e7a03db6b251fa0d93fd5b3179f433d2430432047", size = 14300, upload-time = "2025-12-15T09:55:11.756Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/a1/d18b2067680556ba1441a29fc06d9f3a7952c6e731b8eac84c08638b5517/fastapi_mail-1.5.8-py3-none-any.whl", hash = "sha256:11267795511b5ee5dd05712195c6bcb969686fb29d5689704e2c04bd5a187c41", size = 15311, upload-time = "2025-11-04T07:02:46.878Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/41/feacb95cd4a32486a7884ba9a5288edef2be0bf6af90aa68df2d0e2eca78/fastapi_mail-1.6.1-py3-none-any.whl", hash = "sha256:32ce1efd0e8e242964fe99f18b80a1294b64c0ea9b48c15a25aea338270fc962", size = 16100, upload-time = "2025-12-15T09:55:10.819Z" },
 ]
 
 [[package]]
