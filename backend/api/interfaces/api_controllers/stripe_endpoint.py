@@ -16,6 +16,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from api.core.config import settings
 
+
+logger = get_logger(__name__)
+
+
 router = APIRouter(
     prefix="/configurations",
     dependencies=[
@@ -59,17 +63,12 @@ async def get_stripe_settings(
     return await stripe_setting_service.get_stripe_settings()
 
 
-logger = get_logger(__name__)
-
-router = APIRouter(prefix="/webhooks")
-router.tags = ["Stripe"]
-
 SUPPORTED_EVENTS = {
     "invoice.paid": lambda obj, svc: handle_invoice_paid(obj, svc),
 }
 
 
-@router.post("/webhooks", status_code=status.HTTP_200_OK)
+@router.post("/stripe/webhooks", status_code=status.HTTP_200_OK)
 async def stripe_webhook(
     request: Request,
     stripe_setting_service: StripeSettingService = Depends(get_stripe_setting_service),
