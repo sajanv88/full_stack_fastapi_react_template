@@ -28,7 +28,6 @@ from api.interfaces.api_controllers.product_endpoint import router as product_ro
 from api.interfaces.api_controllers.prices_endpoint import router as prices_router
 from api.interfaces.api_controllers.billing_endpoint import router as billing_router
 from api.interfaces.api_controllers.stripe_endpoint import router as stripe_router
-from api.interfaces.api_controllers.webhook.stripe import router as stripe_webhook_router
 from api.interfaces.api_controllers.invoice_endpoint import router as invoice_router
 from api.interfaces.api_controllers.checkout_endpoint import router as checkout_router
 from api.interfaces.api_controllers.notification_endpoint import router as notification_router
@@ -125,7 +124,6 @@ router.include_router(product_router)
 router.include_router(prices_router)
 router.include_router(billing_router)
 router.include_router(stripe_router)
-router.include_router(stripe_webhook_router)
 router.include_router(invoice_router)
 router.include_router(checkout_router)
 router.include_router(notification_router)
