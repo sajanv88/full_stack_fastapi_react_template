@@ -21,7 +21,7 @@ not_allowed_cache_paths = [
     "/api/v1/account/refresh_token",
     "/api/v1/app_configuration/",
     "/api/v1/security/passkeys",
-    "/api/v1/webhooks/stripe",
+    "/api/v1/configurations/stripe/webhooks",
 ]
 
 
