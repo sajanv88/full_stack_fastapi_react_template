@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, status
 
+from api.common.utils import get_logger
 from api.core.container import get_deps
 from api.core.exceptions import BrandingException
 from api.domain.dtos.branding_dto import UpdateBrandingDto
@@ -8,8 +9,10 @@ from api.infrastructure.security.current_user import CurrentUser
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.branding_service import BrandingService
 
+logger = get_logger(__name__)
 
-router = APIRouter(prefix="/brandings", tags=["Brandings"], dependencies=[Depends(check_permissions_for_current_role(required_permissions=[Permission.FULL_ACCESS]))])
+router = APIRouter(prefix="/brandings", dependencies=[Depends(check_permissions_for_current_role(required_permissions=[Permission.FULL_ACCESS]))])
+router.tags = ["Branding"]
 
 @router.post("/", status_code=status.HTTP_204_NO_CONTENT)
 async def update_branding(
@@ -17,6 +20,8 @@ async def update_branding(
     data: UpdateBrandingDto,
     branding_service: BrandingService = Depends(get_deps(BrandingService))
 ):
+
+    logger.debug(f"Update branding called with data: {data}")  
     branding = await branding_service.get_branding()
     if branding is None:
         data.tenant_id = current_user.tenant_id

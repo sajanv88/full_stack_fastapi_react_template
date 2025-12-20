@@ -26,6 +26,7 @@ class BrandingService:
         if await self.branding_repository.count() > 0:
             raise BrandingException("Branding already exists. Only one branding allowed.")
         
-        created_branding = await self.branding_repository.create(data.model_dump(exclude_unset=True, exclude_none=True))
+        branding_data = Branding(**data.model_dump(exclude_unset=True, exclude_none=True))
+        created_branding = await self.branding_repository.create(data=branding_data.model_dump())
         logger.debug(f"Created default branding: {created_branding}")
         return BrandingDto(**created_branding.model_dump())

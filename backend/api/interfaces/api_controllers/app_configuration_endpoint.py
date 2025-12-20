@@ -62,10 +62,7 @@ async def get_app_configuration(
     enabled_sso_provider_names = [str(sso.provider) for sso in enabled_sso_provider.items]
     
     branding = await branding_service.get_branding()
-    logger.debug(f"Fetched branding in app configuration: {branding}")
 
-    # Fetch available AI models from Ollama
-    # available_ai_models = OllamaModels().list_models()
     return AppConfigurationDto(
         is_multi_tenant_enabled=is_tenancy_enabled(),
         multi_tenancy_strategy=get_tenancy_strategy(),
@@ -74,7 +71,8 @@ async def get_app_configuration(
         user_preferences=user_pref_doc,
         current_tenant=current_tenant,
         environment = settings.fastapi_env,
-        enabled_sso_providers=enabled_sso_provider_names
+        enabled_sso_providers=enabled_sso_provider_names,
+        branding=branding
         
     )
 

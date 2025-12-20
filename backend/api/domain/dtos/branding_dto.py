@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from beanie import PydanticObjectId
 from pydantic import BaseModel, Field, field_serializer
@@ -7,7 +8,7 @@ from api.domain.entities.branding import ContactInfo, LogoType, ThemeConfig
 
 class BrandingDto(BaseModel):
     id: str
-    logo_type: LogoType
+    logo_type: Optional[LogoType] = None
     contact_info: Optional[ContactInfo] = None
     theme_config: ThemeConfig = Field(default_factory=ThemeConfig)
     tenant_id: str
@@ -15,10 +16,9 @@ class BrandingDto(BaseModel):
     updated_at: str
     app_name: str = "SaaS Org"
     favicon_url: Optional[str] = None
+    logo_url: Optional[str] = None
 
-    @field_serializer("id", "created_at", "updated_at", "tenant_id")
-    def serialize_id(self, id: PydanticObjectId) -> str:
-        return str(id)
+   
     
 
 class UpdateBrandingDto(BaseModel):
