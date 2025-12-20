@@ -26,3 +26,7 @@ class StripeSettingDto(BaseModel):
     default_currency: str
     mode: PaymentType
     trial_period_days: int
+
+
+class StripeSettingSecretDto(BaseModel):
+    stripe_webhook_secret: str
