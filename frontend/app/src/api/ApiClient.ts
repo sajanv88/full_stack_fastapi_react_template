@@ -9,7 +9,7 @@ import { AccountService } from './services/AccountService';
 import { AiService } from './services/AiService';
 import { AppConfigurationService } from './services/AppConfigurationService';
 import { AuditLogsService } from './services/AuditLogsService';
-import { BrandingsService } from './services/BrandingsService';
+import { BrandingService } from './services/BrandingService';
 import { DashboardService } from './services/DashboardService';
 import { FeaturesService } from './services/FeaturesService';
 import { HealthService } from './services/HealthService';
@@ -33,7 +33,7 @@ export class ApiClient {
   public readonly ai: AiService;
   public readonly appConfiguration: AppConfigurationService;
   public readonly auditLogs: AuditLogsService;
-  public readonly brandings: BrandingsService;
+  public readonly branding: BrandingService;
   public readonly dashboard: DashboardService;
   public readonly features: FeaturesService;
   public readonly health: HealthService;
@@ -68,7 +68,7 @@ export class ApiClient {
     this.ai = new AiService(this.request);
     this.appConfiguration = new AppConfigurationService(this.request);
     this.auditLogs = new AuditLogsService(this.request);
-    this.brandings = new BrandingsService(this.request);
+    this.branding = new BrandingService(this.request);
     this.dashboard = new DashboardService(this.request);
     this.features = new FeaturesService(this.request);
     this.health = new HealthService(this.request);

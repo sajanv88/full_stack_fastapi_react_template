@@ -12,7 +12,10 @@ import {
     IconMapPin,
     IconLoader2,
     IconCheck,
-    IconIdBadge2
+    IconIdBadge2,
+    IconUpload,
+    IconPhoto,
+    IconX
 } from "@tabler/icons-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +31,7 @@ import {
 } from "@/components/ui/form";
 import { useState } from "react";
 import type { UpdateBrandingDto } from "@/api";
+import ColorField from "@/components/features/branding/color-fields";
 
 const contactInfoSchema = z.object({
     support_email: z.string().email('Invalid email').optional().or(z.literal('')),
@@ -55,7 +59,10 @@ const themeColorsSchema = z.object({
     card_foreground: z.string().optional(),
 });
 
-const brandingFormSchema = z.object({
+export const brandingFormSchema = z.object({
+    identity: z.object({
+        app_name: z.string().optional(),
+    }).optional(),
     contact_info: contactInfoSchema.optional(),
     theme_config: z.object({
         radius: z.string().optional(),
@@ -64,16 +71,22 @@ const brandingFormSchema = z.object({
     }).optional(),
 });
 
-type BrandingFormValues = z.infer<typeof brandingFormSchema>;
+export type BrandingFormValues = z.infer<typeof brandingFormSchema>;
 
 export default function BrandingConfiguration() {
-    const { branding, onUpdateBranding } = useBrandingContext();
+    const { branding, onUpdateBranding, onUploadLogo } = useBrandingContext();
     const [loading, setLoading] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | null>(branding?.logo_url || null);
+    const [uploadingLogo, setUploadingLogo] = useState(false);
 
     const form = useForm<BrandingFormValues>({
         resolver: zodResolver(brandingFormSchema),
         defaultValues: {
+            identity: {
+                app_name: branding?.app_name || '',
+            },
             contact_info: {
                 support_email: branding?.contact_info?.support_email || '',
                 phone: branding?.contact_info?.phone || '',
@@ -87,11 +100,12 @@ export default function BrandingConfiguration() {
         },
     });
 
-    const onSubmit = async (data: BrandingFormValues) => {
+    async function onSubmit(data: BrandingFormValues) {
         setLoading(true);
         setSaved(false);
         try {
             const updateData: UpdateBrandingDto = {
+                identity: data.identity || null,
                 contact_info: data.contact_info || null,
                 theme_config: data.theme_config || null,
             };
@@ -103,6 +117,39 @@ export default function BrandingConfiguration() {
         } finally {
             setLoading(false);
         }
+    };
+
+    function handleLogoChange(event: React.ChangeEvent<HTMLInputElement>) {
+        const file = event.target.files?.[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                return;
+            }
+            setLogoFile(file);
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    async function handleLogoUpload() {
+        await onUploadLogo(logoFile!);
+        setUploadingLogo(false);
+    }
+
+    function handleRemoveLogo() {
+        setLogoFile(null);
+        setLogoPreview(null);
     };
 
     return (
@@ -135,8 +182,113 @@ export default function BrandingConfiguration() {
                                 </TabsTrigger>
                             </TabsList>
                             <TabsContent value="identity" className="space-y-4 pt-5">
-                                <div className="space-y-4">
-                                    <h1>Upload logo</h1>
+                                <div className="space-y-6">
+                                    <FormField
+                                        control={form.control}
+                                        name="identity.app_name"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="flex items-center space-x-2">
+                                                    <IconIdBadge2 className="w-4 h-4" />
+                                                    <span>Application Name</span>
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="My Awesome App"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormDescription>
+                                                    Display name for your application
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <Separator />
+
+                                    <div className="space-y-4">
+                                        <div>
+                                            <FormLabel className="flex items-center space-x-2 mb-3">
+                                                <IconPhoto className="w-4 h-4" />
+                                                <span>Logo</span>
+                                            </FormLabel>
+                                            <FormDescription className="mb-4">
+                                                Upload your application logo (PNG or JPEG, max 5MB)
+                                            </FormDescription>
+                                        </div>
+
+                                        {logoPreview ? (
+                                            <div className="relative w-48 h-48 border-2 border-dashed rounded-lg p-4 flex items-center justify-center bg-muted/20">
+                                                <img
+                                                    src={logoPreview}
+                                                    alt="Logo preview"
+                                                    className="max-w-full max-h-full object-contain"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="icon"
+                                                    className="absolute -top-2 -right-2 h-8 w-8 rounded-full"
+                                                    onClick={handleRemoveLogo}
+                                                >
+                                                    <IconX className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <div className="w-48 h-48 border-2 border-dashed rounded-lg p-4 flex items-center justify-center bg-muted/20">
+                                                <div className="text-center">
+                                                    <IconPhoto className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                                                    <p className="text-sm text-muted-foreground">No logo uploaded</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                id="logo-upload"
+                                                type="file"
+                                                accept="image/png,image/jpeg"
+                                                onChange={handleLogoChange}
+                                                className="hidden"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => document.getElementById('logo-upload')?.click()}
+                                                disabled={uploadingLogo}
+                                            >
+                                                <IconUpload className="mr-2 h-4 w-4" />
+                                                Select Logo
+                                            </Button>
+                                            {logoFile && (
+                                                <Button
+                                                    type="button"
+                                                    onClick={handleLogoUpload}
+                                                    disabled={uploadingLogo}
+                                                >
+                                                    {uploadingLogo ? (
+                                                        <>
+                                                            <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                            Uploading...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <IconUpload className="mr-2 h-4 w-4" />
+                                                            Upload Logo
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        {logoFile && (
+                                            <p className="text-sm text-muted-foreground">
+                                                Selected: {logoFile.name} ({(logoFile.size / 1024).toFixed(2)} KB)
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </TabsContent>
                             {/* Contact Information Tab */}
@@ -382,43 +534,3 @@ export default function BrandingConfiguration() {
     );
 }
 
-// Helper component for color fields
-function ColorField({
-    control,
-    name,
-    label
-}: {
-    control: any;
-    name: any;
-    label: string;
-}) {
-    return (
-        <FormField
-            control={control}
-            name={name}
-            render={({ field }) => (
-                <FormItem>
-                    <FormLabel className="text-sm">{label}</FormLabel>
-                    <FormControl>
-                        <div className="flex items-center space-x-2">
-                            <Input
-                                placeholder="HSL value (e.g., 0 0% 100%)"
-                                {...field}
-                                className="flex-1"
-                            />
-                            {field.value && (
-                                <div
-                                    className="w-10 h-10 rounded border"
-                                    style={{
-                                        background: `hsl(${field.value})`
-                                    }}
-                                />
-                            )}
-                        </div>
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-            )}
-        />
-    );
-}

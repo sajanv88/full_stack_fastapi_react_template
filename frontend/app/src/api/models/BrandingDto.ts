@@ -6,7 +6,7 @@ import type { ContactInfo } from './ContactInfo';
 import type { ThemeConfig } from './ThemeConfig';
 export type BrandingDto = {
   id: string;
-  logo_type: 'image/jpeg' | 'image/png';
+  logo_type?: ('image/jpeg' | 'image/png' | null);
   contact_info?: (ContactInfo | null);
   theme_config?: ThemeConfig;
   tenant_id: string;
@@ -14,5 +14,6 @@ export type BrandingDto = {
   updated_at: string;
   app_name?: string;
   favicon_url?: (string | null);
+  logo_url?: (string | null);
 };
 

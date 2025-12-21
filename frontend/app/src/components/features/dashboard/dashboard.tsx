@@ -31,8 +31,6 @@ export function Dashboard() {
             } catch (error) {
                 if (error instanceof Error) {
                     console.error("Error fetching dashboard metrics:", error.cause);
-                    // window.location.reload();
-                    // await refreshCurrentUser();
                 }
             }
 

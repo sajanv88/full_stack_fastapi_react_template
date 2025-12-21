@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { useAppConfig } from '../providers/app-config-provider'
 
 interface LogoProps {
     className?: string
@@ -7,6 +8,7 @@ interface LogoProps {
 }
 
 export function Logo({ className, size = 'md', showText = true }: LogoProps) {
+    const { branding } = useAppConfig();
     const sizeClasses = {
         sm: 'h-8 w-8',
         md: 'h-12 w-12',
@@ -18,12 +20,33 @@ export function Logo({ className, size = 'md', showText = true }: LogoProps) {
         md: 'text-lg',
         lg: 'text-xl'
     }
-
+    if (branding?.logo_url) {
+        return (
+            <div className={cn('flex items-center gap-3', className)}>
+                <img
+                    src={branding.logo_url}
+                    alt={branding.app_name || 'Logo'}
+                    className={cn(
+                        'object-contain rounded-lg',
+                        sizeClasses[size]
+                    )}
+                />
+                {showText && branding.app_name && (
+                    <span className={cn(
+                        'font-bold text-foreground',
+                        textSizeClasses[size]
+                    )}>
+                        {branding.app_name}
+                    </span>
+                )}
+            </div>
+        )
+    }
     return (
         <div className={cn('flex items-center gap-3', className)}>
             {/* Modern geometric logo */}
             <div className={cn(
-                'relative flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-teal-500 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105',
+                'relative flex items-center justify-center rounded-xl bg-linear-to-br from-blue-500 via-purple-500 to-teal-500 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105',
                 sizeClasses[size]
             )}>
                 {/* Inner geometric shape */}
@@ -45,7 +68,7 @@ export function Logo({ className, size = 'md', showText = true }: LogoProps) {
             {showText && (
                 <div className="flex flex-col">
                     <span className={cn(
-                        'font-bold bg-gradient-to-r from-gray-900 via-purple-700 to-blue-600 bg-clip-text text-transparent dark:from-white dark:via-purple-300 dark:to-blue-300',
+                        'font-bold bg-linear-to-r from-gray-900 via-purple-700 to-blue-600 bg-clip-text text-transparent dark:from-white dark:via-purple-300 dark:to-blue-300',
                         textSizeClasses[size]
                     )}>
                         Full Stack

@@ -8,10 +8,12 @@ import { useAppConfig } from "@/components/providers/app-config-provider";
 interface BrandingProviderState {
     branding?: BrandingDto
     onUpdateBranding: (data: UpdateBrandingDto) => Promise<void>;
+    onUploadLogo: (file: Blob) => Promise<void>;
 }
 
 const initialState: BrandingProviderState = {
     onUpdateBranding: async () => { },
+    onUploadLogo: async () => { },
 }
 
 const BrandingContext = createContext<BrandingProviderState>(initialState);
@@ -28,7 +30,7 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
     async function onUpdateBranding(data: UpdateBrandingDto) {
         try {
             const apiClient = getApiClient(accessToken);
-            await apiClient.brandings.updateBrandingApiV1BrandingsPost({
+            await apiClient.branding.updateBrandingApiV1BrandingsPost({
                 requestBody: data
             });
             toast.success("Branding updated successfully", { richColors: true, position: "top-right" });
@@ -39,6 +41,25 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
         }
     }
 
+    async function onUploadLogo(file: Blob) {
+        try {
+
+            const apiClient = getApiClient(accessToken);
+
+            await apiClient.branding.uploadLogoApiV1BrandingsLogoPut({
+                formData: {
+                    file: file,
+                },
+            });
+            toast.success("Logo uploaded successfully", { richColors: true, position: "top-right" });
+            await reloadAppConfig();
+        } catch (error) {
+            console.error("Failed to upload logo", error);
+            toast.error("Failed to upload logo", { richColors: true, position: "top-right" });
+        }
+    }
+
+
     useEffect(() => {
         if (initialBranding) {
             setBranding(initialBranding);
@@ -47,7 +68,7 @@ export function BrandingProvider({ children }: BrandingProviderProps) {
 
 
     return (
-        <BrandingContext.Provider value={{ branding, onUpdateBranding }}>
+        <BrandingContext.Provider value={{ branding, onUpdateBranding, onUploadLogo }}>
             {children}
         </BrandingContext.Provider>
     )

@@ -20,8 +20,13 @@ class BrandingDto(BaseModel):
 
    
     
+class IdentityDto(BaseModel):
+    app_name: str = "SaaS Org"
 
 class UpdateBrandingDto(BaseModel):
+    identity: Optional[IdentityDto] = None
     contact_info: Optional[ContactInfo] = None
     theme_config: Optional[ThemeConfig] = None
     tenant_id: Optional[str] = None
+    logo_url: Optional[str] = None
+    logo_type: Optional[LogoType] = None

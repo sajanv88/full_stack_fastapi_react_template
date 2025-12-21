@@ -2,10 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_upload_logo_api_v1_brandings_logo_put } from '../models/Body_upload_logo_api_v1_brandings_logo_put';
 import type { UpdateBrandingDto } from '../models/UpdateBrandingDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
-export class BrandingsService {
+export class BrandingService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
   /**
    * Update Branding
@@ -47,6 +48,26 @@ export class BrandingsService {
       },
       body: requestBody,
       mediaType: 'application/json',
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Upload Logo
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public uploadLogoApiV1BrandingsLogoPut({
+    formData,
+  }: {
+    formData: Body_upload_logo_api_v1_brandings_logo_put,
+  }): CancelablePromise<any> {
+    return this.httpRequest.request({
+      method: 'PUT',
+      url: '/api/v1/brandings/logo',
+      formData: formData,
+      mediaType: 'multipart/form-data',
       errors: {
         422: `Validation Error`,
       },

@@ -39,4 +39,15 @@ export class StripeService {
       },
     });
   }
+  /**
+   * Stripe Webhook
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public stripeWebhookApiV1ConfigurationsStripeWebhooksPost(): CancelablePromise<any> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/api/v1/configurations/stripe/webhooks',
+    });
+  }
 }
