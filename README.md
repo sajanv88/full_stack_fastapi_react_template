@@ -14,6 +14,7 @@ This full-stack template provides enterprise-ready features out of the box:
 - **Password Management**: Secure password reset and update functionality
 - **Passkeys Management**: Passkeys and management
 - **Magic link**: Passwordless login via Magic link
+- **Configurable SSO**: Configure SSO
 
 ### 🏢 Tenant Management
 - **Multi-tenancy Support**: Isolated data and resources per tenant
@@ -536,6 +537,7 @@ pnpm build                   # Test production build
 4. Add tests for new features
 5. Update API client after backend changes
 
+If you like this project, please consider supporting me on, [Ko-fi!](https://ko-fi.com/sajanvtech) Your support helps cover maintenance and server costs. I truly appreciate it 🙏 
 ---
 
 This template provides a solid foundation for building modern, scalable full-stack applications with clear separation of concerns and comprehensive tooling.
