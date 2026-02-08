@@ -421,15 +421,15 @@ export default function BrandingConfiguration() {
                                             </div>
 
                                             {/* Sidebar Group */}
-                                            <div className="bg-muted/30 p-4 rounded-lg space-y-4">
-                                                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Sidebar</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
-                                                    <ColorField control={form.control} name={`theme_config.${mode}.sidebar`} label="Sidebar Bg" />
-                                                    <ColorField control={form.control} name={`theme_config.${mode}.sidebar_foreground`} label="Sidebar Text" />
-                                                    <ColorField control={form.control} name={`theme_config.${mode}.sidebar_primary`} label="Sidebar Primary" />
-                                                    <ColorField control={form.control} name={`theme_config.${mode}.sidebar_border`} label="Sidebar Border" />
-                                                </div>
+
+                                            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Sidebar</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
+                                                <ColorField control={form.control} name={`theme_config.${mode}.sidebar`} label="Sidebar Bg" />
+                                                <ColorField control={form.control} name={`theme_config.${mode}.sidebar_foreground`} label="Sidebar Text" />
+                                                <ColorField control={form.control} name={`theme_config.${mode}.sidebar_primary`} label="Sidebar Primary" />
+                                                <ColorField control={form.control} name={`theme_config.${mode}.sidebar_border`} label="Sidebar Border" />
                                             </div>
+
 
                                             {/* Charts Group */}
                                             <div className="space-y-2">
