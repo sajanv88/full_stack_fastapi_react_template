@@ -1,7 +1,7 @@
 from api.common.utils import get_logger
 from api.core.exceptions import BrandingException
 from api.domain.dtos.branding_dto import BrandingDto, UpdateBrandingDto
-from api.domain.entities.branding import Branding
+from api.domain.entities.branding import Branding, ThemeConfig
 from api.infrastructure.persistence.repositories.branding_repository_impl import BrandingRepository
 from api.usecases.file_service import FileService
 
@@ -12,6 +12,10 @@ class BrandingService:
         self.branding_repository = branding_repository
         self.file_service = file_service
     
+    async def default_theme_config(self) -> ThemeConfig:
+        config = await self.branding_repository.default_theme_config()
+        return config
+
     async def get_branding(self) -> BrandingDto | None:
         res = await self.branding_repository.get_branding()
         logger.debug(f"Fetched branding: {res}")
@@ -33,7 +37,8 @@ class BrandingService:
         if await self.branding_repository.count() > 0:
             raise BrandingException("Branding already exists. Only one branding allowed.")
         
-        branding_data = Branding(**data.model_dump(exclude_unset=True, exclude_none=True))
-        created_branding = await self.branding_repository.create(data=branding_data.model_dump())
+        branding_data = Branding(**data.model_dump(), app_name=data.identity.app_name)
+        
+        created_branding = await self.branding_repository.create_branding(data=branding_data)
         logger.debug(f"Created default branding: {created_branding}")
         return BrandingDto(**created_branding.model_dump())

@@ -121,8 +121,12 @@ class Branding(ApiBaseModel):
     theme_config: ThemeConfig = Field(default_factory=ThemeConfig)
     
     @field_serializer("id", "created_at", "updated_at", "tenant_id")
-    def serialize_id(self, value: PydanticObjectId | datetime) -> str:
-        return str(value)
+    def serialize_id(self, value: PydanticObjectId | datetime | None) -> str:
+        if isinstance(value, PydanticObjectId):
+            return str(value)
+        elif isinstance(value, datetime):
+            return value.isoformat()
+        return value
 
     class Settings:
         name = "branding_configuration"
