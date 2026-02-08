@@ -14,7 +14,7 @@ export type BillingRecordDto = {
   stripe_session_id?: (string | null);
   product_id?: (string | null);
   price_id?: (string | null);
-  status: 'pending' | 'requires_payment_method' | 'requires_action' | 'active' | 'succeeded' | 'payment_failed' | 'canceled' | 'incomplete';
+  status: 'paid' | 'pending' | 'requires_payment_method' | 'requires_action' | 'active' | 'succeeded' | 'payment_failed' | 'canceled' | 'incomplete';
   current_period_end?: (number | null);
   canceled_at?: (number | null);
   cancellation_reason?: (string | null);

@@ -83,6 +83,7 @@ class UserService:
         existing.gender = user_data.gender or existing.gender
         existing.role_id = PydanticObjectId(user_data.role_id) if user_data.role_id else existing.role_id
         doc = await existing.to_serializable_dict()
+        doc["image_url"] = user_data.image_url or existing.image_url
         logger.info(f"Updating user {user_id} with data: {doc}")
         return await self.user_repository.update(user_id=user_id, data=UpdateUserDto(**doc))
      

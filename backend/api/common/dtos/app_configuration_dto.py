@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel
 
+from api.domain.dtos.branding_dto import BrandingDto
 from api.domain.dtos.tenant_dto import TenantDto
 from api.domain.dtos.user_preference_dto import UserPreferenceDto
 
@@ -14,6 +15,7 @@ class AppConfigurationDto(BaseModel):
     current_tenant: TenantDto | None = None
     environment: str
     enabled_sso_providers: Optional[list[str]] = None
+    branding: Optional[BrandingDto] = None
 
 
     

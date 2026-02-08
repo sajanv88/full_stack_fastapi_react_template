@@ -33,6 +33,7 @@ from api.interfaces.api_controllers.checkout_endpoint import router as checkout_
 from api.interfaces.api_controllers.notification_endpoint import router as notification_router
 from api.interfaces.api_controllers.audit_logs_endpoint import router as audit_logs_router
 from api.interfaces.api_controllers.sso_settings_endpoint import router as sso_router
+from api.interfaces.api_controllers.branding_endpoint import router as branding_router
 
 from api.common.logging import configure_logging
 from api.core.config import settings
@@ -110,6 +111,9 @@ router.include_router(health_router)
 if is_tenancy_enabled():
     router.include_router(tenant_router)
     router.include_router(features_router)
+    router.include_router(branding_router)
+
+
 
 router.include_router(app_configuration_router)
 router.include_router(account_router)
@@ -130,6 +134,8 @@ router.include_router(checkout_router)
 router.include_router(notification_router)
 router.include_router(audit_logs_router)
 router.include_router(sso_router)
+
+
 app.include_router(router)
 
 

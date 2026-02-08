@@ -65,8 +65,7 @@ class UserRepository(BaseRepository[User], AuditLogRepository):
                     entity="User",
                     user_id=str(user_id),
                     changes={
-                        "new": data.model_dump(exclude_unset=True, exclude={"email"}, exclude_none=True),
-                        "old": UpdateUserDto(**await exising_user.to_serializable_dict()).model_dump(exclude_unset=True, exclude={"email"}, exclude_none=True)
+                        "info": f"User with id {user_id} updated.",
                     },
                     tenant_id=str(exising_user.tenant_id) if exising_user.tenant_id else None
                 ))

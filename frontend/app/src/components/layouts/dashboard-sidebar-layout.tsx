@@ -87,7 +87,7 @@ export function DashboardSidebar() {
         } finally {
             setTimeout(() => {
                 navigate("/login");
-            }, 2000); // Small delay to ensure toast is shown before navigation
+            }, 1000); // Small delay to ensure toast is shown before navigation
 
         }
     };

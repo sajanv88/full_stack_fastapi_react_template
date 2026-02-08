@@ -4,7 +4,7 @@
 /* eslint-disable */
 export type InvoiceDto = {
   id: string;
-  amount_country: string;
+  account_country: string;
   account_name: string;
   amount_due?: number;
   amount_paid?: number;
