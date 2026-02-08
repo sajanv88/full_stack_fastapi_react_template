@@ -35,15 +35,17 @@ import { AuditLogs } from "@/components/features/audit-logs/audit-logs";
 import { SettingsLayout } from "./components/features/settings/settings-layout";
 import { useAppConfig } from "./components/providers/app-config-provider";
 import { useEffect } from "react";
+import { updateThemeConfiguration } from "./lib/utils";
+import { useTheme } from "@/components/providers/theme-provider"
 
 function App() {
   const { user } = useAuthContext();
   const { branding } = useAppConfig();
-  useEffect(() => {
-    if (branding) {
+  const { theme } = useTheme()
 
-    }
-  }, [branding]);
+  useEffect(() => {
+    updateThemeConfiguration(branding);
+  }, [branding, theme]);
   return (
     <Routes>
       <Route element={<DefaultLayout />}>

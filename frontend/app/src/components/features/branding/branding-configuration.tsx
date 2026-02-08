@@ -57,6 +57,21 @@ const themeColorsSchema = z.object({
     ring: z.string().optional(),
     card: z.string().optional(),
     card_foreground: z.string().optional(),
+    popover: z.string().optional(),
+    popover_foreground: z.string().optional(),
+    chart_1: z.string().optional(),
+    chart_2: z.string().optional(),
+    chart_3: z.string().optional(),
+    chart_4: z.string().optional(),
+    chart_5: z.string().optional(),
+    sidebar: z.string().optional(),
+    sidebar_foreground: z.string().optional(),
+    sidebar_primary: z.string().optional(),
+    sidebar_primary_foreground: z.string().optional(),
+    sidebar_accent: z.string().optional(),
+    sidebar_accent_foreground: z.string().optional(),
+    sidebar_border: z.string().optional(),
+    sidebar_ring: z.string().optional(),
 });
 
 export const brandingFormSchema = z.object({
@@ -391,121 +406,43 @@ export default function BrandingConfiguration() {
 
                                     <Separator />
 
-                                    {/* Light Mode Colors */}
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-medium">Light Mode</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.light.background"
-                                                label="Background"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.light.foreground"
-                                                label="Foreground"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.light.primary"
-                                                label="Primary"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.light.primary_foreground"
-                                                label="Primary Foreground"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.light.secondary"
-                                                label="Secondary"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.light.secondary_foreground"
-                                                label="Secondary Foreground"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.light.accent"
-                                                label="Accent"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.light.accent_foreground"
-                                                label="Accent Foreground"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.light.border"
-                                                label="Border"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.light.ring"
-                                                label="Ring"
-                                            />
-                                        </div>
-                                    </div>
+                                    {['light', 'dark'].map((mode) => (
+                                        <div key={mode} className="space-y-4">
+                                            <h3 className="text-lg font-medium capitalize">{mode} Mode</h3>
 
-                                    <Separator />
+                                            {/* Core Colors */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
+                                                <ColorField control={form.control} name={`theme_config.${mode}.background`} label="Background" />
+                                                <ColorField control={form.control} name={`theme_config.${mode}.foreground`} label="Foreground" />
+                                                <ColorField control={form.control} name={`theme_config.${mode}.card`} label="Card" />
+                                                <ColorField control={form.control} name={`theme_config.${mode}.card_foreground`} label="Card Foreground" />
+                                                <ColorField control={form.control} name={`theme_config.${mode}.primary`} label="Primary" />
+                                                <ColorField control={form.control} name={`theme_config.${mode}.primary_foreground`} label="Primary Foreground" />
+                                            </div>
 
-                                    {/* Dark Mode Colors */}
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-medium">Dark Mode</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.dark.background"
-                                                label="Background"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.dark.foreground"
-                                                label="Foreground"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.dark.primary"
-                                                label="Primary"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.dark.primary_foreground"
-                                                label="Primary Foreground"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.dark.secondary"
-                                                label="Secondary"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.dark.secondary_foreground"
-                                                label="Secondary Foreground"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.dark.accent"
-                                                label="Accent"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.dark.accent_foreground"
-                                                label="Accent Foreground"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.dark.border"
-                                                label="Border"
-                                            />
-                                            <ColorField
-                                                control={form.control}
-                                                name="theme_config.dark.ring"
-                                                label="Ring"
-                                            />
+                                            {/* Sidebar Group */}
+                                            <div className="bg-muted/30 p-4 rounded-lg space-y-4">
+                                                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Sidebar</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
+                                                    <ColorField control={form.control} name={`theme_config.${mode}.sidebar`} label="Sidebar Bg" />
+                                                    <ColorField control={form.control} name={`theme_config.${mode}.sidebar_foreground`} label="Sidebar Text" />
+                                                    <ColorField control={form.control} name={`theme_config.${mode}.sidebar_primary`} label="Sidebar Primary" />
+                                                    <ColorField control={form.control} name={`theme_config.${mode}.sidebar_border`} label="Sidebar Border" />
+                                                </div>
+                                            </div>
+
+                                            {/* Charts Group */}
+                                            <div className="space-y-2">
+                                                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Charts</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2  gap-2">
+                                                    {[1, 2, 3, 4, 5].map((i) => (
+                                                        <ColorField key={i} control={form.control} name={`theme_config.${mode}.chart_${i}`} label={`Chart ${i}`} />
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    ))}
+
                                 </div>
                             </TabsContent>
                         </Tabs>

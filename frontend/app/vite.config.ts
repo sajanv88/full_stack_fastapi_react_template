@@ -16,7 +16,7 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://desktop.tail4fc230.ts.net:8086',
+        target: 'http://pop-os-desktop.tail4fc230.ts.net:8086',
       }
 
     },

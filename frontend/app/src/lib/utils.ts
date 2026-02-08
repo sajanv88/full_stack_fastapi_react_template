@@ -1,4 +1,4 @@
-import { ApiClient, type TenantDto } from "@/api"
+import { ApiClient, BrandingDto, type TenantDto } from "@/api"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -79,4 +79,19 @@ export function getApiClient(accessToken?: string) {
 export function extractErrorMessage(error: unknown): string {
   const err = JSON.stringify(error);
   return error instanceof Error ? JSON.parse(err).body.error : "Something went wrong.";
+}
+
+export function updateThemeConfiguration(branding: BrandingDto | undefined | null) {
+  if (!branding) return;
+  setTimeout(() => {
+    const root = document.documentElement;
+    const isDark = root.classList.contains("dark");
+    const theme = isDark ? branding.theme_config?.dark : branding.theme_config?.light;
+    if (!theme) return;
+    Object.entries(theme).forEach(([key, value]) => {
+      root.style.setProperty(`--${key}`, value);
+    });
+  }, 1)
+
+
 }
