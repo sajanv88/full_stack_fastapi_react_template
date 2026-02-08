@@ -1,10 +1,12 @@
 
+from datetime import datetime
 from fastapi import APIRouter, Depends, status
 
 from api.common.dtos.app_configuration_dto import AppConfigurationDto
 from api.common.utils import get_host_main_domain_name, get_logger, get_tenancy_strategy, is_tenancy_enabled
 from api.core.container import   get_deps, get_passkey_service, get_sso_settings_service,  get_tenant_service, get_user_preference_service
 from api.core.exceptions import  TenantNotFoundException
+from api.domain.dtos.branding_dto import BrandingDto
 from api.domain.dtos.tenant_dto import TenantDto
 from api.domain.entities.tenant import Tenant
 from api.infrastructure.security.current_user import  CurrentUserOptional
@@ -62,6 +64,22 @@ async def get_app_configuration(
     enabled_sso_provider_names = [str(sso.provider) for sso in enabled_sso_provider.items]
     
     branding = await branding_service.get_branding()
+    if not branding:
+        # If no branding is found, return a default branding configuration with default theme settings
+        branding_theme_default = await branding_service.default_theme_config()
+        branding = BrandingDto(
+            id="unknown",
+            tenant_id=tenant_id if tenant_id else "",
+            app_name=current_tenant.name if current_tenant else "",
+            logo_url=None,
+            logo_type=None,
+            contact_info=None,
+            favicon_url=None,
+            theme_config=branding_theme_default,
+            created_at=datetime.now().isoformat(),
+            updated_at=datetime.now().isoformat()
+        )
+
 
     return AppConfigurationDto(
         is_multi_tenant_enabled=is_tenancy_enabled(),
