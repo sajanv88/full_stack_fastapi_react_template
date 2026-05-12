@@ -153,7 +153,7 @@ requires-dist = [
     { name = "colorlog", specifier = ">=6.9.0" },
     { name = "faker", specifier = ">=40.15.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.116.2" },
-    { name = "fastapi-mail", specifier = ">=1.6.3" },
+    { name = "fastapi-mail", specifier = ">=1.6.4" },
     { name = "fastapi-sso", specifier = ">=0.18.0" },
     { name = "flower", specifier = ">=2.0.1" },
     { name = "httpx", specifier = ">=0.28.1" },
@@ -626,7 +626,7 @@ wheels = [
 
 [[package]]
 name = "fastapi-mail"
-version = "1.6.3"
+version = "1.6.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiosmtplib" },
@@ -637,14 +637,13 @@ dependencies = [
     { name = "jinja2" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "redis" },
     { name = "regex" },
     { name = "starlette" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/9b/ead0470eb0b093a628fe48f6e515993d6ed54cd0574bd12049a45cfcfd69/fastapi_mail-1.6.3.tar.gz", hash = "sha256:42c6847ae9f16110d341690774bbdc80c9fc723ca44205d87087537d6e7bcb2e", size = 14395, upload-time = "2026-05-01T11:27:14.134Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/c6/10352b42b09a9f57ff75f9cfa2812a523fdfdf5774b93d1243a370dfb360/fastapi_mail-1.6.4.tar.gz", hash = "sha256:be6b5ed3488804c3e877a723c4df673cec2d54574a1320e08ddeb36c36198605", size = 14394, upload-time = "2026-05-07T06:15:41.086Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/dd/f7/fa56c5260766cb847a3021f059cf8c3c17f6ff364cbf4a5ab6cd13c7e37f/fastapi_mail-1.6.3-py3-none-any.whl", hash = "sha256:ea36449904618ed2cc5a93cd93b70aa663eedc8f856fe59e96eaa13b290285bc", size = 16219, upload-time = "2026-05-01T11:27:15.322Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/f4/daa8f21238a72b42797a4a8f02b632d87f8ebc11a173f619f54ebf424af1/fastapi_mail-1.6.4-py3-none-any.whl", hash = "sha256:e2ad20c15a68538723d47a2b2df8625d861cc4e023868f8f1c7f0a5999d895cc", size = 16216, upload-time = "2026-05-07T06:15:42.38Z" },
 ]
 
 [[package]]
