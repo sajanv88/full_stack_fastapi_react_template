@@ -152,7 +152,7 @@ requires-dist = [
     { name = "celery", extras = ["redis"], specifier = ">=5.3.1" },
     { name = "colorlog", specifier = ">=6.9.0" },
     { name = "faker", specifier = ">=40.18.0" },
-    { name = "fastapi", extras = ["standard"], specifier = ">=0.116.2" },
+    { name = "fastapi", extras = ["standard"], specifier = ">=0.136.1" },
     { name = "fastapi-mail", specifier = ">=1.6.4" },
     { name = "fastapi-sso", specifier = ">=0.18.0" },
     { name = "flower", specifier = ">=2.0.1" },
