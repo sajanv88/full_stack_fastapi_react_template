@@ -173,7 +173,7 @@ requires-dist = [
     { name = "redis", specifier = ">=6.4.0" },
     { name = "starlette", specifier = ">=1.2.1" },
     { name = "streamlit", specifier = ">=1.58.0" },
-    { name = "stripe", specifier = ">=13.0.1" },
+    { name = "stripe", specifier = ">=15.2.1" },
     { name = "uvicorn", specifier = ">=0.48.0" },
     { name = "webauthn", specifier = ">=2.7.0" },
 ]
@@ -2198,15 +2198,15 @@ wheels = [
 
 [[package]]
 name = "stripe"
-version = "14.4.1"
+version = "15.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "requests" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/63/01/59d92650146c6340e333c22b8a238561b022e8641ba255298dfe46b4137d/stripe-14.4.1.tar.gz", hash = "sha256:e3eecfb336819326cd2ab9a93f98eb01b49c4d4d93c9d167a52a68ab99c19a88", size = 1473321, upload-time = "2026-03-06T22:59:45.822Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/04/a41c498352317d0c3d52dfb265f3c3c3e50f1468fcacef5b6794dd57c967/stripe-15.2.1.tar.gz", hash = "sha256:5821a802abf70be900d7b1b6bb609697cc25c9aa521eb86430e68b994dac9f78", size = 1520402, upload-time = "2026-06-12T22:44:12.519Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/35/0f/547eab75052384a72771b396a484556e5636629c031e5eafa8dc27af89ed/stripe-14.4.1-py3-none-any.whl", hash = "sha256:d6722b985dc3b4d6da01ff4fa95a975d3694a89bba96895bf17aa858073ff2b8", size = 2116642, upload-time = "2026-03-06T22:59:43.72Z" },
+    { url = "https://files.pythonhosted.org/packages/b4/be/b16d1222b8b47b5c1bf188523df679f28a9ff9662ad8276a02a56101463c/stripe-15.2.1-py3-none-any.whl", hash = "sha256:49571ffbfd7944daae4000e33d3b42705012ee7aae003b7b67868c1e59d442f5", size = 2168627, upload-time = "2026-06-12T22:44:10.458Z" },
 ]
 
 [[package]]
