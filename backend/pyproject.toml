@@ -34,5 +34,5 @@ dependencies = [
     "streamlit>=1.58.0",
     "stripe>=13.0.1",
     "uvicorn>=0.52.4",
-    "webauthn>=2.7.0",
+    "webauthn>=3.0.0",
 ]
