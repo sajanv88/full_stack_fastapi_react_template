@@ -154,7 +154,7 @@ requires-dist = [
     { name = "faker", specifier = ">=40.37.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.116.2" },
     { name = "fastapi-mail", specifier = ">=1.6.5" },
-    { name = "fastapi-sso", specifier = ">=0.21.1" },
+    { name = "fastapi-sso", specifier = ">=0.22.0" },
     { name = "flower", specifier = ">=2.1.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "langchain", specifier = ">=1.4.0" },
@@ -636,7 +636,7 @@ wheels = [
 
 [[package]]
 name = "fastapi-sso"
-version = "0.21.1"
+version = "0.22.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastapi" },
@@ -645,9 +645,9 @@ dependencies = [
     { name = "pydantic", extra = ["email"] },
     { name = "pyjwt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/41/38/1288b0248f91822bba254ce852466857cb51217b817c3d62bcc21cfd4d9e/fastapi_sso-0.21.1.tar.gz", hash = "sha256:c6f730b075caf537efa7c0f531095cf2d963a6fa27d059b3300e5eb19b282adb", size = 18031, upload-time = "2026-06-22T15:34:56.086Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/47/e6ecdd15874d7b9ac3202979396fedfd964e62d005d85eaf6dec2af1da95/fastapi_sso-0.22.0.tar.gz", hash = "sha256:94a71869097fba7c1d36a24939b9fe31cc59ba1c31d25ac661a35f6c810968ea", size = 19522, upload-time = "2026-08-31T10:15:29.925Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/25/72/f66eb9ccbb03a4566af471e12c88c5c6278c6d8185efc6891174c62b6272/fastapi_sso-0.21.1-py3-none-any.whl", hash = "sha256:d73216ffc29a18a6e7b47260f249d593537b777bec1026d0596d0ec374a042ff", size = 29221, upload-time = "2026-06-22T15:34:57.143Z" },
+    { url = "https://files.pythonhosted.org/packages/88/ef/1c6ca984b954c88750164a6e2fb511fb69a240b7ccc66be8a7601942973b/fastapi_sso-0.22.0-py3-none-any.whl", hash = "sha256:7b6bc60a510a117dfbd2a3d97871159738677dceb00fd3ad1bfc9c4751226924", size = 30085, upload-time = "2026-08-31T10:15:30.848Z" },
 ]
 
 [[package]]
