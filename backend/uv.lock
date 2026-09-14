@@ -163,7 +163,7 @@ requires-dist = [
     { name = "motor", specifier = ">=3.7.1" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "passlib", specifier = ">=1.7.4" },
-    { name = "punq", specifier = ">=0.8.0" },
+    { name = "punq", specifier = ">=0.9.0" },
     { name = "pydantic", specifier = ">=2.13.5" },
     { name = "pyjwt", specifier = ">=2.13.0" },
     { name = "pymongo", specifier = ">=4.18.0" },
@@ -1558,14 +1558,14 @@ wheels = [
 
 [[package]]
 name = "punq"
-version = "0.8.0"
+version = "0.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/03/31/be5732aaa2b7cf57225ff25bbd88e4b304890a1aa24f675658f026e12a43/punq-0.8.0.tar.gz", hash = "sha256:efc5308e5b027a466449389ea5b1e9fcfd5eb65495bcb766e3f725a9d6db9998", size = 18159, upload-time = "2026-07-03T17:56:58.105Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/38/15118e8542ada95a49f63648b90bdfdd1115bbc2ed8caf3f0582d509dcc9/punq-0.9.0.tar.gz", hash = "sha256:85aab7455fac47ce1b099fcb7ea2d8e9f562014672e9d7d46e4cc8e60e19685d", size = 17848, upload-time = "2026-09-08T06:21:08.138Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/92/b78a5a31180f5af151ea0b28ee6c0c7964fb79cfea394fbba6f028423c11/punq-0.8.0-py3-none-any.whl", hash = "sha256:1f34dee67f26bd5ea7f4dfeee11b22aa1a19c634421262a07f2b51a9dc8e2c41", size = 19431, upload-time = "2026-07-03T17:56:57.25Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/e3/f668dbcfd7f2fda95b850989640417e692a346bda688415801063dcf2504/punq-0.9.0-py3-none-any.whl", hash = "sha256:c8a3cc778776982cab170853c09a8712d98daae77bdd6516740c1360d41dc28c", size = 9644, upload-time = "2026-09-08T06:21:07.261Z" },
 ]
 
 [[package]]
