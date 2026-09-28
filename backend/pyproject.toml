@@ -7,7 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "azure-storage-blob>=12.30.3",
     "beanie>=2.2.0",
-    "boto3>=1.43.97",
+    "boto3>=1.43.103",
     "celery[redis]>=5.3.1",
     "colorlog>=6.12.0",
     "faker>=40.39.0",
