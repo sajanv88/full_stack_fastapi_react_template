@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "azure-storage-blob>=12.30.3",
+    "azure-storage-blob>=12.31.0",
     "beanie>=2.2.0",
     "boto3>=1.43.103",
     "celery[redis]>=5.3.1",
