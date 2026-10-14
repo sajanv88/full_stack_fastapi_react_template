@@ -171,7 +171,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2.3" },
     { name = "redis", specifier = ">=6.4.0" },
     { name = "starlette", specifier = ">=1.6.0" },
-    { name = "streamlit", specifier = ">=1.64.0" },
+    { name = "streamlit", specifier = ">=1.65.0" },
     { name = "stripe", specifier = ">=13.0.1" },
     { name = "uvicorn", specifier = ">=0.53.0" },
     { name = "webauthn", specifier = ">=2.7.0" },
@@ -2213,7 +2213,7 @@ wheels = [
 
 [[package]]
 name = "streamlit"
-version = "1.64.0"
+version = "1.65.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "altair" },
@@ -2237,9 +2237,9 @@ dependencies = [
     { name = "watchdog", marker = "sys_platform != 'darwin'" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ce/98/399d9b5bea64f0db9a37a800e420ba563dcde293e91d244c7d96acaeb313/streamlit-1.64.0.tar.gz", hash = "sha256:5c3f9a9dec13b5c5197a9c764ebf1a9d77f9e19c1b4af008779cb45c368961a3", size = 9535360, upload-time = "2026-09-15T19:13:53.576Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8f/61/75c550a2d2acd79402aa1f32c8068c6cf47fa621d3995883a43caafeeadc/streamlit-1.65.0.tar.gz", hash = "sha256:42acd9ebdf3576a35584977c48a044ec0b5d3e4997fa9248809b9891598ac6a0", size = 9749831, upload-time = "2026-10-02T21:40:36.584Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/8e/e635448a7fd6d92211d4ff2150356b8dffd3fcdc05c00511c61110078871/streamlit-1.64.0-py3-none-any.whl", hash = "sha256:4daf63aa9eaa5452d0edc64a5bdb0c4ad25580fe3c62c270455f3c43e9db5098", size = 10093987, upload-time = "2026-09-15T19:13:51.284Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/e3/5c9d2e88563c9974e53ac744b1523ebb1fd8f0ebb1ecc28a5f6f6bb0baea/streamlit-1.65.0-py3-none-any.whl", hash = "sha256:517a7254e223f4986d2b2e0745d02acf8ca64656943e63e422d345ce34a7495b", size = 10313469, upload-time = "2026-10-02T21:40:33.164Z" },
 ]
 
 [[package]]
