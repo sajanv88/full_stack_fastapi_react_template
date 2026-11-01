@@ -2,6 +2,14 @@ import pytest
 from httpx import AsyncClient
 from api.domain.dtos.user_dto import CreateUserResponseDto, UpdateUserDto, UserListDto, CreateUserDto, UserDto
 from api.common.enums.gender import Gender
+from api.domain.entities.role import Role
+from api.domain.enum.role import RoleType
+
+
+@pytest.fixture(autouse=True)
+async def guest_role():
+    """New users are assigned the Guest role, which is seeded together with the tenant."""
+    await Role(name=RoleType.GUEST, description=None).insert()
 
 
 async def create_user(client: AsyncClient) -> CreateUserResponseDto:
@@ -33,8 +41,8 @@ async def test_list_users_from_host(client: AsyncClient):
  
     assert data.users == []
     assert data.total == 0
-    assert data.hasNext == False
-    assert data.hasPrevious == False
+    assert data.has_next == False
+    assert data.has_previous == False
     assert data.skip == 0
     assert data.limit == 10
 
@@ -133,8 +141,8 @@ async def test_list_of_users_paginated_in_host(client: AsyncClient):
     data = UserListDto.model_validate(response.json())
     assert data.total == 3
     assert len(data.users) == 1
-    assert data.hasNext == True
-    assert data.hasPrevious == False
+    assert data.has_next == True
+    assert data.has_previous == False
     assert data.skip == 0
     assert data.limit == 1
 
@@ -143,8 +151,8 @@ async def test_list_of_users_paginated_in_host(client: AsyncClient):
     data = UserListDto.model_validate(response.json())
     assert data.total == 3
     assert len(data.users) == 1
-    assert data.hasNext == True
-    assert data.hasPrevious == True
+    assert data.has_next == True
+    assert data.has_previous == True
     assert data.skip == 1
     assert data.limit == 1
 
@@ -153,7 +161,7 @@ async def test_list_of_users_paginated_in_host(client: AsyncClient):
     data = UserListDto.model_validate(response.json())
     assert data.total == 3
     assert len(data.users) == 1
-    assert data.hasNext == False
-    assert data.hasPrevious == True
+    assert data.has_next == False
+    assert data.has_previous == True
     assert data.skip == 2
     assert data.limit == 1

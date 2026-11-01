@@ -1,6 +1,7 @@
 
 import boto3
 from fastapi import UploadFile
+from fastapi.concurrency import run_in_threadpool
 
 from api.core.exceptions import S3StorageException
 
@@ -17,7 +18,7 @@ class S3Storage:
 
     async def upload_file(self, file: UploadFile, destination: str) -> str:
         try:
-            self.s3_client.upload_fileobj(file.file, self.bucket_name, destination)
+            await run_in_threadpool(self.s3_client.upload_fileobj, file.file, self.bucket_name, destination)
             return destination
             # return f"https://{self.bucket_name}.s3.{self.s3_client.meta.region_name}.amazonaws.com/{destination}"
         except Exception as e:

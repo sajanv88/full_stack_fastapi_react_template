@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, status
 from api.common.dtos.download_dto import DownloadResponseDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.exceptions import InvalidOperationException
+from api.common.pagination import Limit, Skip
 from api.core.container import get_audit_logs_service
 from api.domain.dtos.audit_logs_dto import AuditActionType, AuditLogListDto, DownloadAuditRequestDto
 from api.domain.enum.permission import Permission
@@ -30,8 +31,8 @@ router.tags = ["Audit Logs"]
 @router.get("/", response_model=AuditLogListDto, status_code=status.HTTP_200_OK)
 async def list_audit_logs(
     current_user: CurrentUser,
-    limit: int = 10,
-    skip: int = 0,
+    limit: Limit = 10,
+    skip: Skip = 0,
     action: Optional[AuditActionType] = None,
     log_service: AuditLogsService = Depends(get_audit_logs_service)
 ):

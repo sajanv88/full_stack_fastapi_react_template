@@ -1,6 +1,6 @@
 from typing import Annotated
 from api.common.security import oauth2_scheme
-from api.core.exceptions import InvalidOperationException
+from api.core.exceptions import UserNotFoundException
 from api.common.exceptions import UnauthorizedException
 from api.common.utils import get_logger
 from api.domain.dtos.auth_dto import MeResponseDto
@@ -26,10 +26,12 @@ async def get_current_user(
     if payload is None:
         logger.error("Payload is None after decoding token.")
         raise UnauthorizedException("JWT token is invalid or has expired.")
-    user = await user_service.get_user_by_id(user_id=str(payload.sub))
-    if user is None:
+    try:
+        user = await user_service.get_user_by_id(user_id=str(payload.sub))
+    except UserNotFoundException:
+        # A deleted user, or a token used against another tenant.
         logger.error(f"User not found for ID: {payload.sub}")
-        raise InvalidOperationException("User associated with the token not found.")
+        raise UnauthorizedException("JWT token is invalid or has expired.")
 
     user_doc = await user.to_serializable_dict()
     user_dto = UserDto(**user_doc)

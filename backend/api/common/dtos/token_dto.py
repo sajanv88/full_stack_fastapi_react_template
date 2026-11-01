@@ -15,7 +15,6 @@ class TokenPayloadDto(BaseModel):
     activated_at: datetime | None = None
     tenant_id: PydanticObjectId | None = None
     role: RoleDto | None = None
-    tenant_id: PydanticObjectId | None = None
 
     @field_serializer('sub', 'tenant_id', "activated_at")
     def serialize_object_id(self, v: PydanticObjectId | datetime | None) -> str | None:
@@ -63,7 +62,7 @@ class ActivationTokenPayloadDto(BaseModel):
     user_id: str
     email: EmailStr
     tenant_id: str | None = None
-    type: Literal["activation", "password_reset_confirmation", "change_email_confirmation"] = "activation",
+    type: Literal["activation", "password_reset_confirmation", "change_email_confirmation"] = "activation"
     jwt_secret: str | None = None
 
 

@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, status
 
 from api.common.dtos.worker_dto import WorkerPayloadDto
-from api.common.exceptions import ApiBaseException, InvalidOperationException
+from api.common.exceptions import ApiBaseException, ForbiddenException, InvalidOperationException
+from api.common.pagination import Limit, Skip
 from api.common.utils import get_host_main_domain_name, get_logger
 from api.core.container import    get_billing_record_service, get_subscription_plan_service, get_tenant_service
 from api.core.exceptions import InvalidSubdomainException, TenantNotFoundException
+from api.domain.dtos.auth_dto import MeResponseDto
 from api.domain.dtos.subcription_plan_dto import SubscriptionPlanDto
 from api.domain.dtos.tenant_dto import CreateTenantResponseDto, FeatureDto, SubdomainAvailabilityDto, TenantDto, TenantListDto, CreateTenantDto, UpdateTenantDto, UpdateTenantResponseDto
 from api.domain.dtos.user_dto import CreateUserDto
@@ -23,9 +25,16 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/tenants", tags=["Tenants"])
 
+
+def ensure_tenant_access(current_user: MeResponseDto, tenant_id: str) -> None:
+    """Host users manage every tenant, a tenant user only ever manages their own."""
+    if current_user.tenant_id and str(current_user.tenant_id) != tenant_id:
+        raise ForbiddenException("You are not allowed to manage another tenant.")
+
+
 @router.get("/", response_model=TenantListDto, status_code=status.HTTP_200_OK)
 async def list_tenants(
-    skip: int = 0, limit: int = 10,
+    skip: Skip = 0, limit: Limit = 10,
     service: TenantService = Depends(get_tenant_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS]))    
 ):
@@ -137,8 +146,9 @@ async def update_tenant_dns_record(
     data: UpdateTenantDto,
     current_user: CurrentUser,
     tenant_service: TenantService = Depends(get_tenant_service),
-    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS, Permission.MANAGE_TENANT_SETTINGS]))
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS, Permission.MANAGE_TENANT_SETTINGS], any_permission=True))
 ):
+    ensure_tenant_access(current_user, tenant_id)
     tenant = await tenant_service.get_tenant_by_id(tenant_id)
     if tenant.custom_domain_status == "activation-progress":
         return UpdateTenantResponseDto(
@@ -159,7 +169,9 @@ async def update_tenant_dns_record(
         tenant_id=str(tenant.id)
     )
     tenant.custom_domain = data.custom_domain
-    tenant.is_active = data.is_active if data.is_active is not None else tenant.is_active
+    # Activating a tenant is a host decision, a tenant can't reactivate itself.
+    if data.is_active is not None and not current_user.tenant_id:
+        tenant.is_active = data.is_active
     tenant.custom_domain_status = "activation-progress" if data.custom_domain else None
     await tenant.save()
     handle_tenant_dns_update.delay(
@@ -174,8 +186,9 @@ async def check_dns_status(
     tenant_id: str,
     current_user: CurrentUser,
     tenant_service: TenantService = Depends(get_tenant_service),
-    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS, Permission.MANAGE_TENANT_SETTINGS]))
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS, Permission.MANAGE_TENANT_SETTINGS], any_permission=True))
 ):
+    ensure_tenant_access(current_user, tenant_id)
     tenant_doc = await tenant_service.get_tenant_by_id(tenant_id)
     payload=WorkerPayloadDto[dict[str, str]](
         label="update-tenant-dns",
@@ -248,11 +261,14 @@ async def update_tenant_feature(
 @router.patch("/{tenant_id}/activate_trial_plan", response_model=UpdateTenantResponseDto, status_code=status.HTTP_200_OK)
 async def activate_trial_plan(
     tenant_id: str,
+    current_user: CurrentUser,
     tenant_service: TenantService = Depends(get_tenant_service),
     subcription_plan_service: SubscriptionPlanService = Depends(get_subscription_plan_service),
     billing_record_service: BillingRecordService = Depends(get_billing_record_service),
-    _feature_check: bool = Depends(check_feature_access(feature_name=Feature.STRIPE))
+    _feature_check: bool = Depends(check_feature_access(feature_name=Feature.STRIPE)),
+    _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.HOST_MANAGE_TENANTS, Permission.MANAGE_BILLING], any_permission=True))
 ):
+    ensure_tenant_access(current_user, tenant_id)
     logger.debug(f"Activating trial plan for tenant ID: {tenant_id}")
     all_plans = await billing_record_service.list_plans('host')
     if len(all_plans.plans) == 0:

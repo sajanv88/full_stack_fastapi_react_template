@@ -1,6 +1,7 @@
 from typing import List
 from beanie import PydanticObjectId
 
+from api.common.exceptions import ConflictException
 from api.common.utils import get_logger, validate_password
 from api.core.exceptions import TenantNotFoundException
 from api.domain.dtos.tenant_dto import CreateTenantDto, FeatureDto, TenantListDto, UpdateTenantDto
@@ -49,8 +50,12 @@ class TenantService:
         return existing
 
     async def create_tenant(self, tenant_data: CreateTenantDto) -> PydanticObjectId | None:
-        """Create a new tenant. Raises InvalidOperationException if admin password is weak."""
+        """Create a new tenant. Raises InvalidOperationException if admin password is weak, ConflictException if the name or subdomain is taken."""
         validate_password(tenant_data.admin_password)
+        for field in ("name", "subdomain"):
+            value = getattr(tenant_data, field)
+            if await self.tenant_repository.single_or_none(**{field: value}) is not None:
+                raise ConflictException("Tenant", value)
         response = await self.tenant_repository.create(tenant_data)
         return response
 

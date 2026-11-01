@@ -1,5 +1,5 @@
-import { AppConfigurationDto, NotificationBannerSettingDto, TenantDto } from "@/api";
-import { getApiClient, setTenant } from "@/lib/utils";
+import { ApiError, AppConfigurationDto, NotificationBannerSettingDto, TenantDto } from "@/api";
+import { getApiClient, getTenant, setTenant } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useAuthContext } from "./auth-provider";
 
@@ -37,6 +37,24 @@ interface AppConfigProviderProps {
     children: React.ReactNode;
 }
 
+async function fetchConfiguration(accessToken: string) {
+    const request = () => Promise.all([
+        getApiClient(accessToken).appConfiguration.getAppConfigurationApiV1AppConfigurationGet(),
+        getApiClient(accessToken).notifications.getNotificationBannerApiV1NotificationsBannerGet()
+    ]);
+
+    try {
+        return await request();
+    } catch (error) {
+        // The remembered tenant was deleted. Forget it, which brings back the tenant selection.
+        if (error instanceof ApiError && error.status === 404 && getTenant()) {
+            setTenant(null);
+            return await request();
+        }
+        throw error;
+    }
+}
+
 export function AppConfigProvider({ children }: AppConfigProviderProps) {
     const { accessToken } = useAuthContext();
 
@@ -60,10 +78,7 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
     });
 
     const reloadAppConfig = useCallback(async function reloadAppConfig() {
-        const [config, notificationSetting] = await Promise.all([
-            getApiClient(accessToken).appConfiguration.getAppConfigurationApiV1AppConfigurationGet(),
-            getApiClient(accessToken).notifications.getNotificationBannerApiV1NotificationsBannerGet()
-        ]);
+        const [config, notificationSetting] = await fetchConfiguration(accessToken);
         setAppConfig(config)
         setNotificationBannerSetting(notificationSetting);
     }, [accessToken]);
@@ -73,10 +88,7 @@ export function AppConfigProvider({ children }: AppConfigProviderProps) {
 
     useEffect(() => {
         const fetchConfig = async () => {
-            const [config, notificationSetting] = await Promise.all([
-                getApiClient(accessToken).appConfiguration.getAppConfigurationApiV1AppConfigurationGet(),
-                getApiClient(accessToken).notifications.getNotificationBannerApiV1NotificationsBannerGet()
-            ]);
+            const [config, notificationSetting] = await fetchConfiguration(accessToken);
             setAppConfig(config)
             setNotificationBannerSetting(notificationSetting);
             if (config.is_multi_tenant_enabled === false) {

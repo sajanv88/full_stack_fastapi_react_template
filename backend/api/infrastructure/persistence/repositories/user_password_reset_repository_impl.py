@@ -1,3 +1,5 @@
+import secrets
+
 from api.common.audit_logs_repository import AuditLogRepository
 from api.common.base_repository import BaseRepository
 from api.domain.dtos.audit_logs_dto import AuditLogDto
@@ -12,9 +14,10 @@ class UserPasswordResetRepository(BaseRepository[UserPasswordReset], AuditLogRep
 
     async def set_password_reset(self, user_id: str, first_name: str, tenant_id: str | None = None) -> UserPasswordReset:
         existing = await self.single_or_none(user_id=PydanticObjectId(user_id))
-        token_secret = PydanticObjectId()
+        # This signs the reset token, so it has to be unguessable. ObjectIds are not.
+        token_secret = secrets.token_urlsafe(32)
         if existing:
-            existing.token_secret = str(token_secret)
+            existing.token_secret = token_secret
             existing.reset_secret_updated_at = get_utc_now()
             logger.info(f"Updating password reset for user {user_id}")
             ex = await existing.save()
@@ -28,7 +31,7 @@ class UserPasswordResetRepository(BaseRepository[UserPasswordReset], AuditLogRep
             return ex
         new_reset = UserPasswordReset(
             user_id = user_id,
-            token_secret = str(token_secret),
+            token_secret = token_secret,
             reset_secret_updated_at = get_utc_now(),
             tenant_id=tenant_id,
             first_name=first_name
@@ -64,6 +67,6 @@ class UserPasswordResetRepository(BaseRepository[UserPasswordReset], AuditLogRep
             entity="UserPasswordReset",
             user_id=user_id,
             changes={"Info": "Deleted password reset"},
-            tenant_id=existing.tenant_id if existing.tenant_id else None
+            tenant_id=str(existing.tenant_id) if existing.tenant_id else None
         ))
         return True

@@ -509,18 +509,28 @@ Configuration in `frontend/app/`:
 
 ### Backend Testing
 
+The tests need MongoDB and Redis, the ones from `dev.compose.yaml` are enough. They use a dedicated
+database (`api_test_db`) and Redis database (`15`), and never read your `.env`.
+
 ```bash
+docker compose -f dev.compose.yaml up -d mongodb redis
 cd backend
 uv run pytest                # Run all tests
 uv run pytest tests/interfaces/  # Run API tests
+```
+
+`backend/openapi.json` is the API contract that `frontend/app/src/api` is generated from, and a test
+fails when the API drifts from it. After an intended change, update it and regenerate the client:
+
+```bash
+UPDATE_OPENAPI=1 uv run pytest tests/interfaces/test_openapi_snapshot.py
 ```
 
 ### Frontend Testing
 
 ```bash
 cd frontend/app
-pnpm test                    # Run component tests
-pnpm build                   # Test production build
+pnpm build                   # Type check and build for production
 ```
 
 ## 📚 Additional Resources

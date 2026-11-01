@@ -2,6 +2,7 @@
 from typing import Any, List
 from beanie import PydanticObjectId
 from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 
 from api.common.dtos.new_session_dto import NewSessionResponseDto
@@ -23,7 +24,7 @@ router.tags = ["AI"]
 async def get_models(
     # current_user: CurrentUser
 ):
-    return OllamaModels().list_models()
+    return await run_in_threadpool(OllamaModels().list_models)
 
 @router.get("/history", response_model=List[AISessionByUserIdDto])
 async def get_history(

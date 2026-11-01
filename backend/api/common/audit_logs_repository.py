@@ -1,6 +1,8 @@
 from collections import deque
 import glob
 import json
+from pathlib import Path
+import tempfile
 from typing import List, Optional
 from api.common.utils import capture_audit_log, get_logger
 from api.domain.dtos.audit_logs_dto import AuditActionType, AuditLogDto, AuditLogListDto
@@ -10,9 +12,8 @@ logger = get_logger(__name__)
 class AuditLogRepository:
 
     async def _get_files_matching_pattern(self, tenant_id: str | None = None) -> List[str]:
-        file_path_pattern = "/tmp/audit_logs_forhost_*.jsonl"
-        if tenant_id:
-            file_path_pattern = f"/tmp/audit_logs_for{tenant_id}_*.jsonl"
+        file_prefix = f"audit_logs_for{tenant_id}" if tenant_id else "audit_logs_forhost"
+        file_path_pattern = str(Path(tempfile.gettempdir()) / f"{file_prefix}_*.jsonl")
 
         logger.info(f"Reading audit logs from files matching pattern: {file_path_pattern}")
 
@@ -36,7 +37,7 @@ class AuditLogRepository:
 
         for file_path in files:
             try:
-                with open(file_path, "r") as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     for line in f:
                         obj = json.loads(line)
                         if action and obj.get("action") != action:
@@ -70,7 +71,7 @@ class AuditLogRepository:
         results: List[AuditLogDto] = []
         for file_path in files:
             try:
-                with open(file_path, "r") as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     for line in f:
                         obj = json.loads(line)
                         if action and obj.get("action") != action:

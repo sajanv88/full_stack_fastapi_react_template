@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status
 from api.common.exceptions import InvalidOperationException
+from api.common.pagination import Limit, Skip
 from api.core.container import get_billing_record_service, get_tenant_service
 from api.domain.dtos.billing_dto import BillingRecordListDto
 from api.domain.dtos.checkout_dto import CheckoutRequestDto, CheckoutResponseDto
@@ -26,14 +27,16 @@ async def create_host_checkout_session(
     current_user: CurrentUser,
     billing_service: BillingRecordService = Depends(get_billing_record_service)
 ):
-    if current_user and current_user.tenant_id is not None:
-        if checkout_req.tenant_id != current_user.tenant_id:
-            logger.error(f"Tenant ID mismatch for the current user. And current user's tenant id is: {current_user.tenant_id} and requested tenant id is: {checkout_req.tenant_id}")
-            raise InvalidOperationException(f"Tenant ID mismatch for the current user. {checkout_req.tenant_id}")
-        
-        host_main_domain = f"https://{get_host_main_domain_name()}"
-        url = await billing_service.create_host_check_out_session_for_tenant(frontend_url=host_main_domain, checkout_req=checkout_req)
-        return CheckoutResponseDto(checkout_url=url)
+    if current_user.tenant_id is None:
+        raise InvalidOperationException("Tenant context is required to create a checkout session.")
+
+    if checkout_req.tenant_id != current_user.tenant_id:
+        logger.error(f"Tenant ID mismatch for the current user. And current user's tenant id is: {current_user.tenant_id} and requested tenant id is: {checkout_req.tenant_id}")
+        raise InvalidOperationException(f"Tenant ID mismatch for the current user. {checkout_req.tenant_id}")
+
+    host_main_domain = f"https://{get_host_main_domain_name()}"
+    url = await billing_service.create_host_check_out_session_for_tenant(frontend_url=host_main_domain, checkout_req=checkout_req)
+    return CheckoutResponseDto(checkout_url=url)
 
 
 @router.post("/tenant/subscription", response_model=CheckoutResponseDto)
@@ -116,7 +119,7 @@ async def tenant_checkout_canceled(
 
 @router.get("/all", response_model=BillingRecordListDto, status_code=status.HTTP_200_OK)
 async def list_checkout_records(
-    skip: int = 0, limit: int = 100,
+    skip: Skip = 0, limit: Limit = 100,
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.MANAGE_BILLING])),
     billing_service: BillingRecordService = Depends(get_billing_record_service)
 ):

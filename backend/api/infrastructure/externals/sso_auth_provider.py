@@ -1,6 +1,6 @@
 from fastapi import Request
 from api.common.exceptions import InvalidOperationException
-from api.common.utils import get_logger, get_sso_redirect_uri
+from api.common.utils import get_app_base_url, get_logger, get_sso_redirect_uri
 from api.domain.entities.sso_settings import SSOProvider, SSOSettings
 import fastapi_sso
 from api.core.config import settings
@@ -14,18 +14,18 @@ class SSOAuthProvider:
     def __init__(self, sso_settings_service: SSOSettingsService, tenant_service: TenantService):
         self.sso_settings_service: SSOSettingsService = sso_settings_service
         self.tenant_service: TenantService = tenant_service
-        self.redirect_uri_to_app = None
-    
+
+    async def _get_app_domain(self, sso_provider: SSOSettings) -> str | None:
+        if not sso_provider.tenant_id:
+            return None
+        tenant = await self.tenant_service.get_tenant_by_id(tenant_id=sso_provider.tenant_id)
+        return tenant.custom_domain if tenant.custom_domain else tenant.subdomain
+
     async def _provider_instance(self, provider_name: SSOProvider, sso_provider: SSOSettings) -> fastapi_sso.SSOBase:
-        domain = None
-        if sso_provider.tenant_id:
-            tenant = await self.tenant_service.get_tenant_by_id(tenant_id=sso_provider.tenant_id)
-            domain = tenant.custom_domain if tenant.custom_domain else tenant.subdomain
+        domain = await self._get_app_domain(sso_provider)
 
         allow_insecure_http = settings.fastapi_env != "production"
         redirect_uri = get_sso_redirect_uri(provider_name, domain)
-
-        self.redirect_uri_to_app = domain
 
         sso: fastapi_sso.SSOBase = None
         match provider_name:
@@ -93,7 +93,7 @@ class SSOAuthProvider:
                     allow_insecure_http=allow_insecure_http,
                     scope=sso_provider.scopes
                 )
-            case "x", "twitter":
+            case "x" | "twitter":
                 sso = fastapi_sso.TwitterSSO(
                     client_id=sso_provider.client_id,
                     client_secret=sso_provider.client_secret,
@@ -137,11 +137,8 @@ class SSOAuthProvider:
         sso = await self._provider_instance(provider_name, sso_provider)
         user = await sso.verify_and_process(req)
         logger.info(f"SSO callback processed for provider: {provider_name}")
-        logger.debug(f"User information retrieved from SSO: {user}")
         return user
     
-    def get_redirect_uri_to_app(self) -> str:
-        logger.debug(f"Retrieving redirect URI to app: {self.redirect_uri_to_app}")
-        if not self.redirect_uri_to_app:
-            raise InvalidOperationException("Redirect URI to app is not set.")
-        return self.redirect_uri_to_app
+    async def get_redirect_uri_to_app(self, provider_name: SSOProvider) -> str:
+        sso_provider = await self._get_sso_settings(provider_name)
+        return get_app_base_url(await self._get_app_domain(sso_provider))

@@ -1,6 +1,6 @@
 from fastapi import Request
 from api.core.container import get_tenant_service
-from api.common.utils import get_logger
+from api.common.utils import get_logger, is_tenancy_enabled
 from api.core.exceptions import  FeatureNotEnabledException
 from api.domain.dtos.role_dto import RoleDto
 from api.domain.enum.feature import Feature as FeatureEnum
@@ -11,6 +11,10 @@ logger = get_logger(__name__)
 
 def check_feature_access(feature_name: FeatureEnum) -> callable:
     async def dependency(request: Request, currentUser: CurrentUser) -> bool:
+        # Features are switched per tenant, without tenancy there is nothing to switch them off.
+        if not is_tenancy_enabled():
+            return True
+
         role: RoleDto = currentUser.role
         if not currentUser.tenant_id:
             if Permission.HOST_MANAGE_TENANTS in role.permissions:
@@ -21,7 +25,7 @@ def check_feature_access(feature_name: FeatureEnum) -> callable:
             raise FeatureNotEnabledException(feature_name.value)
         
         tenant_service = get_tenant_service()
-        tenant = await tenant_service.get_tenant_by_id(tenant_id=request.state.tenant_id)
+        tenant = await tenant_service.get_tenant_by_id(tenant_id=currentUser.tenant_id)
 
         for f in tenant.features:
             if f.name == feature_name:

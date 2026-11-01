@@ -1,5 +1,4 @@
 from beanie import PydanticObjectId
-from git import List
 from api.common.audit_logs_repository import AuditLogRepository
 from api.common.base_repository import BaseRepository
 from api.common.exceptions import ConflictException

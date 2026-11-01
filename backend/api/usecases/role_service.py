@@ -1,3 +1,7 @@
+import re
+
+import re
+
 from beanie import PydanticObjectId
 from api.common.utils import get_logger
 from api.core.exceptions import RoleAlreadyExistsException, RoleNotFoundException
@@ -23,7 +27,7 @@ class RoleService:
         return existing
 
     async def search_role_by_name(self, name: str) -> list[Role]:
-        return await self.role_repository.search({"name": {"$regex": name, "$options": "i"}})
+        return await self.role_repository.search({"name": {"$regex": re.escape(name), "$options": "i"}})
 
     async def get_role_by_id(self, role_id: str) -> Role:
         existing = await self.role_repository.get(id=role_id)

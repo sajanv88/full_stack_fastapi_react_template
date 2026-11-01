@@ -20,6 +20,20 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/account/login", refreshUrl
 tenant_header = APIKeyHeader(name="x-tenant-id", auto_error=False)
 
 
+def extract_bearer_token(authorization: str | None) -> str | None:
+    """Read the token from an Authorization header value. Returns None if there is none."""
+    if not authorization:
+        return None
+    return authorization.replace("Bearer ", "", 1).strip() or None
+
+
+def extract_bearer_token(authorization: str | None) -> str | None:
+    """Read the token from an Authorization header value. Returns None if there is none."""
+    if not authorization:
+        return None
+    return authorization.replace("Bearer ", "", 1).strip() or None
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pbkdf2_sha256.verify(plain_password, hashed_password)
 

@@ -17,9 +17,10 @@ class BaseRepository(Generic[T]):
         return result
     
     async def get(self, id: str) -> Optional[T]:
-        result = await self.model.find_one({"_id": PydanticObjectId(id)})
-        logger.debug(f"Get result for id {id}: {result}")
-        return result
+        # An id that can't exist is simply not found, it should not surface as a server error.
+        if not PydanticObjectId.is_valid(id):
+            return None
+        return await self.model.find_one({"_id": PydanticObjectId(id)})
 
     async def list(self) -> List[T]:
         results = await self.model.find_all().to_list()

@@ -1,6 +1,6 @@
 
 from typing import Literal, Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
 from pymongo import ASCENDING, IndexModel
@@ -30,7 +30,7 @@ class Challenges(ApiBaseModel):
     email: EmailStr
     type: Literal["registration", "authentication"] = "registration"
     challenge: str
-    expires_at: datetime = get_utc_now()
+    expires_at: datetime = Field(default_factory=get_utc_now)
 
     class Settings:
         name = "user_passkey_challenges"

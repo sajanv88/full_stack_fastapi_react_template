@@ -1,15 +1,25 @@
 from datetime import datetime
 from typing import Optional
 from beanie import Document, PydanticObjectId
-from pydantic import field_serializer
+from pydantic import Field, field_serializer
+from pymongo.asynchronous.collection import AsyncCollection
 
+from api.common.tenant_context import get_active_database
 from api.common.utils import get_utc_now
 
 
 class ApiBaseModel(Document):
-    created_at: datetime = get_utc_now()
-    updated_at: datetime = get_utc_now()
+    created_at: datetime = Field(default_factory=get_utc_now)
+    updated_at: datetime = Field(default_factory=get_utc_now)
     tenant_id: Optional[PydanticObjectId] = None
+
+    @classmethod
+    def get_pymongo_collection(cls) -> AsyncCollection:
+        """Every Beanie operation resolves its collection here, which makes this the tenant routing point."""
+        database = get_active_database()
+        if database is None:
+            return super().get_pymongo_collection()
+        return database[cls.get_collection_name()]
 
     # Todo: Remove all the to_serializable_dict methods and use field_serializers instead
     # @field_serializer("created_at", "updated_at", "tenant_id")

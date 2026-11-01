@@ -1,7 +1,10 @@
 from typing import Annotated, Optional
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import  Depends, Request
+from fastapi import  Depends, Request, status
+from fastapi.responses import JSONResponse
 from beanie import PydanticObjectId
+from api.common.exceptions import error_body
+from api.common.tenant_context import reset_active_database
 from api.common.utils import get_host_main_domain_name, get_logger, is_subdomain
 from api.core.config import settings
 
@@ -14,6 +17,11 @@ logger = get_logger(__name__)
 
 class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        # Only the API touches tenant data, static files and the SPA shell don't need a tenant.
+        if not request.url.path.startswith("/api/"):
+            request.state.tenant_id = None
+            return await call_next(request)
+
         tenant_id: Optional[str] = None
         tenant_host = get_tenant_host(request)
         logger.debug(f"Tenant host found: {tenant_host}")
@@ -37,27 +45,37 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 
         
         if tenant_id is None:
-            tenant_id = request.headers.get("X-Tenant-ID") or request.query_params.get('tenant_id') or None
+            requested_tenant_id = request.headers.get("X-Tenant-ID") or request.query_params.get('tenant_id') or None
+            if requested_tenant_id is not None:
+                if not PydanticObjectId.is_valid(requested_tenant_id):
+                    return JSONResponse(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        content=error_body("Invalid tenant ID.", status.HTTP_400_BAD_REQUEST),
+                    )
+                # Never open a database for an unknown tenant, any caller can send this header.
+                try:
+                    await tenant_service.get_tenant_by_id(requested_tenant_id)
+                except TenantNotFoundException as e:
+                    return JSONResponse(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        content=error_body(e.message, status.HTTP_404_NOT_FOUND),
+                    )
+                tenant_id = requested_tenant_id
 
- 
         if tenant_id is not None:
             logger.debug(f"Tenant ID found: {tenant_id}")
             request.state.tenant_id = PydanticObjectId(tenant_id)
-            # Initialize the database for the tenant and initialize Beanie with tenant-specific models
-            await db.init_db(f"tenant_{tenant_id}", is_tenant=True)
-            logger.debug(f"Database initialized for tenant: tenant_{tenant_id}")
-            return await call_next(request)
-        
-        
-        # If no tenant ID is provided, ensure we are using the default database
-        if db.is_tenant_active():
-            # Reset to default DB if no tenant ID is provided
-            await db.init_db(settings.mongo_db_name, is_tenant=False)
-        request.state.tenant_id = None
-        logger.debug("No tenant ID provided, using default database.")
+            token = await db.use_database(f"tenant_{tenant_id}", is_tenant=True)
+        else:
+            logger.debug("No tenant ID provided, using default database.")
+            request.state.tenant_id = None
+            token = await db.use_database(settings.mongo_db_name, is_tenant=False)
 
-        return await call_next(request)
-        
+        try:
+            return await call_next(request)
+        finally:
+            reset_active_database(token)
+
 
 
 def get_tenant_host(request: Request) -> Optional[str]:

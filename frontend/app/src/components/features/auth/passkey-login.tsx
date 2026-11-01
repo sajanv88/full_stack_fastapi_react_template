@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { getApiClient } from "@/lib/utils";
-import { startRegistration, startAuthentication, WebAuthnError } from "@simplewebauthn/browser";
+import { startAuthentication, WebAuthnError } from "@simplewebauthn/browser";
 import { useNavigate } from "react-router";
 import { useAuthContext } from "@/components/providers/auth-provider";
 
@@ -63,27 +63,6 @@ export function PasskeyLogin() {
     }
 
 
-    async function registerFlow(email: string) {
-        const apiClient = getApiClient();
-
-        const regOpts = await apiClient
-            .account.passkeyRegisterOptionsApiV1AccountPasskeyRegisterOptionsPost({
-                requestBody: email
-            })
-        const regOptsRes = JSON.parse(regOpts)
-        const attResp = await startRegistration(regOptsRes);
-        await apiClient.account.passkeyRegisterApiV1AccountPasskeyRegisterPost({
-            requestBody: {
-                credential: attResp,
-                email: email
-            }
-        })
-        toast.success("Passkey registered successfully!", {
-            description: "You can now use your passkey for future logins.",
-            richColors: true
-        });
-
-    }
     const handleEmailSubmit = async (data: PasskeyEmailForm) => {
         setIsLoading(true);
         const apiClient = getApiClient();
@@ -95,9 +74,11 @@ export function PasskeyLogin() {
                 await loginFlow(data.email);
                 return;
             }
-            await registerFlow(data.email);
-            toast.success("Passkey registration successful!");
-            await loginFlow(data.email);
+            toast.info("No passkey found for this email", {
+                description: "Sign in another way first, then add a passkey from your profile under Manage Security.",
+                richColors: true,
+                position: "top-right"
+            });
 
         } catch (error) {
             if (error instanceof WebAuthnError) {

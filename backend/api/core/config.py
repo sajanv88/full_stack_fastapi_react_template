@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     jwt_secret: str
     access_token_expire_minutes: int = 15
-    refresh_token_expire_days: int = 7 * 24 * 60 * 60
+    refresh_token_expire_days: int = 7
 
     algorithm: str = "HS256"
     refresh_algorithm: str = "HS512"
@@ -41,6 +41,8 @@ class Settings(BaseSettings):
 
 
     fastapi_env: str = "development"  # Options: "development", "production"
+    log_level: str | None = None  # Defaults to DEBUG in development and INFO otherwise
+    log_level: str | None = None  # Defaults to DEBUG in development and INFO otherwise
 
     smtp_user: str
     smtp_password: str

@@ -58,7 +58,6 @@ class EmailMagicLinkService:
             bool: True if the token is valid, False otherwise.
         """
         record = await self.user_magic_link_repo.single_or_none(user_id=PydanticObjectId(user_id), token=token)
-        print("Record:", record)
         if record is None:
             return False
         

@@ -1,7 +1,10 @@
+import asyncio
+from contextvars import Token
 from typing import Sequence
 from pymongo import AsyncMongoClient
 from pymongo.asynchronous.database import AsyncDatabase
 from beanie import Document, UnionDoc, View, init_beanie
+from api.common.tenant_context import set_active_database
 from api.common.utils import get_logger
 from api.core.config import settings
 from api.domain.entities.ai import ChatHistoryAI, ChatSessionAI
@@ -44,16 +47,20 @@ class Database:
         self.client = AsyncMongoClient(uri)
         self.models = models
         logger.debug("Database initializing...")
-        self.is_tenant = False
-        
-    
+        self._prepared_tenant_databases: set[str] = set()
+        self._prepare_lock = asyncio.Lock()
+
+    def _tenant_models(self) -> list:
+        return [model for model in self.models if model != Tenant]
+
     async def init_db(self, db_name: str, is_tenant: bool | None) -> None:
+        """Bind Beanie to a database for the whole process. For startup and background tasks, use `use_database` for requests."""
         self.db: AsyncDatabase = self.client[db_name]
+        set_active_database(self.db)
         if self.models:
             if is_tenant:
-                self.is_tenant = True
-                tenant_models = [model for model in self.models if model != Tenant]
-                await init_beanie(self.db, document_models=tenant_models)
+                await init_beanie(self.db, document_models=self._tenant_models())
+                self._prepared_tenant_databases.add(db_name)
                 logger.debug("Database models are initialized for new tenant.")
             else:
                 await self.init_models()
@@ -61,6 +68,21 @@ class Database:
 
     async def init_models(self) -> None:
         await init_beanie(self.db, document_models=self.models)
+
+    async def use_database(self, db_name: str, is_tenant: bool) -> Token:
+        """
+        Route the current request to a database without touching process-wide state, so concurrent
+        requests of other tenants are unaffected. Pass the returned token to `reset_active_database`.
+        """
+        database: AsyncDatabase = self.client[db_name]
+        token = set_active_database(database)
+        if is_tenant and self.models and db_name not in self._prepared_tenant_databases:
+            async with self._prepare_lock:
+                if db_name not in self._prepared_tenant_databases:
+                    await init_beanie(database, document_models=self._tenant_models())
+                    self._prepared_tenant_databases.add(db_name)
+                    logger.debug(f"Prepared database: {db_name}")
+        return token
 
     async def get_database(self) -> AsyncDatabase:
         return self.db
@@ -72,9 +94,6 @@ class Database:
     async def drop(self) -> None:
         await self.client.drop_database(self.db)
         logger.warning("Database has been deleted")
-
-    def is_tenant_active(self) -> bool:
-        return self.is_tenant
 
 mongo_client = Database(
     uri=settings.mongo_uri,

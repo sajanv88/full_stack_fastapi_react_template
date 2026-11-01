@@ -45,7 +45,7 @@ class UserPasskeyChallengesRepository(BaseRepository[Challenges], AuditLogReposi
         """
             Returns current challenge for the given email if found otherwise, None
         """
-        return await self.single_or_none(email=email, type=type)
+        return await self.model.find({"email": email, "type": type}).sort("-_id").first_or_none()
     
 
     async def delete_challenge(self, email: str, type: Literal["registration", "authentication"]) -> bool:
@@ -63,7 +63,7 @@ class UserPasskeyChallengesRepository(BaseRepository[Challenges], AuditLogReposi
                 tenant_id=None
             ))
             return False
-        await existing.delete()
+        await self.model.find({"email": email, "type": type}).delete()
         await self.add_audit_log(AuditLogDto(
             action="delete",
             entity="UserPasskeyChallenges",

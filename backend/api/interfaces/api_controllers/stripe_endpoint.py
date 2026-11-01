@@ -33,6 +33,9 @@ router = APIRouter(
 )
 router.tags = ["Stripe"]
 
+# Stripe calls this one itself, it authenticates with a signature instead of a user session.
+webhook_router = APIRouter(prefix="/configurations", tags=["Stripe"])
+
 
 @router.post("/stripe", status_code=status.HTTP_201_CREATED)
 async def configure_stripe_setting(
@@ -68,7 +71,7 @@ SUPPORTED_EVENTS = {
 }
 
 
-@router.post("/stripe/webhooks", status_code=status.HTTP_200_OK)
+@webhook_router.post("/stripe/webhooks", status_code=status.HTTP_200_OK)
 async def stripe_webhook(
     request: Request,
     stripe_setting_service: StripeSettingService = Depends(get_stripe_setting_service),
@@ -77,16 +80,11 @@ async def stripe_webhook(
     event = None
     stripe_webhook_secret = None
     payload = await request.body()
-    stripe_settings = await stripe_setting_service.get_stripe_secret()
 
     # Check the request context for tenant or host. If tenant then get tenant webhook secret otherwise use host from env
-    if request.state.tenant_id:
+    if getattr(request.state, "tenant_id", None):
         # Tenant-scoped webhook
-        if not stripe_settings or not stripe_settings.stripe_webhook_secret:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Tenant webhook secret not configured",
-            )
+        stripe_settings = await stripe_setting_service.get_stripe_secret()
         stripe_webhook_secret = stripe_settings.stripe_webhook_secret
     else:
         # Host-scoped webhook
@@ -104,7 +102,7 @@ async def stripe_webhook(
         # Invalid payload
         logger.error("Invalid payload")
         raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError as e:
+    except stripe.SignatureVerificationError as e:
         logger.error(f"Webhook signature verification failed: {e}")
         raise HTTPException(status_code=400, detail="Invalid signature")
     except Exception as e:
@@ -119,11 +117,10 @@ async def stripe_webhook(
     # Handle relevant Stripe events
     # ------------------------------------------------------------------
 
+    # Anything but a 2xx makes Stripe retry, and eventually disable the endpoint.
     if event_type not in SUPPORTED_EVENTS:
-        logger.error(f"Unhandled event type: {event_type}")
-        return JSONResponse(
-            status_code=404, content={"message": "Unhandled event type"}
-        )
+        logger.info(f"Ignoring event type: {event_type}")
+        return JSONResponse(status_code=200, content={"status": "ignored"})
 
     await SUPPORTED_EVENTS.get(event_type, None)(data_object, billing_record_service)
 
@@ -134,7 +131,7 @@ async def handle_invoice_paid(
     invoice: dict[str, Any],
     billing_record_service: BillingRecordService,
 ) -> None:
-    tenant_id = invoice.get("metadata", {}).get("tenant_id")
+    tenant_id = (invoice.get("metadata") or {}).get("tenant_id")
 
     billing_record = await billing_record_service.from_stripe_invoice_paid(
         invoice=invoice, scope="tenant" if tenant_id else "host", tenant_id=tenant_id
@@ -146,12 +143,8 @@ async def handle_invoice_paid(
         )
         return
 
-    try:
-        await billing_record_service.create_billing_record(billing_record)
-        logger.info(
-            f"BillingRecord created for tenant {tenant_id} – invoice {invoice['id']}"
-        )
-    except Exception as e:
-        logger.exception(
-            f"Failed to save BillingRecord for invoice {invoice['id']}: {e}"
-        )
+    # A failure here is left to bubble up, so that Stripe retries the delivery.
+    await billing_record_service.create_billing_record(billing_record)
+    logger.info(
+        f"BillingRecord created for tenant {tenant_id} – invoice {invoice['id']}"
+    )

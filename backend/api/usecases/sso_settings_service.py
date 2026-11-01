@@ -1,5 +1,7 @@
 from typing import List
 from typing_extensions import get_args
+from api.common.exceptions import NotFoundException
+from api.common.exceptions import NotFoundException
 from api.common.utils import get_logger, get_sso_redirect_uri
 from api.domain.dtos.sso_settings_dto import CreateSSOSettingsDto, ReadSSOSettingsDto, SSOSettingsListDto, UpdateSSOSettingsDto
 from api.domain.entities.sso_settings import SSOProvider, SSOSettings
@@ -39,7 +41,6 @@ class SSOSettingsService:
     async def list(self) -> SSOSettingsListDto:
         ssos: List[SSOSettings] = await self.sso_settings_provider_repository.list_sso_settings()
         logger.info(f"Retrieved {len(ssos)} SSO settings from repository")
-        logger.debug(f"SSO Settings: {ssos}")
         items = [ReadSSOSettingsDto(**sso.model_dump(exclude={"client_secret": True})) for sso in ssos]
         return SSOSettingsListDto(items=items)
     
@@ -48,7 +49,7 @@ class SSOSettingsService:
         for sso in ssos:
             if sso.provider == provider_name:
                 return sso
-        raise ValueError(f"SSO provider '{provider_name}' not found or not enabled.")
+        raise NotFoundException("SSOProvider", provider_name)
     
     async def get_only_enabled_providers(self) -> SSOSettingsListDto:
         ssos: List[SSOSettings] = await self.sso_settings_provider_repository.list_sso_settings()

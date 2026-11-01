@@ -204,7 +204,7 @@ export default function Register() {
                                                         <Input
                                                             type="text"
                                                             placeholder="subdomain name"
-                                                            onInput={(e: React.ChangeEvent<HTMLInputElement>) => setSubdomain(e.target.value)}
+                                                            onInput={(e) => setSubdomain(e.currentTarget.value)}
                                                             disabled={isChecking || isLoading || subdomainExists !== ""}
                                                             {...field}
                                                         />

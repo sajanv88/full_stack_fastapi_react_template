@@ -1,6 +1,6 @@
 from typing import Any, Dict, Literal, Optional
-from pydantic import BaseModel
-from datetime import datetime
+from pydantic import BaseModel, Field
+from datetime import datetime, timezone
 
 AuditActionType = Literal["create", "update", "delete", "read", "login", "logout", "error", "download"]
 class AuditLogDto(BaseModel):
@@ -8,7 +8,7 @@ class AuditLogDto(BaseModel):
     action: AuditActionType
     changes: Dict[str, Any] = {}
     user_id: Optional[str] = None
-    timestamp: str = datetime.now().isoformat()
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     tenant_id: Optional[str] = None
 
 class AuditLogListDto(BaseModel):

@@ -1,3 +1,7 @@
+import secrets
+
+import secrets
+
 from beanie import PydanticObjectId
 from fastapi_mail import MessageType
 from fastapi_sso import OpenID
@@ -5,8 +9,8 @@ from pydantic import EmailStr
 from api.common.dtos.token_dto import ActivationTokenPayloadDto, RefreshTokenPayloadDto, TokenPayloadDto, TokenRefreshRequestDto, TokenSetDto
 from api.common.exceptions import ForbiddenException, InvalidOperationException, UnauthorizedException
 from api.common.security import verify_password
-from api.common.utils import get_logger, get_utc_now, is_tenancy_enabled, get_email_sharing_link
-from api.core.exceptions import TenantNotFoundException, UserNotFoundException
+from api.common.utils import get_logger, get_utc_now, is_tenancy_enabled, get_email_sharing_link, validate_password
+from api.core.exceptions import RoleNotFoundException, TenantNotFoundException, UserNotFoundException
 from api.domain.dtos.audit_logs_dto import AuditLogDto
 from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.role_dto import RoleDto
@@ -52,7 +56,6 @@ class AuthService:
         self.audit_log_service: AuditLogsService = audit_log_service
         self.sso_settings_service: SSOSettingsService = sso_settings_service
         logger.info("Initialized.")
-        print(self.email_service, "email service in auth service")
 
     async def _get_token_set(self, user: User) -> TokenSetDto:
         """
@@ -93,7 +96,6 @@ class AuthService:
 
     async def login_with_magic_link(self, user_id: str) -> TokenSetDto:
         try:
-  
             user = await self.user_service.get_user_by_id(user_id=user_id)
             await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
                 entity="User",
@@ -103,14 +105,13 @@ class AuthService:
                 tenant_id=str(user.tenant_id) if user.tenant_id else None
             ))
             return await self._get_token_set(user)
-        except UserNotFoundException or Exception:
+        except UserNotFoundException:
             logger.error(f"Login attempt failed for user_id: {user_id}")
             await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
                 entity="User",
                 action="error",
-                user_id=str(user.id),
-                tenant_id=str(user.tenant_id) if user.tenant_id else None,
-                changes={"Info": f"User with an email: {user.email} failed to log in."}
+                user_id=user_id,
+                changes={"Info": f"User with id: {user_id} failed to log in with magic link."}
             ))
             raise UnauthorizedException("Authentication failed. Please check your credentials.")
 
@@ -126,7 +127,7 @@ class AuthService:
                 changes={"Info": f"User attempted to log in with passkey."}
             ))
             return await self._get_token_set(user)
-        except UserNotFoundException or Exception:
+        except UserNotFoundException:
             logger.error(f"Login attempt failed for email: {email}")
             await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
                 entity="User",
@@ -138,9 +139,18 @@ class AuthService:
 
 
     async def login(self, req: LoginRequestDto) -> TokenSetDto:
-        user = await self.user_service.find_by_email(email=req.email)
+        authentication_failed = UnauthorizedException("Authentication failed. Please check your credentials.")
+        try:
+            user = await self.user_service.find_by_email(email=req.email)
+        except UserNotFoundException:
+            raise authentication_failed
+
+        # SSO accounts used to be created with this well known password, which must never log in.
+        if user.sso_provider_id and req.password == f"signed_up_via_sso_{user.sso_provider_id}":
+            raise authentication_failed
+
         if verify_password(req.password, user.password) is False:
-            raise UnauthorizedException("Authentication failed. Please check your credentials.")
+            raise authentication_failed
 
         return await self._get_token_set(user)
 
@@ -165,7 +175,7 @@ class AuthService:
                 email=email,
                 first_name=first_name or display_name or "N/A",
                 last_name=last_name or display_name or "N/A",
-                password=f"signed_up_via_sso_{provider_name}",
+                password=secrets.token_urlsafe(32),
                 gender="prefer_not_to_say",
                 role_id=role.id if role else None,
                 tenant_id=tenant_id if tenant_id else None,
@@ -180,6 +190,8 @@ class AuthService:
         return await self._get_token_set(user)
 
     async def new_user_creation(self, new_user: CreateUserDto, tenant_id: Optional[str] = None) -> None:
+            validate_password(new_user.password)
+            validate_password(new_user.password)
             new_user.tenant_id = tenant_id
             not_found = True
             try:
@@ -212,40 +224,42 @@ class AuthService:
             logger.info("New user registered in single-tenant mode.")
             return
 
-        tenant = None
-        
+        # The tenant middleware has resolved the tenant, so this is a new user joining it.
+        if new_user.tenant_id is not None:
+            validate_password(new_user.password)
+            await self.user_service.create_user(user_data=new_user)
+            return
 
-        if new_user.tenant_id is None or validate_subdomain(new_user.sub_domain) is not None:
-            try:
-                tenant = await self.tenant_service.find_by_subdomain(subdomain=new_user.sub_domain)
-                if tenant is not None:
-                    await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
-                        entity="Tenant",
-                        action="error",
-                        user_id="unknown",
-                        changes={"Info": f"Tenant with subdomain: {new_user.sub_domain} is already taken."},
-                        tenant_id=str(tenant.id)
-                    ))
-                    raise InvalidOperationException(f"Subdomain '{new_user.sub_domain}' is already taken.")
-            except InvalidOperationException as ioe:
-                logger.warning(f"Subdomain validation failed for '{new_user.sub_domain}': {ioe}")
-                # If it is coming here.. that means the request is valid and made by a legit tenant.. because the tenant middleware has already validated it.
-                await self.user_service.create_user(user_data=new_user)
-        
-            except TenantNotFoundException as tnfe:
-                logger.warning(f"Tenant not found for subdomain '{new_user.sub_domain}': {tnfe} - Proceeding to create new tenant.")
-                create_new_tenant = CreateTenantDto(
-                    name=new_user.sub_domain.split('.')[0],
-                    subdomain=new_user.sub_domain,
-                    admin_email=new_user.email,
-                    admin_password=new_user.password,
-                    first_name=new_user.first_name,
-                    last_name=new_user.last_name,
-                    gender=new_user.gender,
-                )
-                newly_created_tenant_id = await self.tenant_service.create_tenant(tenant_data=create_new_tenant)
-                logger.info(f"New tenant created with ID: {newly_created_tenant_id} for subdomain '{new_user.sub_domain}' and user creation will be procssed...")
-                cb(newly_created_tenant_id)
+        if not new_user.sub_domain:
+            raise InvalidOperationException("A subdomain is required to register a new tenant.")
+        validate_subdomain(new_user.sub_domain)
+
+        try:
+            tenant = await self.tenant_service.find_by_subdomain(subdomain=new_user.sub_domain)
+        except TenantNotFoundException as tnfe:
+            logger.warning(f"Tenant not found for subdomain '{new_user.sub_domain}': {tnfe} - Proceeding to create new tenant.")
+            create_new_tenant = CreateTenantDto(
+                name=new_user.sub_domain.split('.')[0],
+                subdomain=new_user.sub_domain,
+                admin_email=new_user.email,
+                admin_password=new_user.password,
+                first_name=new_user.first_name,
+                last_name=new_user.last_name,
+                gender=new_user.gender,
+            )
+            newly_created_tenant_id = await self.tenant_service.create_tenant(tenant_data=create_new_tenant)
+            logger.info(f"New tenant created with ID: {newly_created_tenant_id} for subdomain '{new_user.sub_domain}' and user creation will be procssed...")
+            cb(newly_created_tenant_id)
+            return
+
+        await self.audit_log_service.create_audit_log(audit_log=AuditLogDto(
+            entity="Tenant",
+            action="error",
+            user_id="unknown",
+            changes={"Info": f"Tenant with subdomain: {new_user.sub_domain} is already taken."},
+            tenant_id=str(tenant.id)
+        ))
+        raise InvalidOperationException(f"Subdomain '{new_user.sub_domain}' is already taken.")
 
 
 
@@ -270,9 +284,13 @@ class AuthService:
         if refresh_token_payload is None:
             raise UnauthorizedException("Invalid refresh token")
         
-        user = await self.user_service.get_user_by_id(user_id=str(refresh_token_payload.sub))
-        role = await self.role_service.get_role_by_id(role_id=user.role_id)
-        role_doc = await role.to_serializable_dict()    
+        try:
+            user = await self.user_service.get_user_by_id(user_id=str(refresh_token_payload.sub))
+            role = await self.role_service.get_role_by_id(role_id=user.role_id)
+        except (UserNotFoundException, RoleNotFoundException):
+            raise UnauthorizedException("Invalid refresh token")
+
+        role_doc = await role.to_serializable_dict()
         payload = TokenPayloadDto(
             sub=user.id,
             email=user.email,
@@ -317,6 +335,8 @@ class AuthService:
             Raises InvalidOperationException if the token is invalid or expired.
             On success, updates the user's password and clears the password reset data.
         """
+        validate_password(new_password)
+        validate_password(new_password)
         reset_data = await self.user_service.retrieve_password_reset_data_by_user_id(user_id=user_id)
         if reset_data is None:
             raise InvalidOperationException("Invalid or expired password reset token.")
@@ -345,12 +365,12 @@ class AuthService:
         if user.is_active:
             raise InvalidOperationException("User is already active.")
         activation_token = await self.jwt_token_service.encode_activation_token(payload=ActivationTokenPayloadDto(
-            user_id=str(payload.id),
+            user_id=str(user.id),
             email=payload.email,
             type="activation",
             tenant_id=payload.tenant_id
         ))
-        link = get_email_sharing_link(token=activation_token, user_id=payload.id, domain=domain, type="activation", tenant_id=payload.tenant_id)
+        link = get_email_sharing_link(token=activation_token, user_id=str(user.id), domain=domain, type="activation", tenant_id=payload.tenant_id)
         html = activation_template_html(user_first_name=payload.first_name, activation_link=link)
         await self.email_service.send_email(
             to=payload.email,
@@ -401,12 +421,12 @@ class AuthService:
             user_id=str(user.id),
             email=new_email,
             type="change_email_confirmation",
-            tenant_id=user.tenant_id
+            tenant_id=str(user.tenant_id) if user.tenant_id else None
         ))
         link = get_email_sharing_link(token=activation_token, user_id=str(user.id), domain=domain, type="change_email_confirmation", tenant_id=str(user.tenant_id))
         html = email_changes_confirmation_template_html(user_first_name=user.first_name, email_change_link=link)
         await self.email_service.send_email(
-            to=user.email,
+            to=new_email,
             subject="Confirm Your Email Change",
             body=html,
             type=MessageType.html
