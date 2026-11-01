@@ -1,3 +1,5 @@
+import asyncio
+import asyncio
 import logging
 import re
 import tempfile
@@ -40,7 +42,7 @@ def is_development_environment() -> bool:
     return get_app_environment() == "development"
 
 
-PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]")
+PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$")
 def validate_password(password: str) -> str:
     """Validate password strength. Raises InvalidOperationException if invalid."""
     if not PASSWORD_REGEX.match(password):
@@ -110,6 +112,16 @@ def create_temp_file(file_name: str) -> Path:
     return path
 
 
+def _append_line(file_path: Path, line: str) -> None:
+    with open(file_path, "a", encoding="utf-8") as f:
+        f.write(line)
+
+
+def _append_line(file_path: Path, line: str) -> None:
+    with open(file_path, "a", encoding="utf-8") as f:
+        f.write(line)
+
+
 async def capture_audit_log(
     log_data: AuditLogDto
 ) -> None:
@@ -118,14 +130,17 @@ async def capture_audit_log(
     
     file_path = create_temp_file(file_name)
 
-    with open(file_path, "a") as f:
-        f.write(log_data.model_dump_json() + "\n")
-    
+    await asyncio.to_thread(_append_line, file_path, log_data.model_dump_json() + "\n")
 
-def get_sso_redirect_uri(provider_name: str, domain: Optional[str] = None) -> str:
+
+def get_app_base_url(domain: Optional[str] = None) -> str:
     local_domain = domain if domain else get_host_main_domain_name()
     if settings.fastapi_env == "production":
-        return f"https://{local_domain}/api/v1/account/sso/{provider_name}/callback"
-        
-    return f"http://{local_domain}:3000/api/v1/account/sso/{provider_name}/callback"
+        return f"https://{local_domain}"
+
+    return f"http://{local_domain}:3000"
+
+
+def get_sso_redirect_uri(provider_name: str, domain: Optional[str] = None) -> str:
+    return f"{get_app_base_url(domain)}/api/v1/account/sso/{provider_name}/callback"
     

@@ -195,29 +195,29 @@ class PasskeyService():
         
         rep = await self._get_rep_id_and_name(expected_challenge.tenant_id)
 
-        user_credentials = user_passkey.credentials
+        used_credential_id = decode_base64url(credential.get("rawId") or credential.get("id") or "")
+        stored_credential = next(
+            (cred for cred in user_passkey.credentials if decode_base64url(cred.credential_id) == used_credential_id),
+            None
+        )
+        if stored_credential is None:
+            raise PassKeyException("This passkey is not registered for the user.")
+
         logger.info(f"Completing authentication for user {email} with RP ID {rep.rp_id}.")
         verified = verify_authentication_response(
             credential=credential,
             expected_challenge=decode_base64url(expected_challenge.challenge),
             expected_rp_id=rep.rp_id,
             expected_origin=f"https://{rep.rp_id}",
-            credential_public_key=[
-                base64.urlsafe_b64decode(cred.public_key) for cred in user_credentials
-            ][0],
-            credential_current_sign_count=[
-                cred.sigin_count for cred in user_credentials
-            ][0],
+            credential_public_key=base64.urlsafe_b64decode(stored_credential.public_key),
+            credential_current_sign_count=stored_credential.sigin_count,
             require_user_verification=True,
         )
 
         # Update sign-in count
-        for cred in user_credentials:
-            if  cred.credential_id == base64.urlsafe_b64encode(verified.credential_id).decode():
-                if verified.new_sign_count > cred.sigin_count:
-                    cred.sigin_count = verified.new_sign_count
-                cred.last_used_at = get_utc_now().isoformat()
-                break
+        if verified.new_sign_count > stored_credential.sigin_count:
+            stored_credential.sigin_count = verified.new_sign_count
+        stored_credential.last_used_at = get_utc_now().isoformat()
 
         await user_passkey.save()
         await self.challenges_repo.delete_challenge(email=email, type="authentication")

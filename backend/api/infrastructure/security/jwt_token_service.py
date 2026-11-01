@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Literal
 
 import jwt
+from pydantic import ValidationError
 from api.common.dtos.token_dto import AccessTokenDto, ActivationTokenPayloadDto, RefreshTokenDto, RefreshTokenDto, RefreshTokenPayloadDto, TokenPayloadDto, TokenSetDto, VerifyEmailTokenPayloadDto
 from api.common.utils import get_logger, get_utc_now
 from api.common.security import ACCESS_TOKEN_EXPIRE_MINUTES, ACTIVATION_TOKEN_EXPIRE_HOURS, ALGORITHM, JWT_SECRET, REFRESH_ALGORITHM, REFRESH_TOKEN_EXPIRE_DAYS, REFRESH_TOKEN_SECRET
@@ -22,7 +23,6 @@ class JwtTokenService:
             to_encode.update({"exp": expire})
 
             encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
-            logger.debug(f"Encoded JWT: {encoded_jwt}")
             return AccessTokenDto(access_token=encoded_jwt, token_type="bearer", expires_in=expire)
         except Exception as e:
             logger.error(f"Error generating access token: {str(e)}")
@@ -46,7 +46,6 @@ class JwtTokenService:
         """
             Generate access and refresh tokens.
         """
-        logger.debug(f"Generating tokens for payload: {payload}")
         access_token = await self.get_access_token(payload)
         refresh_token = await self.get_refresh_token(payload)
         return TokenSetDto(
@@ -66,13 +65,12 @@ class JwtTokenService:
                 return TokenPayloadDto(**payload)
             elif type == "refresh_token":
                 payload = jwt.decode(token, REFRESH_TOKEN_SECRET, algorithms=[REFRESH_ALGORITHM])
-                logger.debug(f"Decoded refresh token payload: {payload}")
                 return RefreshTokenPayloadDto(sub=payload.get("sub"), tenant_id=payload.get("tenant_id", None), type=payload.get("type"))
         except jwt.ExpiredSignatureError:
-            logger.error("Token has expired.")
+            logger.debug("Token has expired.")
             return None
-        except jwt.InvalidTokenError:
-            logger.error("Invalid token.")
+        except (jwt.InvalidTokenError, ValidationError):
+            logger.debug("Invalid token.")
             return None
 
     async def verify_activation_token(self, token: str) -> VerifyEmailTokenPayloadDto:
@@ -104,7 +102,6 @@ class JwtTokenService:
         """
         try:
             payload = jwt.decode(token, jwt_secret, algorithms=[ALGORITHM])
-            logger.debug(f"Decoded password reset token payload: {payload}")
             if payload.get("type") != "password_reset_confirmation":
                 logger.debug(f"Invalid token type: {payload.get('type')}")
                 raise InvalidOperationException("Invalid token type")
@@ -126,7 +123,6 @@ class JwtTokenService:
         """
         try:
             payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
-            logger.debug(f"Decoded change email token payload: {payload}")
             if payload.get("type") != "change_email_confirmation":
                 logger.debug(f"Invalid token type: {payload.get('type')}")
                 raise jwt.InvalidTokenError("Invalid token type")

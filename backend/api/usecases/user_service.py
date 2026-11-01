@@ -84,7 +84,7 @@ class UserService:
         existing.role_id = PydanticObjectId(user_data.role_id) if user_data.role_id else existing.role_id
         doc = await existing.to_serializable_dict()
         doc["image_url"] = user_data.image_url or existing.image_url
-        logger.info(f"Updating user {user_id} with data: {doc}")
+        logger.info(f"Updating user {user_id}")
         return await self.user_repository.update(user_id=user_id, data=UpdateUserDto(**doc))
      
 
@@ -112,7 +112,11 @@ class UserService:
         """Set password reset for user by ID. Returns None otherwise, Raises InvalidOperationException on failure."""
         try:
             user = await self.find_by_email(email=email)
-            return await self.user_password_reset_repository.set_password_reset(user_id=str(user.id), first_name=user.first_name, tenant_id=user.tenant_id)
+            return await self.user_password_reset_repository.set_password_reset(
+                user_id=str(user.id),
+                first_name=user.first_name,
+                tenant_id=str(user.tenant_id) if user.tenant_id else None
+            )
         except Exception as e:
             logger.error(f"Error setting password reset for user with an email: {email} wasn't successful: {e}")
             raise InvalidOperationException(message="Failed to set password reset.")

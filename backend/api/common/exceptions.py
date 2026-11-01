@@ -1,5 +1,10 @@
 # Keep generic exceptions here
 
+def error_body(message: str, status_code: int) -> dict:
+    """The JSON shape of every API error. `error` is the contract, `detail` mirrors FastAPI's default."""
+    return {"error": message, "code": status_code, "detail": message}
+
+
 class ApiBaseException(Exception):
     """Base exception for the app."""
     def __init__(self, message: str):
@@ -38,6 +43,18 @@ class ForbiddenException(ApiBaseException):
 class AuthenticationFailedException(ApiBaseException):
     """Authentication failed."""
     def __init__(self, message: str = "Authentication failed."):
+        super().__init__(message)
+
+
+class TooManyRequestsException(ApiBaseException):
+    """Too many requests."""
+    def __init__(self, message: str = "Too many requests. Please try again later."):
+        super().__init__(message)
+
+
+class TooManyRequestsException(ApiBaseException):
+    """Too many requests."""
+    def __init__(self, message: str = "Too many requests. Please try again later."):
         super().__init__(message)
 
 

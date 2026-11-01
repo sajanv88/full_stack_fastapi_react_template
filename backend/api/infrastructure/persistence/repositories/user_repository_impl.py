@@ -57,8 +57,11 @@ class UserRepository(BaseRepository[User], AuditLogRepository):
         try:
             exising_user = await self.get(id=user_id)
             if not exising_user:
-                raise NotFoundException("User not found")
-            updated_user = await super().update(id=user_id, data=data.model_dump(exclude_unset=True))
+                raise NotFoundException("User", user_id)
+            changes = data.model_dump(exclude_unset=True)
+            if changes.get("role_id"):
+                changes["role_id"] = PydanticObjectId(changes["role_id"])
+            updated_user = await super().update(id=user_id, data=changes)
             if updated_user:
                 await self.add_audit_log(AuditLogDto(
                     action="update",
@@ -85,7 +88,7 @@ class UserRepository(BaseRepository[User], AuditLogRepository):
         existing_user = await self.get(id=user_id)
         try:
             if not existing_user:
-                raise NotFoundException("User not found")
+                raise NotFoundException("User", user_id)
 
             result = await super().delete(id=user_id)
             if result:

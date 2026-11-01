@@ -1,7 +1,7 @@
 from beanie import PydanticObjectId
 from api.common.audit_logs_repository import AuditLogRepository
 from api.common.base_repository import BaseRepository
-from api.common.exceptions import ApiBaseException
+from api.common.exceptions import TooManyRequestsException
 from api.common.utils import get_logger
 from api.domain.dtos.audit_logs_dto import AuditLogDto
 from api.domain.entities.user_magic_link import UserMagicLink
@@ -31,7 +31,7 @@ class UserMagicLinkRepository(BaseRepository[UserMagicLink], AuditLogRepository)
                 changes={"Info": "Too many magic link requests"},
                 tenant_id=None
             ))
-            raise ApiBaseException("Too many magic link requests. Please try again later.")
+            raise TooManyRequestsException("Too many magic link requests. Please try again later.")
 
         new_link = UserMagicLink(
             user_id=user_id,

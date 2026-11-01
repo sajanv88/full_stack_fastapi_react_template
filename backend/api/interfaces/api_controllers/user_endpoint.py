@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, File, UploadFile, status
-from api.common.exceptions import InvalidOperationException
+from api.common.exceptions import ForbiddenException, InvalidOperationException
+from api.common.pagination import Limit, Skip
 from api.common.utils import get_logger
 from api.domain.dtos.user_dto import CreateUserDto, CreateUserResponseDto, UpdateUserDto, UserDto, UserListDto, UserProfileImageUpdateDto, UserRoleUpdateRequestDto
 from api.domain.enum.permission import Permission
+from api.domain.security.user_access_management import has_any_permission
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.file_service import FileService
 from api.usecases.user_service import UserService
@@ -16,10 +18,12 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
+MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB, the same limit the frontend applies
+
 
 @router.get("/", response_model=UserListDto)
 async def list_users(
-    skip: int = 0, limit: int = 10,
+    skip: Skip = 0, limit: Limit = 10,
     service: UserService = Depends(get_user_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.USER_VIEW_ONLY]))
 ):
@@ -47,7 +51,7 @@ async def get_user(
     user_id: str,
     service: UserService = Depends(get_user_service),
     _bool: bool = Depends(check_permissions_for_current_role(
-        required_permissions=[Permission.USER_SELF_READ_AND_WRITE_ONLY],
+        required_permissions=[Permission.USER_VIEW_ONLY],
         allow_self_access=True)
     )
 ):
@@ -60,6 +64,7 @@ async def get_user(
 async def update_user(
     user_id: str,
     data: UpdateUserDto,
+    current_user: CurrentUser,
     service: UserService = Depends(get_user_service),
     _bool: bool = Depends(check_permissions_for_current_role(
         required_permissions=[Permission.USER_READ_AND_WRITE_ONLY, Permission.USER_SELF_READ_AND_WRITE_ONLY],
@@ -67,6 +72,12 @@ async def update_user(
     )
 
 ):
+    existing_user = await service.get_user_by_id(user_id)
+    # A role change is a privilege change, editing a profile is not enough to make one.
+    if data.role_id and data.role_id != str(existing_user.role_id):
+        if not has_any_permission(current_user, [Permission.USER_ROLE_ASSIGN_OR_REMOVE_ONLY]):
+            raise ForbiddenException("You are not allowed to change the role of a user.")
+
     user_doc = await service.update_user(user_id=user_id, user_data=data)
     serialized_user = await user_doc.to_serializable_dict()
     return UserDto(**serialized_user)
@@ -107,6 +118,11 @@ async def update_profile_picture(
     file_service: FileService = Depends(get_file_service),
 ):
     await user_service.get_user_by_id(user_id)
+    if not (file.content_type or "").startswith("image/"):
+        raise InvalidOperationException("Please upload a valid image file.")
+    if file.size is not None and file.size > MAX_PROFILE_IMAGE_SIZE:
+        raise InvalidOperationException("Image size should be less than 5MB.")
+
     file_location = await file_service.upload_file(file)
     await user_service.update_user(user_id=user_id, user_data=UpdateUserDto(image_url=file_location))
     return UserProfileImageUpdateDto(image_url=file_location)
@@ -116,14 +132,18 @@ async def update_profile_picture(
 async def patch_user(
     user_id: str, role_update: UserRoleUpdateRequestDto,
     _: bool = Depends(check_permissions_for_current_role([Permission.USER_ROLE_ASSIGN_OR_REMOVE_ONLY])),
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
+    role_service: RoleService = Depends(get_role_service)
 
 ):
-    
+
     exsisting_user = await user_service.get_user_by_id(user_id)
     if str(exsisting_user.role_id) == role_update.role_id:
         raise InvalidOperationException("User already has this role assigned")
-    
+
+    # Assigning a role that doesn't exist would lock the user out of the application.
+    await role_service.get_role_by_id(role_update.role_id)
+
     user = await user_service.update_user(user_id=user_id, user_data=UpdateUserDto(role_id=role_update.role_id))
     user_doc = await user.to_serializable_dict()
     return UserDto(**user_doc)

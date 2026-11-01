@@ -1,6 +1,11 @@
 from logging.config import dictConfig
 
+from api.core.config import settings
+
+
 def configure_logging() -> None:
+    default_level = "DEBUG" if settings.fastapi_env == "development" else "INFO"
+    level = (settings.log_level or default_level).upper()
     dictConfig(
         {
             "version": 1,
@@ -29,7 +34,7 @@ def configure_logging() -> None:
             },
             "loggers": {
                 "uvicorn" : { "handlers": ["default"], "level": "INFO" },
-                "api": { "handlers": ["default"], "level": "DEBUG", "propagate": False },
+                "api": { "handlers": ["default"], "level": level, "propagate": False },
                 "databases": { "handlers": ["default"], "level": "WARNING" }
             }
         }

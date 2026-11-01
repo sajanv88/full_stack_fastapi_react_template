@@ -1,11 +1,11 @@
 import asyncio
 from io import BytesIO
-import os
 from typing import Dict
 from celery import Celery
 
 from api.common.dtos.worker_dto import WorkerPayloadDto
 from api.common.utils import get_host_main_domain_name, get_logger
+from api.core.config import settings
 from api.core.container import  get_audit_logs_service, get_dns_resolver, get_role_service, get_tenant_service, get_user_service, get_coolify_app_service
 from api.core.exceptions import CoolifyIntegrationException
 from api.domain.dtos.coolify_app_dto import UpdateDomainDto
@@ -21,11 +21,11 @@ from api.usecases.tenant_service import TenantService
 from api.usecases.user_service import UserService
 
 
-broker_url = os.getenv("CELERY_BROKER_URL")
-backend_url = os.getenv("CELERY_RESULT_BACKEND")
-mongo_uri = os.getenv("MONGO_URI")
-mongo_db_default = os.getenv("MONGO_DB_NAME")
-coolify_enabled = os.getenv("COOLIFY_ENABLED", "false").lower() == "true"
+broker_url = settings.celery_broker_url
+backend_url = settings.celery_result_backend
+mongo_uri = settings.mongo_uri
+mongo_db_default = settings.mongo_db_name
+coolify_enabled = settings.coolify_enabled
 logger = get_logger(__name__)
 
 celery_app = Celery(
@@ -65,7 +65,6 @@ async def _get_current_tenant_db(tenant_id: str) -> Database:
 
 async def _handle_post_tenant_creation_async(payload: str):
     worker_payload = WorkerPayloadDto[CreateUserDto].model_validate_json(payload)
-    logger.info(f"Admin user details: {worker_payload.data}")
     logger.info(f"Handling task with label: {worker_payload.label}")
     if worker_payload.label == "post-tenant-creation":
         db = await _get_current_tenant_db(tenant_id=worker_payload.tenant_id)

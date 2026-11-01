@@ -1,11 +1,14 @@
 from typing import Annotated, List
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, status
-from api.common.exceptions import InvalidOperationException
+from api.common.exceptions import ForbiddenException, InvalidOperationException
+from api.common.pagination import Limit, Skip
 from api.common.utils import get_logger
 from api.domain.dtos.role_dto import CreateRoleDto, CreateRoleResponseDto, RoleDto, RoleListDto, UpdateRoleDto
 from api.core.container import get_role_service, get_user_service
 from api.domain.enum.permission import Permission
+from api.domain.security.user_access_management import HOST_PERMISSIONS
+from api.infrastructure.security.current_user import CurrentUser
 from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.role_service import RoleService
 from api.usecases.user_service import UserService
@@ -18,7 +21,7 @@ router = APIRouter(prefix="/roles", tags=["Roles"])
 
 @router.get("/", response_model=RoleListDto)
 async def list_roles(
-    skip: int = 0, limit: int = 10,
+    skip: Skip = 0, limit: Limit = 10,
     service: RoleService = Depends(get_role_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.ROLE_VIEW_ONLY]))
 
@@ -60,9 +63,13 @@ async def get_role(
 async def update_role(
     role_id: str,
     data: UpdateRoleDto,
+    current_user: CurrentUser,
     service: RoleService = Depends(get_role_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.ROLE_READ_AND_WRITE_ONLY]))
 ):
+    if current_user.tenant_id and HOST_PERMISSIONS.intersection(data.permissions):
+        raise ForbiddenException("Host permissions can't be assigned to a tenant role.")
+
     role_doc = await service.update_role(role_id=role_id, role_data=data)
     serialized_role = await role_doc.to_serializable_dict()
     return RoleDto(**serialized_role)
@@ -75,7 +82,8 @@ async def delete_role(
     user_service: UserService = Depends(get_user_service),
     _bool: bool = Depends(check_permissions_for_current_role(required_permissions=[Permission.ROLE_DELETE_ONLY]))
 ):
-    users_role = await user_service.total_count(params={"role_id": role_id})
+    # Older documents store role_id as a string, so both representations have to be counted.
+    users_role = await user_service.total_count(params={"role_id": {"$in": [role_id, PydanticObjectId(role_id)]}})
     logger.debug(f"Number of users with role {role_id}: {users_role}")
     if users_role > 0:
         logger.warning(f"Cannot delete role {role_id} as it is assigned to users.")

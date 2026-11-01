@@ -8,7 +8,7 @@ from pydantic import EmailStr
 from api.common.dtos.passkey_rep_dto import HasPasskeysDto
 from api.common.dtos.token_dto import TokenRefreshRequestDto, TokenSetDto
 from api.common.dtos.worker_dto import WorkerPayloadDto
-from api.common.exceptions import ApiBaseException, ForbiddenException, InvalidOperationException
+from api.common.exceptions import ApiBaseException, ForbiddenException, InvalidOperationException, UnauthorizedException
 from api.common.utils import get_logger
 from api.core.container import get_auth_service, get_email_magic_link_service, get_passkey_service, get_role_service, get_sso_auth_provider, get_user_magic_link_repository
 from api.core.exceptions import PassKeyException, UserNotFoundException
@@ -17,13 +17,14 @@ from api.domain.dtos.login_dto import LoginRequestDto
 from api.domain.dtos.user_dto import CreateUserDto, UserActivationRequestDto, UserDto, UserResendActivationEmailRequestDto
 from api.domain.entities.sso_settings import SSOProvider
 from api.domain.enum.permission import Permission
+from api.domain.security.user_access_management import has_any_permission
 from api.infrastructure.externals.sso_auth_provider import SSOAuthProvider
 from api.infrastructure.messaging.celery_worker import handle_post_tenant_creation
 from api.infrastructure.persistence.repositories.user_magic_link_repository_impl import UserMagicLinkRepository
 from api.infrastructure.security.current_user import CurrentUser
 from api.infrastructure.security.passkey_service import PasskeyService
+from api.infrastructure.security.rate_limiter import enforce_rate_limit
 from api.interfaces.middlewares.tenant_middleware import FrontendHost, get_tenant_id
-from api.interfaces.security.role_checker import check_permissions_for_current_role
 from api.usecases.auth_service import AuthService
 from api.core.config import settings
 from api.common.dtos.cookies import Cookies
@@ -35,6 +36,18 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/account", tags=["Account"])
 
+
+def set_refresh_token_cookie(response: Response, refresh_token: str) -> None:
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=settings.fastapi_env == "production",
+        samesite="lax",
+        max_age=settings.refresh_token_expire_days * 24 * 60 * 60
+    )
+
+
 @router.post("/login", response_model=TokenSetDto, status_code=status.HTTP_200_OK)
 async def login(
     response: Response,
@@ -43,19 +56,13 @@ async def login(
     x_tenant_id: str | None = Depends(get_tenant_id)
 ):
     logger.info(f"Login attempt for user: {login_request.username} x_tenant_id: {x_tenant_id}")
+    await enforce_rate_limit("login", f"{x_tenant_id}:{login_request.username}", limit=10, window_seconds=60)
     token_set: TokenSetDto = await auth_service.login(LoginRequestDto(
         email=login_request.username,
         password=login_request.password
     ))
-    
-    response.set_cookie(
-        key="refresh_token",
-        value=token_set.refresh_token,
-        httponly=True,
-        secure=settings.fastapi_env == "production",
-        samesite="lax",
-        max_age=settings.refresh_token_expire_days
-    )
+
+    set_refresh_token_cookie(response, token_set.refresh_token)
     return token_set
 
 
@@ -66,19 +73,12 @@ async def refresh_token(
     auth_service: AuthService = Depends(get_auth_service)
 ):
     if cookies.refresh_token is None:
-        raise ForbiddenException("Refresh token missing!")
+        raise UnauthorizedException("Refresh token missing!")
     
     token = TokenRefreshRequestDto(refresh_token=cookies.refresh_token)
     
     token_set = await auth_service.refresh_token(token)
-    response.set_cookie(
-        key="refresh_token",
-        value=token_set.refresh_token,
-        httponly=True,
-        secure=settings.fastapi_env == "production",
-        samesite="lax",
-        max_age=settings.refresh_token_expire_days
-    )
+    set_refresh_token_cookie(response, token_set.refresh_token)
     return token_set
 
 @router.get("/logout", status_code=status.HTTP_200_OK)
@@ -101,9 +101,9 @@ async def register(
     logger.info(f"Register attempt for user: {data.email} x_tenant_id: {x_tenant_id}")
     role_guest = await role_service.find_by_name(name=RoleType.GUEST)
 
-    if x_tenant_id is not None:
-        data.tenant_id = x_tenant_id
-      
+    # The tenant comes from the request context, never from the request body.
+    data.tenant_id = x_tenant_id
+
     def process_user_creation(tenant_id: PydanticObjectId):
         logger.info(f"Processing user creation for tenant_id: {tenant_id}")
         data.tenant_id = tenant_id
@@ -132,14 +132,16 @@ async def read_users_me(
 async def password_reset_request(
     request: PasswordResetRequestDto,
     frontend_host: FrontendHost,
-    auth_service: AuthService = Depends(get_auth_service)
+    auth_service: AuthService = Depends(get_auth_service),
+    x_tenant_id: PydanticObjectId | None = Depends(get_tenant_id)
 ):
+    await enforce_rate_limit("password_reset", f"{x_tenant_id}:{request.email}", limit=5, window_seconds=15 * 60)
     try:
-        await auth_service.initate_password_reset(request.email)
+        await auth_service.initate_password_reset(request.email, frontend_host)
     except Exception as e:
         logger.error(f"Password reset request for email: {request.email} wasn't successful: {e}")
-    finally:
-        return PasswordResetResponseDto(message="If the email exists, a password reset link has been sent.")
+
+    return PasswordResetResponseDto(message="If the email exists, a password reset link has been sent.")
 
 
 @router.post("/password_reset_confirmation", response_model=PasswordResetResponseDto)
@@ -163,12 +165,15 @@ async def password_reset_confirm(
 @router.post("/resend_activation_email", status_code=status.HTTP_202_ACCEPTED)
 async def resend_activation_email(
     req: UserResendActivationEmailRequestDto,
+    current_user: CurrentUser,
     frontend_host: FrontendHost,
-    auth_service: AuthService = Depends(get_auth_service),
-    _bool: bool = Depends(check_permissions_for_current_role(
-        required_permissions=[Permission.USER_READ_AND_WRITE_ONLY, Permission.FULL_ACCESS]
-    ))
+    auth_service: AuthService = Depends(get_auth_service)
 ):
+    # New users are guests, they have to be able to request their own activation email.
+    is_own_account = req.email.lower() == current_user.email.lower()
+    if not is_own_account and not has_any_permission(current_user, [Permission.FULL_ACCESS]):
+        raise ForbiddenException("You are not allowed to perform this operation.")
+
     await auth_service.send_activation_email(req, frontend_host)
     return status.HTTP_202_ACCEPTED
 
@@ -191,14 +196,17 @@ async def change_email(
     auth_service: AuthService = Depends(get_auth_service)
 ):
     
+    # Always accepted, the response must not reveal whether the new email is already in use.
     try:
         await auth_service.change_email_request(
             current_email=current_user.email,
             new_email=request.new_email,
             domain=frontend_host
         )
-    finally:
-        return status.HTTP_202_ACCEPTED
+    except ApiBaseException as e:
+        logger.warning(f"Email change request for user {current_user.id} wasn't successful: {e}")
+
+    return status.HTTP_202_ACCEPTED
 
     
 @router.patch("/change_email_confirmation",  status_code=status.HTTP_200_OK, response_model=ChangeEmailResponseDto)
@@ -218,26 +226,32 @@ async def change_email_confirmation(
 
 
 
+def ensure_own_email(email: str, current_user: MeResponseDto) -> None:
+    """A passkey is a login credential, so only the signed in account owner may add one."""
+    if email.lower() != current_user.email.lower():
+        raise ForbiddenException("You can only register a passkey for your own account.")
+
+
 @router.post("/passkey/register_options", status_code=status.HTTP_200_OK)
 async def passkey_register_options(
+    current_user: CurrentUser,
     email: EmailStr = Body(...),
-    passkey_service: PasskeyService = Depends(get_passkey_service),
-    auth_service: AuthService = Depends(get_auth_service)
+    passkey_service: PasskeyService = Depends(get_passkey_service)
 ):
-    user_service = await auth_service.get_user_service()
-    user = await user_service.find_by_email(email=email)
-    user_dto = await user.to_serializable_dict()
-    result = await passkey_service.register_options(user_dto=UserDto(**user_dto))
-    
+    ensure_own_email(email, current_user)
+    result = await passkey_service.register_options(user_dto=current_user)
+
     return result
 
 
 @router.post("/passkey/register", status_code=status.HTTP_202_ACCEPTED)
 async def passkey_register(
+    current_user: CurrentUser,
     email: EmailStr = Body(...),
     credential: dict = Body(...),
     passkey_service: PasskeyService = Depends(get_passkey_service)
 ):
+    ensure_own_email(email, current_user)
     result = await passkey_service.complete_registration(email, credential)
     
     if result is False:
@@ -272,15 +286,8 @@ async def passkey_login(
             raise PassKeyException("Passkey authentication failed.")
         
         token_set: TokenSetDto = await auth_service.login_with_passkey(email=email)
-        
-        response.set_cookie(
-            key="refresh_token",
-            value=token_set.refresh_token,
-            httponly=True,
-            secure=settings.fastapi_env == "production",
-            samesite="lax",
-            max_age=settings.refresh_token_expire_days
-        )
+
+        set_refresh_token_cookie(response, token_set.refresh_token)
         return token_set
     except Exception as e:
         logger.error(f"Passkey login failed for email: {email} with error: {e}")
@@ -335,15 +342,8 @@ async def email_magic_link_validate(
         raise ForbiddenException("Invalid or expired magic link.")
     
     token_set: TokenSetDto = await auth_service.login_with_magic_link(user_id=user_id)
-    
-    response.set_cookie(
-        key="refresh_token",
-        value=token_set.refresh_token,
-        httponly=True,
-        secure=settings.fastapi_env == "production",
-        samesite="lax",
-        max_age=settings.refresh_token_expire_days
-    )
+
+    set_refresh_token_cookie(response, token_set.refresh_token)
     return token_set
 
 
@@ -365,17 +365,10 @@ async def sso_provider_callback(
 ):
     user = await sso_auth_provider.callback(provider_name, req)
     token_set = await auth_service.login_with_sso(provider_name=provider_name, user_info=user , tenant_id=tenant_id)
-    response = RedirectResponse(url=f"{sso_auth_provider.get_redirect_uri_to_app()}/dashboard", status_code=status.HTTP_308_PERMANENT_REDIRECT)
-    response.set_cookie(
-        key="refresh_token",
-        value=token_set.refresh_token,
-        httponly=True,
-        secure=settings.fastapi_env == "production",
-        samesite="lax",
-        max_age=settings.refresh_token_expire_days
-    )
-   
-    
+    app_url = await sso_auth_provider.get_redirect_uri_to_app(provider_name)
+    response = RedirectResponse(url=f"{app_url}/dashboard", status_code=status.HTTP_308_PERMANENT_REDIRECT)
+    set_refresh_token_cookie(response, token_set.refresh_token)
+
     return response
     
 
