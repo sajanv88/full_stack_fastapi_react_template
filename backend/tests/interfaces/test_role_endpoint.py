@@ -32,8 +32,8 @@ async def test_list_roles_from_host(client: AsyncClient):
  
     assert data.roles == []
     assert data.total == 0
-    assert data.hasNext == False
-    assert data.hasPrevious == False
+    assert data.has_next == False
+    assert data.has_previous == False
     assert data.skip == 0
     assert data.limit == 10
 
@@ -126,8 +126,8 @@ async def test_list_of_roles_paginated_in_host(client: AsyncClient):
     data = RoleListDto.model_validate(response.json())
     assert data.total == 3
     assert len(data.roles) == 1
-    assert data.hasNext == True
-    assert data.hasPrevious == False
+    assert data.has_next == True
+    assert data.has_previous == False
     assert data.skip == 0
     assert data.limit == 1
 
@@ -136,8 +136,8 @@ async def test_list_of_roles_paginated_in_host(client: AsyncClient):
     data = RoleListDto.model_validate(response.json())
     assert data.total == 3
     assert len(data.roles) == 1
-    assert data.hasNext == True
-    assert data.hasPrevious == True
+    assert data.has_next == True
+    assert data.has_previous == True
     assert data.skip == 1
     assert data.limit == 1
 
@@ -146,8 +146,8 @@ async def test_list_of_roles_paginated_in_host(client: AsyncClient):
     data = RoleListDto.model_validate(response.json())
     assert data.total == 3
     assert len(data.roles) == 1
-    assert data.hasNext == False
-    assert data.hasPrevious == True
+    assert data.has_next == False
+    assert data.has_previous == True
     assert data.skip == 2
     assert data.limit == 1
 

@@ -5,15 +5,14 @@ from api.common.enums.gender import Gender
 from api.core.exceptions import InvalidSubdomainException
 from api.domain.dtos.tenant_dto import CreateTenantDto, CreateTenantResponseDto, TenantDto, TenantListDto
 from api.domain.dtos.user_dto import CreateUserResponseDto
-from api.infrastructure.background.post_tenant_creation_task_service import PostTenantCreationTaskService
 
 # ------------------------
-# Fixture to mock PostTenantCreationTaskService._init_and_run
+# Fixture to mock the background tasks, which need a running Celery worker
 # ------------------------
 @pytest.fixture
 def mock_post_tenant_service():
-    with patch.object(PostTenantCreationTaskService, "_init_and_run", new_callable=AsyncMock) as mock_task:
-        yield mock_task
+    with patch("api.interfaces.api_controllers.tenant_endpoint.handle_post_tenant_creation") as creation_task,          patch("api.interfaces.api_controllers.tenant_endpoint.handle_post_tenant_deletion"):
+        yield creation_task.delay
     
 # ------------------------
 # Mock Database for tenant tests
@@ -37,7 +36,7 @@ async def create_tenant(client: AsyncClient, mock_post_tenant_service) -> Create
     )
     response = await client.post("/tenants/", json=new_tenant.model_dump())
     assert response.status_code == 201
-    mock_post_tenant_service.assert_awaited()
+    mock_post_tenant_service.assert_called()
 
     return CreateUserResponseDto.model_validate(response.json())
 
@@ -59,8 +58,8 @@ async def test_list_tenants_from_host(client: AsyncClient):
  
     assert data.tenants == []
     assert data.total == 0
-    assert data.hasNext == False
-    assert data.hasPrevious == False
+    assert data.has_next == False
+    assert data.has_previous == False
     assert data.skip == 0
     assert data.limit == 10
 
@@ -134,7 +133,7 @@ async def test_list_of_tenants_paginated_in_host(client: AsyncClient, mock_post_
             subdomain=f"test{i}.fsrapp.com",
         )
         response = await client.post("/tenants/", json=new_tenant.model_dump())
-        mock_post_tenant_service.assert_awaited()
+        mock_post_tenant_service.assert_called()
         assert response.status_code == 201
     # Create a single user and return the response
 
@@ -144,8 +143,8 @@ async def test_list_of_tenants_paginated_in_host(client: AsyncClient, mock_post_
     data = TenantListDto.model_validate(response.json())
     assert data.total == 3
     assert len(data.tenants) == 1
-    assert data.hasNext == True
-    assert data.hasPrevious == False
+    assert data.has_next == True
+    assert data.has_previous == False
     assert data.skip == 0
     assert data.limit == 1
 
@@ -154,8 +153,8 @@ async def test_list_of_tenants_paginated_in_host(client: AsyncClient, mock_post_
     data = TenantListDto.model_validate(response.json())
     assert data.total == 3
     assert len(data.tenants) == 1
-    assert data.hasNext == True
-    assert data.hasPrevious == True
+    assert data.has_next == True
+    assert data.has_previous == True
     assert data.skip == 1
     assert data.limit == 1
 
@@ -164,10 +163,34 @@ async def test_list_of_tenants_paginated_in_host(client: AsyncClient, mock_post_
     data = TenantListDto.model_validate(response.json())
     assert data.total == 3
     assert len(data.tenants) == 1
-    assert data.hasNext == False
-    assert data.hasPrevious == True
+    assert data.has_next == False
+    assert data.has_previous == True
     assert data.skip == 2
     assert data.limit == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name, subdomain", [
+    ("test", "other.fsrapp.com"),
+    ("other", "test.fsrapp.com"),
+])
+async def test_tenant_name_and_subdomain_are_unique(client: AsyncClient, mock_post_tenant_service, mock_db, name, subdomain):
+    """Regression: a tenant could be created twice, and requests then resolved to the first one."""
+    await create_tenant(client, mock_post_tenant_service)
+
+    duplicate = CreateTenantDto(
+        name=name,
+        admin_email="other@test.com",
+        admin_password="Test@123!",
+        first_name="Other",
+        last_name="Admin",
+        gender=Gender.MALE,
+        subdomain=subdomain,
+    )
+    response = await client.post("/tenants/", json=duplicate.model_dump())
+
+    assert response.status_code == 409
+    assert (await client.get("/tenants/")).json()["total"] == 1
 
 
 @pytest.mark.asyncio
