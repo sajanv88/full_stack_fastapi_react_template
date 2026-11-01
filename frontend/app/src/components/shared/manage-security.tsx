@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { getApiClient } from "@/lib/utils";
+import { extractErrorMessage, getApiClient } from "@/lib/utils";
 import { useAuthContext } from "../providers/auth-provider";
 import { useEffect, useState } from "react";
 import { RegisteredPasskeyCredentialsDto } from "@/api";
@@ -13,15 +13,19 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Trash } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
+import { startRegistration, WebAuthnError } from "@simplewebauthn/browser";
+import { toast } from "sonner";
 
 
 interface PassKeyManagementProps {
     accessToken: string;
+    email?: string;
     shouldRefresh?: boolean;
 }
-function PassKeyManagement({ accessToken, shouldRefresh }: PassKeyManagementProps) {
+function PassKeyManagement({ accessToken, email, shouldRefresh }: PassKeyManagementProps) {
     const [allPasskeys, setAllPasskeys] = useState<Array<RegisteredPasskeyCredentialsDto>>([]);
+    const [isAdding, setIsAdding] = useState(false);
     async function fetchPasskeys() {
         const apiClient = getApiClient(accessToken);
         const passkeys = await apiClient.manageSecurity.getRegisteredPasskeysApiV1SecurityPasskeysGet();
@@ -35,6 +39,34 @@ function PassKeyManagement({ accessToken, shouldRefresh }: PassKeyManagementProp
         });
         // Refresh the list
         fetchPasskeys();
+    }
+
+    async function onAddPasskey() {
+        if (!email) return;
+        setIsAdding(true);
+        try {
+            const account = getApiClient(accessToken).account;
+            const options = await account.passkeyRegisterOptionsApiV1AccountPasskeyRegisterOptionsPost({
+                requestBody: email
+            });
+            const credential = await startRegistration(JSON.parse(options));
+            await account.passkeyRegisterApiV1AccountPasskeyRegisterPost({
+                requestBody: { credential, email }
+            });
+            toast.success("Passkey registered successfully!", {
+                description: "You can now use your passkey for future logins.",
+                richColors: true
+            });
+            await fetchPasskeys();
+        } catch (error) {
+            toast.error("Could not add the passkey", {
+                description: error instanceof WebAuthnError ? error.message : extractErrorMessage(error),
+                richColors: true,
+                position: "top-right"
+            });
+        } finally {
+            setIsAdding(false);
+        }
     }
 
     useEffect(() => {
@@ -80,13 +112,19 @@ function PassKeyManagement({ accessToken, shouldRefresh }: PassKeyManagementProp
                         )}
                     </TableBody>
                 </Table>
+                <div className="mt-4 flex justify-end">
+                    <Button variant="outline" onClick={onAddPasskey} disabled={isAdding || !email}>
+                        <Plus />
+                        {isAdding ? "Adding..." : "Add a passkey"}
+                    </Button>
+                </div>
             </section>
         </DialogContent >
     )
 }
 
 export function ManageSecurity() {
-    const { accessToken } = useAuthContext();
+    const { accessToken, user } = useAuthContext();
     const [shouldRefresh, setShouldRefresh] = useState<boolean>(false);
 
     function onOpen(isOpen: boolean) {
@@ -103,7 +141,7 @@ export function ManageSecurity() {
             <DialogTrigger asChild>
                 <Button variant="outline">Manage Security</Button>
             </DialogTrigger>
-            <PassKeyManagement accessToken={accessToken!} shouldRefresh={shouldRefresh} />
+            <PassKeyManagement accessToken={accessToken!} email={user?.email} shouldRefresh={shouldRefresh} />
         </Dialog>
     )
 }

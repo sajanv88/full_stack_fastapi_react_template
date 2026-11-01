@@ -1,4 +1,4 @@
-import { ApiClient, BrandingDto, type TenantDto } from "@/api"
+import { ApiClient, ApiError, BrandingDto, type TenantDto } from "@/api"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -77,8 +77,10 @@ export function getApiClient(accessToken?: string) {
 
 
 export function extractErrorMessage(error: unknown): string {
-  const err = JSON.stringify(error);
-  return error instanceof Error ? JSON.parse(err).body.error : "Something went wrong.";
+  if (error instanceof ApiError) {
+    return error.body?.error ?? error.message;
+  }
+  return error instanceof Error ? error.message : "Something went wrong.";
 }
 
 export function updateThemeConfiguration(branding: BrandingDto | undefined | null) {
