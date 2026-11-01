@@ -8,7 +8,6 @@ from api.domain.dtos.ai_dto import AIModelInfoDto
 from api.usecases.local_ai_service import LocalAIService
 from api.core.config import settings
 import requests
-import asyncio
 
 logger = get_logger(__name__)
 
@@ -23,7 +22,7 @@ class OllamaModels:
         """
         models: List[AIModelInfoDto] = []
         try:
-            response = requests.get(f"{settings.ollama_host}/api/tags")
+            response = requests.get(f"{settings.ollama_host}/api/tags", timeout=5)
             if response.status_code != 200:
                 logger.error(f"Failed to fetch models from Ollama API: {response.status_code} - {response.text}")
                 raise Exception(f"Failed to fetch models from Ollama API: {response.status_code}")
@@ -77,12 +76,13 @@ class OllamaChat:
         logger.info(f"Using existing session: {self.current_session} for user: {self.username}")
         logger.debug(f"Current history before fetching from DB: {self.history}")
         stored_history = await history_service.get_histories_by_session_id(self.user_id, self.current_session)
-        logger.debug(f"Stored history fetched from DB: {stored_history}")
-        previous_histories = stored_history["histories"]
+        if not stored_history:
+            return
+        previous_histories = stored_history[0].histories
         logger.debug(f"Memory fetched from DB: {len(previous_histories)} items")
         for item in previous_histories:
-            self.history.append(HumanMessage(content=item["query"]))
-            self.history.append(AIMessage(content=item["response"]))
+            self.history.append(HumanMessage(content=item.query))
+            self.history.append(AIMessage(content=item.response))
     
 
     async def generate_response(self, question: str, background_tasks: BackgroundTasks):
@@ -94,10 +94,9 @@ class OllamaChat:
             output = ""
             recent_history = self.history[-self.MAX_HISTORY:]
 
-            for chunk in self.chain.stream({"question": question, "history": recent_history, "username": self.username}):
+            async for chunk in self.chain.astream({"question": question, "history": recent_history, "username": self.username}):
                 output += chunk.content
                 yield chunk.content
-                await asyncio.sleep(0.01)
 
             self.history.append(AIMessage(content=output))
             background_tasks.add_task(self.local_ai_service.save_user_query,

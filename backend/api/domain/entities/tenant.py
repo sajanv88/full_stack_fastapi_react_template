@@ -3,7 +3,7 @@ import re
 from typing import Annotated, List, Literal, Optional
 from urllib.parse import urlparse
 from beanie import Document, Indexed, PydanticObjectId
-from pydantic import AfterValidator, BaseModel, field_serializer
+from pydantic import AfterValidator, BaseModel, Field, field_serializer
 from api.common.utils import get_host_main_domain_name, get_utc_now
 from api.core.exceptions import InvalidCustomDomainException, InvalidSubdomainException
 from api.domain.enum.feature import Feature as FeatureEnum
@@ -87,8 +87,8 @@ class Feature(BaseModel):
 class Tenant(Document):
     name: str = Indexed(str, unique=True)
     subdomain: Subdomain | None = None
-    created_at: datetime = get_utc_now()
-    updated_at: datetime = get_utc_now()
+    created_at: datetime = Field(default_factory=get_utc_now)
+    updated_at: datetime = Field(default_factory=get_utc_now)
     is_active: bool = False
     custom_domain: Optional[CustomDomain] | None = None
     custom_domain_status: Literal["active", "failed", "activation-progress"] = "failed"

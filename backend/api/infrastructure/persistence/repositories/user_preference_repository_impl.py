@@ -34,17 +34,13 @@ class UserPreferenceRepository(BaseRepository[UserPreference], AuditLogRepositor
                 entity="UserPreference",
                 user_id=user_id,
                 changes={"new": preferences},
-                tenant_id=existing.tenant_id if existing and existing.tenant_id else None
+                tenant_id=str(existing.tenant_id) if existing and existing.tenant_id else None
             ))
             return
         prf = existing.preferences.copy()
         prf.update(preferences)
-        payload = UserPreference(
-            user_id=existing.user_id,
-            preferences=prf
-        )
-        logger.debug(f"Updating preferences for user {user_id}: {payload.preferences}")
-        await self.update(id=existing.id, data=payload.model_dump())
+        logger.debug(f"Updating preferences for user {user_id}: {prf}")
+        await self.update(id=existing.id, data={"preferences": prf})
         logger.debug(f"Updated preferences for user {user_id}")
         await self.add_audit_log(AuditLogDto(
             action="update",

@@ -49,7 +49,7 @@ class BillingRecordService:
             return None, None
 
         # New Stripe format
-        details = pricing["price_details"]
+        details = pricing.get("price_details") or {}
         return details.get("price"), details.get("product")
 
     def _extract_tenant_id(self, line: dict[str, Any], scope: str) -> Optional[str]:
@@ -226,18 +226,17 @@ class BillingRecordService:
             )
 
         billing_record = await self.billing_record_repository.single_or_none(
-            session_id=session_id
+            stripe_session_id=session_id
         )
         if billing_record is None:
             raise BillingRecordNotFoundException(session_id)
-        if billing_record.tenant_id != tenant_id:
+        if str(billing_record.tenant_id) != tenant_id:
             raise BillingRecordException(
                 f"Tenant ID mismatch for the billing record {session_id}"
             )
 
-        billing_record.status = "succeeded"
         await self.billing_record_repository.update(
-            billing_record.id, billing_record.model_dump()
+            billing_record.id, {"status": "succeeded"}
         )
 
     async def handle_host_checkout_canceled(self, tenant_id: str) -> None:
@@ -245,11 +244,10 @@ class BillingRecordService:
         Handle cancelled checkout for host scope
         """
         billing_records = await self.billing_record_repository.search(
-            {"tenant_id": tenant_id, "status": "pending"}
+            {"tenant_id": PydanticObjectId(tenant_id), "status": "pending"}
         )
         for record in billing_records:
-            record.status = "canceled"
-            await self.billing_record_repository.update(record.id, record.model_dump())
+            await self.billing_record_repository.update(record.id, {"status": "canceled"})
 
     async def handle_tenant_checkout_success(
         self, session_id: str, user_id: str
@@ -265,7 +263,7 @@ class BillingRecordService:
             )
 
         billing_record = await self.billing_record_repository.single_or_none(
-            session_id=session_id
+            stripe_session_id=session_id
         )
         if billing_record is None:
             raise BillingRecordNotFoundException(session_id)
@@ -274,21 +272,19 @@ class BillingRecordService:
                 f"User ID mismatch for the billing record {session_id}"
             )
 
-        billing_record.status = "succeeded"
         await self.billing_record_repository.update(
-            billing_record.id, billing_record.model_dump()
+            billing_record.id, {"status": "succeeded"}
         )
 
     async def handle_tenant_checkout_canceled(self, user_id: str) -> None:
         """
         Handle cancelled checkout for tenant scope
         """
-        billing_records = await self.billing_record_repository.list(
-            {"user_id": user_id, "status": "pending"}
+        billing_records = await self.billing_record_repository.search(
+            {"user_id": PydanticObjectId(user_id), "status": "pending"}
         )
         for record in billing_records:
-            record.status = "canceled"
-            await self.billing_record_repository.update(record.id, record.model_dump())
+            await self.billing_record_repository.update(record.id, {"status": "canceled"})
 
     async def list_checkout_records(
         self, skip: int = 0, limit: int = 100
@@ -338,18 +334,27 @@ class BillingRecordService:
             canceled_at=None,
             cancellation_reason=None,
             metadata={
-                "invoice_id": invoice["id"],
-                "stripe_event_id": invoice["id"],
-                "billing_reason": invoice.get("billing_reason"),
-                "hosted_invoice_url": invoice.get("hosted_invoice_url"),
-                "invoice_pdf": invoice.get("invoice_pdf"),
-                "period_start": str(period_start),
-                "period_end": str(period_end),
+                key: value
+                for key, value in {
+                    "invoice_id": invoice["id"],
+                    "stripe_event_id": invoice["id"],
+                    "billing_reason": invoice.get("billing_reason"),
+                    "hosted_invoice_url": invoice.get("hosted_invoice_url"),
+                    "invoice_pdf": invoice.get("invoice_pdf"),
+                    "period_start": str(period_start),
+                    "period_end": str(period_end),
+                }.items()
+                if value is not None
             },
         )
 
     async def create_billing_record(self, billing_record: BillingRecord) -> None:
         """
-        Create a billing record in the database
+        Create a billing record in the database. Stripe delivers webhooks at least once, so an
+        invoice that was already recorded is skipped.
         """
+        invoice_id = billing_record.metadata.get("invoice_id")
+        if invoice_id and await self.billing_record_repository.single_or_none(**{"metadata.invoice_id": invoice_id}):
+            logger.info(f"BillingRecord for invoice {invoice_id} already exists, skipping.")
+            return
         await self.billing_record_repository.create(billing_record.model_dump())

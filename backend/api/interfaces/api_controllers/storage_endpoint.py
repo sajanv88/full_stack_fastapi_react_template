@@ -1,7 +1,7 @@
 from typing import List
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, status
-from api.common.exceptions import NotFoundException
+from api.common.exceptions import InvalidOperationException
 from api.common.utils import get_logger
 from api.core.container import get_storage_settings_service
 from api.domain.dtos.storage_settings_dto import AvailableStorageProviderDto, StorageSettingsDto
@@ -41,19 +41,14 @@ async def configure_storage(
     setting_service: StorageSettingsService = Depends(get_storage_settings_service)
 ):
 
-    logger.debug(f"Received storage configuration: {configuration}")
-    try:
-        # We don't expect storage settings to be configured with host context as they are global settings. Only tenants with proper permissions can configure them.
-        if current_user.tenant_id is None or current_user.tenant_id.strip() == "":
-            logger.error("Tenant ID is missing in the current user context.")
-            return status.HTTP_400_BAD_REQUEST
-        
-        configuration.updated_by_user_id = current_user.id
-        await setting_service.configure_storage(setting=configuration, tenant_id=current_user.tenant_id)
-        return status.HTTP_201_CREATED
-    except Exception as e:
-        logger.error(f"Failed to configure storage: {e}")
-        return status.HTTP_400_BAD_REQUEST
+    # We don't expect storage settings to be configured with host context as they are global settings. Only tenants with proper permissions can configure them.
+    if not current_user.tenant_id:
+        logger.error("Tenant ID is missing in the current user context.")
+        raise InvalidOperationException("Tenant context is required to configure storage settings.")
+
+    configuration.updated_by_user_id = current_user.id
+    await setting_service.configure_storage(setting=configuration, tenant_id=current_user.tenant_id)
+    return status.HTTP_201_CREATED
 
 
 
@@ -65,14 +60,9 @@ async def reset_storage(
 ):
     logger.debug(f"Received request to reset storage settings for ID: {storage_id}")
 
-    try:
-        # We don't expect storage settings to be configured with host context as they are global settings. Only tenants with proper permissions can configure them.
-        if current_user.tenant_id is None or current_user.tenant_id.strip() == "":
-            logger.error("Tenant ID is missing in the current user context.")
-            return status.HTTP_400_BAD_REQUEST
+    # We don't expect storage settings to be configured with host context as they are global settings. Only tenants with proper permissions can configure them.
+    if not current_user.tenant_id:
+        logger.error("Tenant ID is missing in the current user context.")
+        raise InvalidOperationException("Tenant context is required to reset storage settings.")
 
-        await setting_service.reset_storage(storage_id=storage_id, updated_by_user_id=current_user.id, tenant_id=PydanticObjectId(current_user.tenant_id))
-        return status.HTTP_201_CREATED
-    except (NotFoundException, Exception) as e:
-        logger.error(f"Failed to reset storage settings: {e}")
-        raise e
+    await setting_service.reset_storage(storage_id=storage_id, updated_by_user_id=current_user.id, tenant_id=PydanticObjectId(current_user.tenant_id))

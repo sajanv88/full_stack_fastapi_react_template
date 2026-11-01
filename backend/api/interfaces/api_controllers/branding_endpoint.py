@@ -56,15 +56,16 @@ async def upload_logo(
     logger.debug(f"Received logo file: {file.filename}, size: {len(file_content)} bytes")
     if not file_content:
         raise BrandingException("Uploaded file is empty.")
-    if file.content_type not in ["image/png", "image/jpeg", "image/svg+xml"]:
-        raise BrandingException("Unsupported file type. Please upload a PNG, JPEG, or SVG image.")
-    
+    if file.content_type not in ["image/png", "image/jpeg"]:
+        raise BrandingException("Unsupported file type. Please upload a PNG or JPEG image.")
+
+    # The size check above read the file, rewind it or an empty object gets stored.
+    await file.seek(0)
     key = await file_service.upload_file(file=file)
     logger.debug(f"Logo uploaded successfully with key: {key}")
     branding = await branding_service.get_branding()
     if branding is None:
-        current_user.tenant_id = current_user.tenant_id
-        branding = await branding_service.create_branding(data=UpdateBrandingDto(logo_url=key, logo_type=file.content_type))
+        branding = await branding_service.create_branding(data=UpdateBrandingDto(logo_url=key, logo_type=file.content_type, tenant_id=current_user.tenant_id))
         return
     
 

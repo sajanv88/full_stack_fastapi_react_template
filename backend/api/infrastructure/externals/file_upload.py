@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from fastapi import UploadFile
 
 from api.common.utils import get_logger
@@ -8,6 +10,13 @@ from api.infrastructure.externals.s3_storage import S3Storage
 from api.core.config import settings
 
 logger = get_logger(__name__)
+
+
+def build_object_key(prefix: str, filename: str | None) -> str:
+    """Unique per upload, otherwise two users uploading `logo.png` overwrite each other's file."""
+    safe_name = (filename or "upload").replace("\\", "/").rsplit("/", 1)[-1] or "upload"
+    return f"{prefix}/{uuid4().hex}-{safe_name}"
+
 
 class FileUpload:
     def __init__(self):
@@ -29,14 +38,14 @@ class FileUpload:
                     aws_secret_key=active_provider.aws_secret_key,
                     region=active_provider.region
                 )
-                return await s3.upload_file(file, active_provider.aws_bucket_name + "/" + file.filename)
+                return await s3.upload_file(file, build_object_key(active_provider.aws_bucket_name, file.filename))
             elif active_provider.provider.value == StorageProvider.AZURE_BLOB.value:
                 logger.info(f"Uploading file to Azure Blob Storage: {file.filename}")
                 azure = AzureBlobStorage(
                     connection_string=active_provider.azure_connection_string,
                     container_name=active_provider.azure_container_name
                 )
-                return await azure.upload_file(file, active_provider.azure_container_name + "/" + file.filename)
+                return await azure.upload_file(file, build_object_key(active_provider.azure_container_name, file.filename))
             else:
                 raise StorageNotEnabledException()
                 
@@ -48,4 +57,4 @@ class FileUpload:
                 aws_secret_key=settings.aws_secret_access_key,
                 region=settings.aws_region
             )
-            return await s3.upload_file(file, settings.aws_s3_bucket_name + "/" + file.filename)
+            return await s3.upload_file(file, build_object_key(settings.aws_s3_bucket_name, file.filename))

@@ -1,6 +1,5 @@
 
-import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
 from fastapi import UploadFile
 
@@ -18,7 +17,7 @@ class AzureBlobStorage:
             blob_client = self.container_client.get_blob_client(destination)
             data = await file.read()
             blob_client.upload_blob(data, overwrite=True)
-            return blob_client.url
+            return destination
         except Exception as e:
             raise AzureBlobStorageException(str(e))
     
@@ -28,8 +27,9 @@ class AzureBlobStorage:
                 account_name=self.blob_service_client.account_name,
                 container_name=self.container_name,
                 blob_name=blob_name,
+                account_key=self.blob_service_client.credential.account_key,
                 permission=BlobSasPermissions(read=True),
-                expiry=datetime.utcnow() + timedelta(seconds=expires_in)
+                expiry=datetime.now(timezone.utc) + timedelta(seconds=expires_in)
             )
             blob_client = self.container_client.get_blob_client(blob_name)
             return f"{blob_client.url}?{sas_token}"
